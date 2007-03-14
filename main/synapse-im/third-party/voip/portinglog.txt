@@ -1,0 +1,41 @@
+Log for qt3to4 on Sun Jan 28 21:16:04 2007. Number of log entries: 1
+In file voip.pri: Added entry QT += qt3support 
+
+Log for qt3to4 on Sun Jan 28 21:16:07 2007. Number of log entries: 1
+No changes made to file /build/psi/new/third-party/voip/voip.pri
+
+Log for qt3to4 on Sun Jan 28 21:17:24 2007. Number of log entries: 33
+In file /build/psi/new/third-party/voip/voicecodec.cpp at line 3 column 20: qvaluelist.h -> q3valuelist.h
+In file /build/psi/new/third-party/voip/voicecodec.cpp at line 4 column 15: qdict.h -> q3dict.h
+In file /build/psi/new/third-party/voip/voicecodec.cpp at line 5 column 18: qintdict.h -> q3intdict.h
+In file /build/psi/new/third-party/voip/voicecodec.cpp at line 23 column 12: QIntDict -> Q3IntDict
+In file /build/psi/new/third-party/voip/voicecodec.cpp at line 24 column 9: QDict -> Q3Dict
+In file /build/psi/new/third-party/voip/voicecodec.cpp at line 25 column 14: QValueList -> Q3ValueList
+In file /build/psi/new/third-party/voip/voicecodec.cpp at line 70 column 10: QValueList -> Q3ValueList
+No changes made to file /build/psi/new/third-party/voip/codecs/pcmucodec.cpp
+No changes made to file /build/psi/new/third-party/voip/codecs/speexcodec.cpp
+No changes made to file /build/psi/new/third-party/voip/ringbuffer.cpp
+In file /build/psi/new/third-party/voip/mediastream.cpp at line 159 column 34: QPtrQueue -> Q3PtrQueue
+No changes made to file /build/psi/new/third-party/voip/jabbinmediaengine.cpp
+No changes made to file /build/psi/new/third-party/voip/portaudio/pa_convert.c
+No changes made to file /build/psi/new/third-party/voip/portaudio/pa_lib.c
+No changes made to file /build/psi/new/third-party/voip/portaudio/pa_trace.c
+In file /build/psi/new/third-party/voip/portaudio/pa_win_wmme.c at line 35 column 4963: HANDLE -> Qt::HANDLE
+In file /build/psi/new/third-party/voip/portaudio/pa_win_wmme.c at line 35 column 5041: HANDLE -> Qt::HANDLE
+In file /build/psi/new/third-party/voip/portaudio/pa_win_wmme.c at line 35 column 5121: HANDLE -> Qt::HANDLE
+In file /build/psi/new/third-party/voip/voicecodec.h at line 5 column 20: qvaluelist.h -> q3valuelist.h
+In file /build/psi/new/third-party/voip/voicecodec.h at line 64 column 14: QValueList -> Q3ValueList
+No changes made to file /build/psi/new/third-party/voip/codecs/pcmucodec.h
+No changes made to file /build/psi/new/third-party/voip/codecs/speexcodec.h
+No changes made to file /build/psi/new/third-party/voip/ringbuffer.h
+In file /build/psi/new/third-party/voip/mediastream.h at line 7 column 18: qcstring.h -> q3cstring.h
+In file /build/psi/new/third-party/voip/mediastream.h at line 8 column 19: qptrqueue.h -> q3ptrqueue.h
+In file /build/psi/new/third-party/voip/mediastream.h at line 30 column 25: QPtrQueue -> Q3PtrQueue
+In file /build/psi/new/third-party/voip/jabbinmediaengine.h at line 6 column 18: qcstring.h -> q3cstring.h
+In file /build/psi/new/third-party/voip/jabbinmediaengine.h at line 7 column 19: qptrqueue.h -> q3ptrqueue.h
+In file /build/psi/new/third-party/voip/jabbinmediaengine.h at line 30 column 11: QPtrQueue -> Q3PtrQueue
+No changes made to file /build/psi/new/third-party/voip/portaudio/pa_host.h
+No changes made to file /build/psi/new/third-party/voip/portaudio/pa_trace.h
+No changes made to file /build/psi/new/third-party/voip/portaudio/portaudio.h
+In file voip.pri: Added entry QT +=  
+
