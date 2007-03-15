@@ -523,7 +523,7 @@ void JingleSessionManager::deinitialize()
 	
 	disconnect(client_,SIGNAL(xmlIncoming(const QString&)),this,SLOT(receiveStanza(const QString&)));
 
-	delete socket_server_;
+// 	delete socket_server_;
 	delete sslots_;
 
 	initialized_ = false;

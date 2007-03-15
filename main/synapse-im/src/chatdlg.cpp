@@ -284,11 +284,11 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 	ui_.toolbar->addAction(d->act_info);
 	ui_.toolbar->addAction(d->act_history);
 	if (d->pa->voiceCaller())
-		d->toolbar->addAction(d->act_voice);
+		ui_.toolbar->addAction(d->act_voice);
 	if (d->pa->gArchive() != NULL)
-		d->toolbar->addAction(d->act_otr);
-	d->toolbar->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
-	hb3->addWidget(d->toolbar);
+		ui_.toolbar->addAction(d->act_otr);
+	ui_.toolbar->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+	//hb3->addWidget(d->toolbar);
 
 	PsiToolTip::install(ui_.avatar);
 	

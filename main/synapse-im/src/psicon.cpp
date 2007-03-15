@@ -226,8 +226,8 @@ public:
 		QPushButton *existingButton = msgBox.addButton(tr("Use existing account"),QMessageBox::ActionRole);
 		msgBox.exec();
 		if (msgBox.clickedButton() ==  existingButton) {
-			AccountModifyDlg w(psi);
-			w.exec();
+//			AccountModifyDlg w(psi);
+//			w.exec();
 		}
 		else if (msgBox.clickedButton() ==  registerButton) {
 			AccountRegDlg w(psi->proxy());
