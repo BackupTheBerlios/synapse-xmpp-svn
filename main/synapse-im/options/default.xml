@@ -88,6 +88,7 @@
 				</avatars>
 			</chat>
 			<contactlist comment="Contact list options">
+				<SynapseStyle type="bool" comment="New view on roster">true</SynapseStyle>
 				<auto-delete-unlisted comment="Automatically remove an unlisted contact from the contact list if it does not have any pending messages anymore" type="bool">false</auto-delete-unlisted>
 				<opacity comment="Opacity percentage of the contact list" type="int">100</opacity>
 				<avatar comment="Avatars in contactlist">

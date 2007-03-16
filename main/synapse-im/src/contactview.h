@@ -329,17 +329,23 @@ public:
 	virtual ~RichListViewItem();
 	void setJid(const Jid& jid);
 	void setAvatarFactory(AvatarFactory *af);
+	void setStatus(int status);
 	int widthUsed();
 
 protected:
 	virtual void paintCell( QPainter * p, const QColorGroup & cg, int column
 , int width, int align );
+	void scaleAvatar();
+	void greyscaleAvatar();
 private:
 	int v_widthUsed;
 	bool v_selected, v_active;
 	bool v_rich;
 	bool noOfflineStatusMsg;
 	QTextDocument* v_rt;
+    // Synapse Style
+	bool v_synapseStyle;
+	int v_status;
     // Avatars
 	bool v_avatarShow;
 	int v_avatarSize;
