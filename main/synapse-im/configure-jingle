@@ -61,6 +61,7 @@ Dependency options:
   --with-glibconfig-inc=[path]    Path to glibconfig include file (for Jingle)
   --disable-plugins               Disable use of Plugins
   --enable-plugins                Enable Psi Plugin support
+  --enable-dbus                   Enable D-Bus service
   --enable-debug                  Enable debugging support
 
 EOT
@@ -387,6 +388,11 @@ while [ $# -gt 0 ]; do
 			shift
 			;;
 
+		--enable-dbus)
+			QC_ENABLE_DBUS="Y"
+			shift
+			;;
+
 		--enable-debug)
 			QC_ENABLE_DEBUG="Y"
 			shift
@@ -455,6 +461,7 @@ echo QC_WITH_GLIB_LIB=$QC_WITH_GLIB_LIB
 echo QC_WITH_GLIBCONFIG_INC=$QC_WITH_GLIBCONFIG_INC
 echo QC_DISABLE_plugins=$QC_DISABLE_plugins
 echo QC_ENABLE_PLUGINS=$QC_ENABLE_PLUGINS
+echo QC_ENABLE_DBUS=$QC_ENABLE_DBUS
 echo QC_ENABLE_DEBUG=$QC_ENABLE_DEBUG
 echo
 fi
@@ -1703,6 +1710,35 @@ public:
 		return true;
 	}
 };
+#line 1 "dbus.qcm"
+/*
+-----BEGIN QCMOD-----
+name: D-Bus support
+arg: enable-dbus,Enable D-Bus support
+-----END QCMOD-----
+*/
+
+//----------------------------------------------------------------------------
+// qc_dbus
+//----------------------------------------------------------------------------
+class qc_dbus : public ConfObj
+{
+public:
+	qc_dbus(Conf *c) : ConfObj(c) {}
+	QString name() const { return "D-Bus support"; }
+	QString shortname() const { return "dbus"; }
+	QString checkString() const { return QString(); }
+
+	bool exec()
+	{
+		if (conf->getenv("QC_ENABLE_DEBUG").isEmpty())
+			return false;
+		conf->addExtra("DEFINES += HAVE_DBUS");
+		conf->addExtra("CONFIG += qdbus");
+		conf->addExtra("CONFIG += dbus");
+		return true;
+	}
+};
 #line 1 "debug.qcm"
 /*
 -----BEGIN QCMOD-----
@@ -2756,6 +2792,7 @@ export QC_WITH_GLIB_LIB
 export QC_WITH_GLIBCONFIG_INC
 export QC_DISABLE_plugins
 export QC_ENABLE_PLUGINS
+export QC_ENABLE_DBUS
 export QC_ENABLE_DEBUG
 export QC_DEBUG
 rm -rf .qconftemp

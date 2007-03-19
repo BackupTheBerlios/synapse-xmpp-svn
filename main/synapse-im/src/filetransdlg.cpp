@@ -37,6 +37,10 @@
 #include "msgmle.h"
 #include "jidutil.h"
 #include "psitooltip.h"
+#ifdef HAVE_DBUS
+#include "mainwin.h"
+#include "dbus.h"
+#endif
 #include "psicontactlist.h"
 #include "accountlabel.h"
 
@@ -566,7 +570,11 @@ FileRequestDlg::FileRequestDlg(const Jid &jid, PsiCon *psi, PsiAccount *pa, cons
 	d->psi->dialogRegister(this);
 
 	if (files.isEmpty()) {
+#ifdef HAVE_DBUS
+		DBus::instance()->frdlg = this;
+#else
 		QTimer::singleShot(0, this, SLOT(chooseFile()));
+#endif
 	}
 	else {
 		// TODO: Once sending of multiple files is supported, change this
@@ -662,7 +670,12 @@ FileRequestDlg::~FileRequestDlg()
 {
 	delete d->ft;
 	if(d->psi)
+	{
+#ifdef HAVE_DBUS
+		DBus::instance()->frdlg = NULL;
+#endif
 		d->psi->dialogUnregister(this);
+	}
 	else
 		d->pa->dialogUnregister(this);
 	delete d;
@@ -748,6 +761,22 @@ void FileRequestDlg::unblockWidgets()
 	d->te->setEnabled(true);
 	pb_start->setEnabled(true);
 }
+
+#ifdef HAVE_DBUS
+void FileRequestDlg::setFile(QString& str)
+{
+	if(!str.isEmpty()) {
+		QFileInfo fi(str);
+		if(!fi.exists()) {
+			QMessageBox::information(this, tr("Error"), tr("The file specified does not exist."));
+		}else{
+		option.lastPath = fi.dirPath();
+		le_fname->setText(QDir::convertSeparators(fi.filePath()));
+		lb_size->setText(tr("%1 byte(s)").arg(fi.size())); // TODO: large file support
+		}
+	}
+}
+#endif
 
 void FileRequestDlg::chooseFile()
 {

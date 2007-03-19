@@ -96,6 +96,14 @@ jingle {
 	}
 }
 
+dbus {
+	HEADERS += \
+		$$PWD/dbus.h
+
+	SOURCES += \
+		$$PWD/dbus.cpp
+}
+
 # include Iris XMPP library
 include($$PWD/../iris/iris.pri)
 

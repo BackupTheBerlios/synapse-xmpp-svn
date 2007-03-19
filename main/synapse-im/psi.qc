@@ -31,6 +31,7 @@
   <dep type='aspell'/>
   <dep type='xmms'/>
   <dep type='plugins'/>
+  <dep type='dbus'/>
   <dep type='debug'>
 	<required/>
   </dep>

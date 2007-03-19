@@ -611,13 +611,13 @@ void PsiCon::doGroupChat()
 	w->show();
 }
 
-void PsiCon::doNewBlankMessage()
+void PsiCon::doNewBlankMessage(QString to = "")
 {
 	PsiAccount *account = d->contactList->defaultAccount();
 	if(!account)
 		return;
 
-	EventDlg *w = createEventDlg("", account);
+	EventDlg *w = createEventDlg(to, account);
 	w->show();
 }
 

@@ -28,6 +28,9 @@
 #include <QStringList>
 
 #include "advwidget.h"
+#ifdef HAVE_DBUS
+#include "dbus.h"
+#endif
 
 class QMenuBar;
 class QAction;
@@ -41,6 +44,7 @@ class PsiAccount;
 class IconAction;
 class PsiIcon;
 class ContactView;
+class DBus;
 namespace XMPP {
 	class Status;
 }
@@ -66,7 +70,7 @@ public:
 	void buildToolbars();
 	void saveToolbarsPositions();
 	PsiCon *psiCon() const;
-
+	DBus *dbus;
 protected:
 	void closeEvent(QCloseEvent *);
 	void keyPressEvent(QKeyEvent *);

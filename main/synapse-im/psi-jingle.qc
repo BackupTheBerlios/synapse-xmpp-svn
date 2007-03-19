@@ -33,6 +33,7 @@
   <dep type='google_ft'/>
   <dep type='jingle'/>
   <dep type='plugins'/>
+  <dep type='dbus'/>
   <dep type='debug'>
 	<required/>
   </dep>

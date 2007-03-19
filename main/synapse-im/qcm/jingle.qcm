@@ -363,6 +363,7 @@ public:
 		}
 
 		// Finish
+		conf->addExtra("CONFIG += google_ft google_voice");
 		conf->addExtra("CONFIG += jingle");                              
 
 		qWarning("");

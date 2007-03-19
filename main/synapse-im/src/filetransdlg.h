@@ -80,6 +80,9 @@ public:
 	FileRequestDlg(const QDateTime &ts, FileTransfer *ft, PsiAccount *pa);
 	~FileRequestDlg();
 
+#ifdef HAVE_DBUS	
+	void setFile(QString& filename);
+#endif
 protected:
 	void keyPressEvent(QKeyEvent *);
 

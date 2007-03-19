@@ -232,6 +232,11 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 		setAttribute(Qt::WA_MacMetalStyle);
 	d = new Private(psi, this);
 
+#ifdef HAVE_DBUS
+	dbus = new DBus(this);
+// 	QDBus::sessionBus().registerObject("/Synapse-IM", app);
+#endif
+
 	setWindowIcon(PsiIconset::instance()->status(STATUS_OFFLINE).impix());
 
 	d->onTop = _onTop;

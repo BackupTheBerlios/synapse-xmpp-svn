@@ -145,7 +145,7 @@ public slots:
 	void changeProfile();
 	void doManageAccounts();
 	void doGroupChat();
-	void doNewBlankMessage();
+	void doNewBlankMessage(QString to);
 	void doOptions();
 	void doFileTransDlg();
 	void statusMenuChanged(int);
