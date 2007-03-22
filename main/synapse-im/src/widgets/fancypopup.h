@@ -21,23 +21,22 @@
 #ifndef FANCYPOPUP_H
 #define FANCYPOPUP_H
 
-#include <QFrame>
+#include <QWidget>
+#include "psirichlabel.h"
 
 class PsiIcon;
 class QTimer;
 
-class FancyPopup : public QFrame
+class FancyPopup : public QWidget
 {
 	Q_OBJECT
 public:
-	FancyPopup(QString title, const PsiIcon *icon = 0, FancyPopup *prev = 0, bool copyIcon = true);
+	FancyPopup(QWidget *parent, QString title, const PsiIcon *icon = 0, int timeout = 3000, bool copyIcon = true);
 	~FancyPopup();
 
-	void addLayout(QLayout *layout, int stretch = 0);
+	void setData(QPixmap pix, PsiRichLabel *prl);
 
-	static void setHideTimeout(int);
-	static void setBorderColor(QColor);
-
+	void setup();
 	void show();
 	void restartHideTimer();
 
@@ -47,12 +46,26 @@ signals:
 protected:
 	void hideEvent(QHideEvent *);
 	void mouseReleaseEvent(QMouseEvent *);
+	void paintEvent(QPaintEvent *);
+
+	static const int MARGIN = 15;
 
 public:
 	class Private;
 private:
-	Private *d;
-	friend class Private;
+	QSize dimensions();	
+
+	QPixmap m_logo;
+	QRect logo_rect;
+	QTimer *m_timer;
+	PsiRichLabel *m_prl;
+	QString m_title;
+	QRect m_titleSize;
+	QSize size;
+	int m_timeout;
+	uint xround;
+	uint yround;
+
 };
 
 #endif

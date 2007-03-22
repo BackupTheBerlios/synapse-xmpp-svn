@@ -23,6 +23,8 @@ public:
 	QSize sizeHint() const;
 	void setFont(QFont& font);
 
+	void paintThere(QPainter *p, QRect rect);
+
 protected:
 	void paintEvent(QPaintEvent *e);
 	QSize sizeForWidth(int w);

@@ -106,6 +106,17 @@ void PsiRichLabel::setFont(QFont& font)
 	font_ = font;
 }
 
+void PsiRichLabel::paintThere(QPainter *p, QRect rect)
+{
+	PsiRichText::ensureTextLayouted(doc, width());
+	doc->setDefaultFont(font_);
+	QAbstractTextDocumentLayout *layout = doc->documentLayout();
+
+	QAbstractTextDocumentLayout::PaintContext context;
+	context.palette = palette();
+	layout->draw(p, context);
+}
+
 void PsiRichLabel::paintEvent(QPaintEvent *e)
 {
 //	QStylePainter p(this);

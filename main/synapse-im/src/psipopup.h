@@ -57,7 +57,7 @@ public:
 	};
 	PsiPopup(PopupType type, PsiAccount *acc);
 
-	void setData(const PsiIcon *icon, QString text);
+	void setData(const PsiIcon *icon, QString text,const Jid& j);
 	void setData(const Jid &, const Resource &, const UserListItem * = 0, const PsiEvent * = 0);
 
 	void show();
