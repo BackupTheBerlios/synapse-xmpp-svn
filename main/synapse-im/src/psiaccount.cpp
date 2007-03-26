@@ -659,13 +659,6 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	// Google Archive
 	d->ga = new GArchive(this, jid(), d->serverInfoManager->hasGoogleArchive());
 	
-	// auto-login ?
-	if(d->acc.opt_auto && d->acc.opt_enabled)
-		if(!d->acc.opt_login_as)
-			setStatus(Status("", "", d->acc.priority));
-		else
-			setStatus(Status(d->acc.opt_login_status, d->acc.opt_login_message, d->acc.priority));
-
 	//printf("PsiAccount: [%s] loaded\n", name().latin1());
 	d->xmlConsole = new XmlConsole(this);
 	if(option.xmlConsoleOnLogin && d->acc.opt_enabled) {
@@ -991,6 +984,18 @@ QString PsiAccount::nameWithJid() const
 	return (name() + " (" + JIDUtil::toString(jid(),true) + ')');
 }
 
+// Moved out of constructor to have all accounts loaded
+// when we ask for passwords.
+void PsiAccount::autoLogin()
+{
+	// auto-login ?
+	if(d->acc.opt_auto && d->acc.opt_enabled)
+		if(!d->acc.opt_login_as)
+			setStatus(Status("", "", d->acc.priority));
+		else
+			setStatus(Status(d->acc.opt_login_status, d->acc.opt_login_message, d->acc.priority));
+}
+
 // logs on with the active account settings
 void PsiAccount::login()
 {
@@ -1050,6 +1055,7 @@ void PsiAccount::login()
 		d->tls = new QCA::TLS;
 		d->tls->setTrustedCertificates(CertUtil::allCertificates());
 		d->tlsHandler = new QCATLSHandler(d->tls);
+		d->tlsHandler->setXMPPCertCheck(true);
 		connect(d->tlsHandler, SIGNAL(tlsHandshaken()), SLOT(tls_handshaken()));
 	}
 	d->conn->setProxy(p);
@@ -1135,31 +1141,53 @@ void PsiAccount::tls_handshaken()
 {
 	QCA::Certificate cert = d->tls->peerCertificateChain().primary();
 	int r = d->tls->peerIdentityResult();
+	if (r == QCA::TLS::Valid && !d->tlsHandler->certMatchesHostname()) r = QCA::TLS::HostMismatch;
 	if(r != QCA::TLS::Valid && !d->acc.opt_ignoreSSLWarnings) {
 		QCA::Validity validity =  d->tls->peerCertificateValidity();
 		QString str = CertUtil::resultToString(r,validity);
-		while(1) {
-			int n = QMessageBox::warning(0,
-				(d->psi->contactList()->enabledAccounts().count() > 1 ? QString("%1: ").arg(name()) : "") + tr("Server Authentication"),
-				tr("The %1 certificate failed the authenticity test.").arg(d->jid.host()) + '\n' + tr("Reason: %1.").arg(str),
-				tr("&Details..."),
-				tr("Co&ntinue"),
-				tr("&Cancel"), 0, 2);
-			if(n == 0) {
+		QMessageBox msgBox(QMessageBox::Warning,
+			(d->psi->contactList()->enabledAccounts().count() > 1 ? QString("%1: ").arg(name()) : "") + tr("Server Authentication"),
+			tr("The %1 certificate failed the authenticity test.").arg(d->jid.host()) + '\n' + tr("Reason: %1.").arg(str));
+		QPushButton *detailsButton = msgBox.addButton(tr("&Details..."), QMessageBox::ActionRole);
+		QPushButton *continueButton = msgBox.addButton(tr("Co&ntinue"), QMessageBox::AcceptRole);
+		QPushButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
+		msgBox.setDefaultButton(detailsButton);
+		msgBox.setResult(QDialog::Accepted);
+
+		connect(this, SIGNAL(disconnected()), &msgBox, SLOT(reject()));
+		connect(this, SIGNAL(reconnecting()), &msgBox, SLOT(reject()));
+
+		while (msgBox.result() != QDialog::Rejected) {
+			msgBox.exec();
+			if (msgBox.clickedButton() == detailsButton) {
+			msgBox.setResult(QDialog::Accepted);
 				SSLCertDlg::showCert(cert, r, validity);
 			}
-			else if(n == 1) {
+			else if(msgBox.clickedButton() == continueButton) {
 				d->tlsHandler->continueAfterHandshake();
 				break;
 			}
-			else if(n == 2) {
+			else if(msgBox.clickedButton() == cancelButton) {
 				logout();
+				break;
+			}
+			else {
 				break;
 			}
 		}
 	}
 	else
 		d->tlsHandler->continueAfterHandshake();
+}
+
+void PsiAccount::showCert()
+{
+	if (!d->tls || !d->tls->isHandshaken()) return;
+	QCA::Certificate cert = d->tls->peerCertificateChain().primary();
+	int r = d->tls->peerIdentityResult();
+	if (r == QCA::TLS::Valid && !d->tlsHandler->certMatchesHostname()) r = QCA::TLS::HostMismatch;
+	QCA::Validity validity =  d->tls->peerCertificateValidity();
+	SSLCertDlg::showCert(cert, r, validity);
 }
 
 void PsiAccount::cs_connected()
@@ -2097,6 +2125,7 @@ void PsiAccount::reconnect()
 {
 	if(doReconnect) {
 		//printf("PsiAccount: [%s] reconnecting...\n", name().latin1());
+		emit reconnecting();
 		v_isActive = false;
 		doReconnect = false;
 		login();

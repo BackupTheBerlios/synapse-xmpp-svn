@@ -192,6 +192,7 @@ public slots:
 };
 
 ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
+	: highlightersInstalled_(false)
 {
   	if ( option.brushedMetal )
 		setAttribute(Qt::WA_MacMetalStyle);
@@ -315,6 +316,9 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 	d->sendComposingEvents = false;
 	d->isComposing = false;
 	d->composingTimer = 0;
+	// SyntaxHighlighters modify the QTextEdit in a QTimer::singleShot(0, ...) call
+	// so we need to install out hooks after it fired for the first time
+	QTimer::singleShot(10, this, SLOT(initComposing()));
 	connect(d, SIGNAL(composing(bool)), SLOT(updateIsComposing(bool)));
 
 	updateContact(d->jid, true);
@@ -342,6 +346,12 @@ ChatDlg::~ChatDlg()
 	d->pa->dialogUnregister(this);
 
 	delete d;
+}
+
+void ChatDlg::initComposing()
+{
+	highlightersInstalled_ = true;
+	chatEditCreated();
 }
 
 void ChatDlg::setShortcuts()
@@ -753,11 +763,13 @@ void ChatDlg::setLooks()
 	ui_.splitter->setSplitterEnabled(!option.chatLineEdit);
 	ui_.mle->setLineEditEnabled(option.chatLineEdit);
 
+	ui_.tb_pgp->hide();
 	if (d->smallChat) {
 		ui_.lb_status->hide();
 		ui_.le_jid->hide();
 		ui_.tb_actions->hide();
 		ui_.tb_emoticons->hide();
+		ui_.tb_pgp->hide();
 		ui_.toolbar->hide();
 	}
 	else {
@@ -767,11 +779,14 @@ void ChatDlg::setLooks()
 			ui_.toolbar->show();
 			ui_.tb_actions->hide();
 			ui_.tb_emoticons->hide();
+			ui_.tb_pgp->hide();
 		}
 		else {
 			ui_.toolbar->hide();
 			ui_.tb_emoticons->show();
+			ui_.tb_emoticons->setVisible(option.useEmoticons);
 			ui_.tb_actions->show();
+			ui_.tb_pgp->setVisible(d->pa->hasPGP());
 		}
 	}
 	updateIdentityVisibility();
@@ -844,6 +859,7 @@ void ChatDlg::updatePGP()
 		d->act_pgp->setChecked(false);
 		d->act_pgp->setEnabled(false);
 	}
+	ui_.tb_pgp->setVisible(d->pa->hasPGP() && !d->smallChat && !PsiOptions::instance()->getOption("options.ui.chat.central-toolbar").toBool());
 }
 
 void ChatDlg::doInfo()
@@ -1142,7 +1158,7 @@ void ChatDlg::appendMessage(const Message &m, bool local)
 			ui_.log->appendText(QString("<span style=\"color: %1\">").arg(color) + QString("[%1] &lt;").arg(timestr) + who + QString("&gt;</span> ") + txt);
 	}
 	if(!m.subject().isEmpty()) {
-		ui_.log->appendText(QString("<b>") + tr("Subject:") + "</b> " + QString("%1").arg(Qt::escape(m.subject())));
+		ui_.log->appendText(QString("<b>") + tr("Subject:") + "</b> " + QString("%1").arg(TextUtil::plain2rich(m.subject())));
 	}
 	if(!m.urlList().isEmpty()) {
 		UrlList urls = m.urlList();
@@ -1326,6 +1342,8 @@ void ChatDlg::chatEditCreated()
 	connect(ui_.mle->chatEdit(), SIGNAL(textChanged()), d, SLOT(updateCounter()));
 	ui_.mle->chatEdit()->installEventFilter(this);
 	connect(ui_.mle->chatEdit(), SIGNAL(textChanged()), d, SLOT(setComposing()));
+	if (highlightersInstalled_)
+		connect(ui_.mle->chatEdit(), SIGNAL(textChanged()), d, SLOT(setComposing()));
 }
 
 #include "chatdlg.moc"

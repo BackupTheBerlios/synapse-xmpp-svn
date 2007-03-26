@@ -123,6 +123,7 @@ private slots:
 	void actOnlineHelpActivated ();
 	void actOnlineWikiActivated ();
 	void actOnlineHomeActivated ();
+	void actJoinPsiMUCActivated ();
 	void actBugReportActivated ();
 	void actAboutActivated ();
 	void actAboutQtActivated ();

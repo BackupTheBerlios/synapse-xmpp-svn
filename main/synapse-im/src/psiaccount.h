@@ -190,6 +190,7 @@ public:
 
 signals:
 	void disconnected();
+	void reconnecting();
 	void updatedActivity();
 	void updatedAccount();
 	void queueChanged();
@@ -215,6 +216,9 @@ public slots:
 	void secondsIdle(int);
 	void openNextEvent();
 	int forwardPendingEvents(const Jid &jid);
+	void autoLogin();
+
+	void showCert();
 
 	//dj_ originally referred to 'direct jabber', if you care
 	void dj_sendMessage(const Message &, bool log=true);

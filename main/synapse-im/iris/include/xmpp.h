@@ -201,6 +201,11 @@ namespace XMPP
 		QCA::TLS *tls() const;
 		int tlsError() const;
 
+
+		void setXMPPCertCheck(bool enable);
+		bool XMPPCertCheck();
+		bool certMatchesHostname();
+
 		void reset();
 		void startClient(const QString &host);
 		void write(const QByteArray &a);

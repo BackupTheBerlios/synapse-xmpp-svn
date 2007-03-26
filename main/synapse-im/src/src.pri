@@ -116,6 +116,7 @@ HEADERS += \
 	$$PWD/profiles.h \
 	$$PWD/profiledlg.h \
 	$$PWD/aboutdlg.h \
+	$$PWD/desktoputil.h \
 	$$PWD/textutil.h \
 	$$PWD/pixmaputil.h \
 	$$PWD/psiaccount.h \
@@ -235,6 +236,7 @@ SOURCES += \
 	$$PWD/psi_profiles.cpp \
 	$$PWD/profiledlg.cpp \
 	$$PWD/aboutdlg.cpp \
+	$$PWD/desktoputil.cpp \
 	$$PWD/textutil.cpp \
 	$$PWD/pixmaputil.cpp \
 	$$PWD/psiaccount.cpp \

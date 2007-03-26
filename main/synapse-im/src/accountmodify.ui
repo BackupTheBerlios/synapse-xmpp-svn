@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>569</height>
+    <height>640</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -671,7 +671,16 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="cb_ssl" />
+             <widget class="QComboBox" name="cb_ssl" >
+              <property name="sizePolicy" >
+               <sizepolicy>
+               <hsizetype>3</hsizetype>
+               <vsizetype>0</vsizetype>
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
             </item>
             <item>
              <spacer>
@@ -721,7 +730,16 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="cb_plain" />
+             <widget class="QComboBox" name="cb_plain" >
+              <property name="sizePolicy" >
+               <sizepolicy>
+                <hsizetype>3</hsizetype>
+                <vsizetype>0</vsizetype>
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
             </item>
             <item>
              <spacer>
@@ -740,8 +758,8 @@
              </spacer>
             </item>
            </layout>
- 	 	  </item>
-		  <item>
+          </item>
+          <item>
            <widget class="QCheckBox" name="ck_req_mutual" >
             <property name="text" >
              <string>Require mutual authentication</string>
@@ -908,7 +926,6 @@
          </property>
         </widget>
        </item>
-	   
        <item>
         <layout class="QHBoxLayout" >
          <property name="margin" >
