@@ -129,6 +129,7 @@ void OptionsTabAppearanceMisc::applyOptions(Options *opt)
 	
 	PsiOptions::instance()->setOption("options.ui.style.name", d->cb_style->currentText());
 	PsiOptions::instance()->setOption("options.ui.style.use-palette", d->ck_stylePalette->isChecked());
+	PsiOptions::instance()->setOption("options.ui.contactlist.SynapseStyle", !d->cb_synapseStyle->isChecked());
 }
 
 void OptionsTabAppearanceMisc::restoreOptions(const Options *opt)
@@ -156,6 +157,7 @@ void OptionsTabAppearanceMisc::restoreOptions(const Options *opt)
 	d->cb_style->addItems(stylesList);
 	d->cb_style->setCurrentItem(n);
 	d->ck_stylePalette->setChecked( PsiOptions::instance()->getOption("options.ui.style.use-palette").toBool() );
+	d->cb_synapseStyle->setChecked( !PsiOptions::instance()->getOption("options.ui.contactlist.SynapseStyle").toBool());
 }
 
 void OptionsTabAppearanceMisc::changeStyle(const QString &styleName)
