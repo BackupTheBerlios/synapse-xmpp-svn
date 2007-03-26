@@ -103,9 +103,9 @@
           </sizepolicy>
          </property>
          <property name="text" >
-          <string>A cross-platform Jabber client designed for the Jabber power user.&lt;br>
+          <string>A cross-platform Jabber client designed for the Jabber power user based on Psi-IM.&lt;br>
 &lt;br>
-Copyright (C) 2001 - 2006 by Justin Karneges&lt;br>
+Copyright (C) 2007 by Andrzej Wójcik&lt;br>
 </string>
          </property>
          <property name="textFormat" >
@@ -119,10 +119,10 @@ Copyright (C) 2001 - 2006 by Justin Karneges&lt;br>
           <set>Qt::AlignCenter</set>
          </property>
          <property name="url" >
-          <string>http://psi-im.org</string>
+          <string>http://synapse.hi-low.eu</string>
          </property>
          <property name="title" >
-          <string>http://psi-im.org</string>
+          <string>http://synapse.hi-low.eu</string>
          </property>
         </widget>
        </item>

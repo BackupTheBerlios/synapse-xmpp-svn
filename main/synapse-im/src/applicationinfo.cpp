@@ -120,7 +120,7 @@ QString ApplicationInfo::resourcesDir()
 
 
 /** \brief return psi's private read write data directory
-  * unix+mac: $HOME/.psi
+  * unix+mac: $HOME/.synapseim
   * environment variable "PSIDATADIR" overrides
   */
 QString ApplicationInfo::homeDir()
@@ -131,10 +131,10 @@ QString ApplicationInfo::homeDir()
 		return p;
 
 #if defined(Q_WS_X11)
-	QDir proghome(QDir::homeDirPath() + "/.psi");
+	QDir proghome(QDir::homeDirPath() + "/.synapse-im");
 	if(!proghome.exists()) {
 		QDir home = QDir::home();
-		home.mkdir(".psi");
+		home.mkdir(".synapse-im");
 		chmod(QFile::encodeName(proghome.path()), 0700);
 	}
 	return proghome.path();
@@ -152,18 +152,18 @@ QString ApplicationInfo::homeDir()
 	if(base.at(base.length()-1) == '/')
 		base.truncate(base.length()-1);
 
-	QDir proghome(base + "/PsiData");
+	QDir proghome(base + "/Synapse-IMData");
 	if(!proghome.exists()) {
 		QDir home(base);
-		home.mkdir("PsiData");
+		home.mkdir("Synapse-IMData");
 	}
 
 	return proghome.path();
 #elif defined(Q_WS_MAC)
-	QDir proghome(QDir::homeDirPath() + "/.psi");
+	QDir proghome(QDir::homeDirPath() + "/.synapse-im");
 	if(!proghome.exists()) {
 		QDir home = QDir::home();
-		home.mkdir(".psi");
+		home.mkdir(".synapse-im");
 		chmod(QFile::encodeName(proghome.path()), 0700);
 	}
 

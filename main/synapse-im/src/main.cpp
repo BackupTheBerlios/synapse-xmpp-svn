@@ -77,15 +77,15 @@ PsiMain::PsiMain(QObject *par)
 	pcon = 0;
 
 	// load simple registry settings
-	QSettings sUser(QSettings::UserScope, "psi-im.org", "Psi");
+	QSettings sUser(QSettings::UserScope, "synapse-im", "Synapse-IM");
 	lastProfile = sUser.value("last_profile").toString();
 	lastLang = sUser.value("last_lang").toString();
 	autoOpen = sUser.value("auto_open", QVariant(false)).toBool();
 
-       QSettings s(ApplicationInfo::homeDir() + "/psirc", QSettings::IniFormat);
-       lastProfile = s.value("last_profile", lastProfile).toString();
-       lastLang = s.value("last_lang", lastLang).toString();
-       autoOpen = s.value("auto_open", autoOpen).toBool();
+	QSettings s(ApplicationInfo::homeDir() + "/synapse-imrc", QSettings::IniFormat);
+	lastProfile = s.value("last_profile", lastProfile).toString();
+	lastLang = s.value("last_lang", lastLang).toString();
+	autoOpen = s.value("auto_open", autoOpen).toBool();
 
 	if(lastLang.isEmpty()) {
 		lastLang = QTextCodec::locale();

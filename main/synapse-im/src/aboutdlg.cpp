@@ -42,21 +42,24 @@ AboutDlg::AboutDlg(QWidget* parent)
 
 	// fill in Authors tab...
 	QString authors;
+	authors += details(QString::fromUtf8("Andrzej Wójcik"),
+			   "andrzej@hi-low.eu", "hantu.sc@jid.pl", "http://andrzej.hi-low.eu",
+			   tr("Author and Lead Developer of Synapse-IM"));
 	authors += details(QString::fromUtf8("Justin Karneges"),
 			   "justin@affinix.com", "", "",
-			   tr("Founder and Original Author"));
+			   tr("Founder and Original Author of Psi-IM"));
 	authors += details(QString::fromUtf8("Kevin Smith"),
 			   "kismith@psi-im.org", "", "",
-			   tr("Project Lead/Maintainer"));
+			   tr("Psi Project Lead/Maintainer"));
 	authors += details(QString::fromUtf8("Michail Pishchagin"),
 			   "mblsha@psi-im.org", "", "",
-			   tr("Lead Developer"));
+			   tr("Psi Lead Developer"));
 	authors += details(QString::fromUtf8("Remko TronÃ§on"),
 			   "remko@psi-im.org", "", "",
-			   tr("Developer"));
+			   tr("Psi Developer"));
 	authors += details(QString::fromUtf8("Akito Nozaki"),
 			   "anpluto@usa.net", "", "",
-			   tr("Miscellaneous Developer"));
+			   tr("Psi Miscellaneous Developer"));
 	ui_.te_authors->setText( authors );
 
 	// fill in Thanks To tab...

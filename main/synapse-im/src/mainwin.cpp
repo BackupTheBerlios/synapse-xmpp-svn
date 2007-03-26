@@ -742,7 +742,7 @@ void MainWin::actOnlineWikiActivated ()
 
 void MainWin::actOnlineHomeActivated ()
 {
-	QDesktopServices::openUrl(QUrl("http://psi-im.org"));
+	QDesktopServices::openUrl(QUrl("http://synapse.hi-low.eu"));
 }
 
 void MainWin::actJoinPsiMUCActivated ()
@@ -759,7 +759,7 @@ void MainWin::actJoinPsiMUCActivated ()
 
 void MainWin::actBugReportActivated ()
 {
-	QDesktopServices::openUrl(QUrl("http://psi-im.org/forum/forum/2"));
+	QDesktopServices::openUrl(QUrl("http://synapse.hi-low.eu"));
 }
 
 void MainWin::actAboutActivated ()
@@ -825,7 +825,7 @@ void MainWin::setTrayToolTip(int status)
 {
 	if (!d->tray)
 		return;
-	d->tray->setToolTip(QString("Psi - " + status2txt(status)));
+	d->tray->setToolTip(QString("Synapse-IM - " + status2txt(status)));
 }
 
 void MainWin::decorateButton(int status)
@@ -990,7 +990,7 @@ void MainWin::setTrayToolTip(const Status &status, bool)
 {
 	if (!d->tray)
 		return;
-	QString s = "Psi";
+	QString s = "Synapse-IM";
 
  	QString show = status.show();
 	if(!show.isEmpty()) {
