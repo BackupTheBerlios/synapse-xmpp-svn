@@ -222,21 +222,8 @@ public:
 	 */
 	void promptUserToCreateAccount()
 	{
-		QMessageBox msgBox(QMessageBox::Question,tr("Account setup"),tr("You need to set up an account to start. Would you like to register a new account, or use an existing account?"));
-		QPushButton *registerButton = msgBox.addButton(tr("Register new account"), QMessageBox::ActionRole);
-		QPushButton *existingButton = msgBox.addButton(tr("Use existing account"),QMessageBox::ActionRole);
-		msgBox.exec();
-		if (msgBox.clickedButton() ==  existingButton) {
-//			AccountModifyDlg w(psi);
-//			w.exec();
-		}
-		else if (msgBox.clickedButton() ==  registerButton) {
-			AccountRegDlg w(psi->proxy());
-			int n = w.exec();
-			if (n == QDialog::Accepted) {
-				psi->contactList()->createAccount(w.jid().node(),w.jid(),w.pass(),w.useHost(),w.host(),w.port(),w.legacySSLProbe(),w.ssl(),w.proxy(),false);
-			}
-		}
+		AccountAddDlg *w = new AccountAddDlg(psi);
+		w->show();
 	}
 
 	PsiCon* psi;
@@ -457,9 +444,11 @@ bool PsiCon::init()
 	PassphraseDlg::setEventHandler(d->qcaEventHandler);
 
 	// load accounts
-	d->contactList->loadAccounts(d->pro.acc);
-	checkAccountsEmpty();
-	
+	if (d->pro.acc.count() > 0)
+		d->contactList->loadAccounts(d->pro.acc);
+	else
+		d->promptUserToCreateAccount();
+
 	// try autologin if needed
 	foreach(PsiAccount* account, d->contactList->accounts()) {
 		account->autoLogin();
@@ -968,13 +957,6 @@ void PsiCon::doOptions()
 void PsiCon::doFileTransDlg()
 {
 	bringToFront(d->ftwin);
-}
-
-void PsiCon::checkAccountsEmpty()
-{
-	while (d->pro.acc.count() == 0) {
-		d->promptUserToCreateAccount();
-	}
 }
 
 void PsiCon::doToolbars()

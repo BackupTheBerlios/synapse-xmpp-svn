@@ -136,7 +136,6 @@ signals:
 public slots:
 	void setGlobalStatus(const Status &, bool withPriority = false);
 	void doToolbars();
-	void checkAccountsEmpty();
 
 public slots:
 	void doSleep();

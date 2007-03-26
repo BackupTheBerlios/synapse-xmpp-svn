@@ -150,7 +150,7 @@ PsiMain::~PsiMain()
 	delete rs;
 #endif
 */
-	QSettings s(ApplicationInfo::homeDir() + "/psirc", QSettings::IniFormat);
+	QSettings s(ApplicationInfo::homeDir() + "/synapse-imrc", QSettings::IniFormat);
 	s.setValue("last_profile", lastProfile);
 	s.setValue("last_lang", lastLang);
 	s.setValue("auto_open", autoOpen);
