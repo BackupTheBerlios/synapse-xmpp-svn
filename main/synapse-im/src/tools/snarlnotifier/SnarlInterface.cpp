@@ -121,3 +121,5 @@ long SnarlInterface::send(SNARLSTRUCT snarlStruct) {
 		}
 	}
 	return 0;
+}
+

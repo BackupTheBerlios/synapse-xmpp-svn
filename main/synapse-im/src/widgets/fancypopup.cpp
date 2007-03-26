@@ -168,4 +168,4 @@ void FancyPopup::restartHideTimer()
 	m_timer->start(m_timeout);
 }
 
-#include "fancypopup.moc"
+//#include "fancypopup.moc"
