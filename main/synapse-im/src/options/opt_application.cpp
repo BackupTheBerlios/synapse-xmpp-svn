@@ -39,11 +39,11 @@ QWidget *OptionsTabApplication::widget()
 	OptApplicationUI *d = (OptApplicationUI *)w;
 
 	d->ck_alwaysOnTop->setWhatsThis(
-		tr("Makes the main Psi window always be in front of other windows."));
+		tr("Makes the main Synapse-IM window always be in front of other windows."));
 	d->ck_autoRosterSize->setWhatsThis(
-		tr("Makes the main Psi window resize automatically to fit all contacts."));
+		tr("Makes the main Synapse-IM window resize automatically to fit all contacts."));
 	d->ck_keepSizes->setWhatsThis(
-		tr("Makes Psi remember window size and positions for chats and messages."
+		tr("Makes Synapse-IM remember window size and positions for chats and messages."
 		"  If disabled, the windows will always appear in their default positions and sizes."));
 	d->ck_useleft->setWhatsThis(
 		tr("Normally, right-clicking with the mouse on a contact will activate the context-menu."
@@ -53,17 +53,17 @@ QWidget *OptionsTabApplication::widget()
 
 	// docklet
 	d->ck_docklet->setWhatsThis(
-		tr("Makes Psi use a docklet icon, also known as system tray icon."));
+		tr("Makes Synapse-IM use a docklet icon, also known as system tray icon."));
 	d->ck_dockDCstyle->setWhatsThis(
-		tr("Normally, single-clicking on the Psi docklet icon brings the main window to"
+		tr("Normally, single-clicking on the Synapse-IM docklet icon brings the main window to"
 		" the foreground.  Check this option if you would rather use a double-click."));
 	d->ck_dockHideMW->setWhatsThis(
-		tr("Starts Psi with only the docklet icon visible."));
+		tr("Starts Synapse-IM with only the docklet icon visible."));
 	d->ck_dockToolMW->setWhatsThis(
-		tr("Prevents Psi from taking up a slot on the taskbar and makes the main "
+		tr("Prevents Synapse-IM from taking up a slot on the taskbar and makes the main "
 		"window use a small titlebar."));
 	d->ck_dockUseWM->setWhatsThis(
-		tr("If checked, Psi will use the Window Maker docklet instead of FreeDesktop one."));
+		tr("If checked, Synapse-IM will use the Window Maker docklet instead of FreeDesktop one."));
 
 #ifdef Q_WS_MAC
 	d->ck_alwaysOnTop->hide();

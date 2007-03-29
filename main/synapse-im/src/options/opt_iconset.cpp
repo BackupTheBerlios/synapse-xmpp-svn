@@ -546,7 +546,7 @@ QWidget *OptionsTabIconsetEmoticons::widget()
 
 	d->ck_useEmoticons->setWhatsThis(
 		tr("<P>Emoticons are short sequences of characters that are used to convey an emotion or idea.</P>"
-		"<P>Enable this option if you want Psi to replace common emoticons with a graphical image.</P>"
+		"<P>Enable this option if you want Synapse-IM to replace common emoticons with a graphical image.</P>"
 		"<P>For example, <B>:-)</B> would be replaced by <icon name=\"psi/smile\"></P>"));
 
 	// TODO: add QWhatsThis

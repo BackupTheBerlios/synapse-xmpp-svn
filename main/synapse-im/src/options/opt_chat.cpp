@@ -66,16 +66,16 @@ QWidget *OptionsTabChat::widget()
 		   "  You must use Shift+Enter in order to create a newline in the chat message."
 		   "  If unchecked, messages are sent by pressing Alt-S or Control-Enter, just as they are with regular messages.</P>"));
 	QWhatsThis::add(d->ck_alertOpenChats,
-		tr("Normally, Psi will not alert you when a new chat message"
+		tr("Normally, Synapse-IM will not alert you when a new chat message"
 		" is received in a chat window that is already open."
 		"  Check this option if you want to receive these alerts anyway."));
 	QWhatsThis::add(d->ck_raiseChatWindow,
-		tr("Makes Psi bring an open chat window to the front of your screen when you receive a new message."
+		tr("Makes Synapse-IM bring an open chat window to the front of your screen when you receive a new message."
 		" It does not take the keyboard focus, so it will not interfere with your work."));
 	QWhatsThis::add(d->ck_smallChats,
-		tr("Makes Psi open chat windows in compact mode."));
+		tr("Makes Synapse-IM open chat windows in compact mode."));
 	QWhatsThis::add(d->ck_tabChats,
-		tr("Makes Psi open chats in a tabbed window."));
+		tr("Makes Synapse-IM open chats in a tabbed window."));
 	QString s = tr("<P>Controls how long the chat log will be kept in memory after the"
 		" chat window is closed.</P>");
 	QWhatsThis::add(d->rb_delChatsClose, s +

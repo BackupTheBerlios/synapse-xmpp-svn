@@ -45,7 +45,7 @@ public:
  * \brief Constructor of the Options Tab Shortcuts Class
  */
 OptionsTabShortcuts::OptionsTabShortcuts(QObject *parent)
-: OptionsTab(parent, "shortcuts", "", tr("Shortcuts"), tr("Options for Psi Shortcuts"), "psi/shortcuts")
+: OptionsTab(parent, "shortcuts", "", tr("Shortcuts"), tr("Options for Synapse-IM Shortcuts"), "psi/shortcuts")
 {
 	w = 0;
 }

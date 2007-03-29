@@ -42,15 +42,15 @@ QWidget *OptionsTabEvents::widget()
 	QWhatsThis::add(d->ck_popupFiles,
 		tr("Makes new incoming file requests pop up automatically when received."));
 	QWhatsThis::add(d->ck_allowAwayPopup,
-		tr("Normally, Psi will not autopopup events when you are away.  "
+		tr("Normally, Synapse-IM will not autopopup events when you are away.  "
 		"Set this option if you want them to popup anyway."));
 	QWhatsThis::add(d->ck_allowUnlistedPopup,
-		tr("Normally, Psi will not autopopup events from users not in your roster.  "
+		tr("Normally, Synapse-IM will not autopopup events from users not in your roster.  "
 		"Set this option if you want them to popup anyway."));
 	QWhatsThis::add(d->ck_raise,
 		tr("Makes new incoming events bring the main window to the foreground."));
 	QWhatsThis::add(d->ck_ignoreNonRoster,
-		tr("Makes Psi ignore all incoming events from contacts"
+		tr("Makes Synapse-IM ignore all incoming events from contacts"
 		" not already in your list of contacts."));
 	QWhatsThis::add(d->cb_animation,
 		tr("What kind of animation should psi use for incoming event icons on the main window?"));
@@ -61,9 +61,9 @@ QWidget *OptionsTabEvents::widget()
 	QWhatsThis::add(d->rb_aAnimate,
 		tr("Animates incoming event icons on the main window as events are recieved."));*/
 	QWhatsThis::add(d->ck_autoAuth,
-		tr("Makes Psi automatically accept all authorization requests from <b>anyone</b>."));
+		tr("Makes Synapse-IM automatically accept all authorization requests from <b>anyone</b>."));
 	QWhatsThis::add(d->ck_notifyAuth,
-		tr("Makes Psi notify you when your authorization request was approved."));
+		tr("Makes Synapse-IM notify you when your authorization request was approved."));
 
 #ifndef Q_WS_MAC
 	d->cb_bounce->hide();

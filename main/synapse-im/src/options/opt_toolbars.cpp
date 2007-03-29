@@ -171,7 +171,7 @@ public:
 };
 
 OptionsTabToolbars::OptionsTabToolbars(QObject *parent) 
-: OptionsTab(parent, "toolbars", "", tr("Toolbars"), tr("Configure Psi toolbars"), "psi/toolbars")
+: OptionsTab(parent, "toolbars", "", tr("Toolbars"), tr("Configure Synapse-IM toolbars"), "psi/toolbars")
 {
 	w = 0;
 	p = new Private();

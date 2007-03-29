@@ -26,7 +26,7 @@ public:
 //----------------------------------------------------------------------------
 
 OptionsTabSound::OptionsTabSound(QObject *parent)
-: OptionsTab(parent, "sound", "", tr("Sound"), tr("Configure how Psi sounds"), "psi/playSounds")
+: OptionsTab(parent, "sound", "", tr("Sound"), tr("Configure how Synapse-IM sounds"), "psi/playSounds")
 {
 	w = 0;
 	bg_se = bg_sePlay = 0;

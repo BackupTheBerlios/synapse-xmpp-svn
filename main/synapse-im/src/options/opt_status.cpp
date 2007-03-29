@@ -47,22 +47,22 @@ QWidget *OptionsTabStatus::widget()
 	w = new OptStatusUI();
 	OptStatusUI *d = (OptStatusUI *)w;
 
-	QString s = tr("Makes Psi automatically set your status to \"away\" if your"
+	QString s = tr("Makes Synapse-IM automatically set your status to \"away\" if your"
 		" computer is idle for the specified amount of time.");
 	QWhatsThis::add(d->ck_asAway, s);
 	QWhatsThis::add(d->sb_asAway, s);
-	s = tr("Makes Psi automatically set your status to \"extended away\" if your"
+	s = tr("Makes Synapse-IM automatically set your status to \"extended away\" if your"
 		" computer is idle for the specified amount of time.");
 	QWhatsThis::add(d->ck_asXa, s);
 	QWhatsThis::add(d->sb_asXa, s);
-	s = tr("Makes Psi automatically set your status to \"offline\" if your"
+	s = tr("Makes Synapse-IM automatically set your status to \"offline\" if your"
 		" computer is idle for the specified amount of time."
 		"  This will disconnect you from the Jabber server.");
 	QWhatsThis::add(d->ck_asOffline, s);
 	QWhatsThis::add(d->sb_asOffline, s);
 
 	QWhatsThis::add(d->te_asMessage,
-		tr("Specifies an extended message to use if you allow Psi"
+		tr("Specifies an extended message to use if you allow Synapse-IM"
 		" to set your status automatically.  See options above."));
 
 	d->pb_spNew->setEnabled(TRUE);
@@ -97,7 +97,7 @@ QWidget *OptionsTabStatus::widget()
 
 	QWhatsThis::add(d->ck_askOnline,
 		tr("Jabber allows you to put extended status messages on"
-		" all status types.  Normally, Psi does not prompt you for"
+		" all status types.  Normally, Synapse-IM does not prompt you for"
 		" an extended message when you set your status to \"online\"."
 		"  Check this option if you want to have this prompt."));
 

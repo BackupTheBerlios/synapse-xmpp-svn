@@ -71,17 +71,17 @@ QWidget *OptionsTabAdvanced::widget()
 		"<P><B>Messages</B> - All messages/chats come as messages, no matter what their original form was.</P>"
 		"<P><B>Chats</B> - All messages/chats come as chats, no matter what their original form was.</P>"));
 	QWhatsThis::add(d->ck_showSubjects,
-		tr("Makes Psi show separate subject line in messages. Uncheck this if you want to save some screen space."));
+		tr("Makes Synapse-IM show separate subject line in messages. Uncheck this if you want to save some screen space."));
 	QWhatsThis::add(d->ck_showCounter,
-		tr("Makes Psi show message length counter. Check this if you want to know how long is your message. Can be useful when you're using SMS transport."));
+		tr("Makes Synapse-IM show message length counter. Check this if you want to know how long is your message. Can be useful when you're using SMS transport."));
 	QWhatsThis::add(d->ck_autoVCardOnLogin,
-		tr("By default, Psi always checks your vCard on login. If you want to save some traffic, you can uncheck this option."));
+		tr("By default, Synapse-IM always checks your vCard on login. If you want to save some traffic, you can uncheck this option."));
 	QWhatsThis::add(d->ck_rosterAnim,
-		tr("Makes Psi animate contact names in the main window when they come online."));
+		tr("Makes Synapse-IM animate contact names in the main window when they come online."));
 	QWhatsThis::add(d->ck_scrollTo,
-		tr("Makes Psi scroll the main window automatically so you can see new incoming events."));
+		tr("Makes Synapse-IM scroll the main window automatically so you can see new incoming events."));
 	QWhatsThis::add(d->ck_ignoreHeadline,
-		tr("Makes Psi ignore all incoming \"headline\" events,"
+		tr("Makes Synapse-IM ignore all incoming \"headline\" events,"
 		" like system-wide news on MSN, announcements, etc."));
 
 	connect(d->ck_messageevents,SIGNAL(toggled(bool)),d->ck_inactiveevents,SLOT(setEnabled(bool)));
