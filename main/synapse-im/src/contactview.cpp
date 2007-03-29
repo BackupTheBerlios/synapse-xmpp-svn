@@ -1275,32 +1275,22 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 			}
 		}
 
-		if(!isPrivate && PsiOptions::instance()->getOption("options.ui.message.enabled").toBool())
+		if(!isPrivate && (rl.size() > 1) && PsiOptions::instance()->getOption("options.ui.message.enabled").toBool())
 			pm.insertItem(tr("Send message to"), s2m, 17);
 
 		d->cv->qa_chat->setIconSet(IconsetFactory::iconPixmap("psi/start-chat"));
 		d->cv->qa_chat->addTo(&pm);
 
-		if(!isPrivate)
+		if(!isPrivate && (rl.size() > 1))
 			pm.insertItem(tr("Open chat to"), c2m, 18);
 
 #ifdef WHITEBOARDING
 		d->cv->qa_wb->setIconSet(IconsetFactory::iconPixmap("psi/whiteboard"));
 		d->cv->qa_wb->addTo(&pm);
 
-		if(!isPrivate)
+		if(!isPrivate && (rl.size() > 1))
 			pm.insertItem(tr("Open a whiteboard to"), wb2m, 19);
 #endif
-		
-		if(!isPrivate) {
-			if(rl.isEmpty()) {
-				pm.setItemEnabled(17, false);
-				pm.setItemEnabled(18, false);
-#ifdef WHITEBOARDING
-				pm.setItemEnabled(19, false);
-#endif
-			}
-		}
 		
 		// TODO: Add executeCommand() thing
 		if(!isPrivate) {
@@ -1311,7 +1301,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		int base_hidden = base_sendto + at_sendto;
 		int at_hidden = 0;
 		QStringList hc;
-		if(!isPrivate && PsiOptions::instance()->getOption("options.ui.menu.contact.active-chats").toBool()) {
+		if(!isPrivate && (rl.size() > 1) && PsiOptions::instance()->getOption("options.ui.menu.contact.active-chats").toBool()) {
 			hc = d->pa->hiddenChats(u->jid());
 			ResourceMenu *cm = new ResourceMenu(&pm);
 			for(QStringList::ConstIterator it = hc.begin(); it != hc.end(); ++it) {
