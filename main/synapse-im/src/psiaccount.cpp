@@ -77,7 +77,7 @@
 #include "registrationdlg.h"
 #include "searchdlg.h"
 #include "discodlg.h"
-#include "eventdb.h"
+#include "historydb.h"
 #include "accountmodifydlg.h"
 #include "passphrasedlg.h"
 #include "voicecaller.h"
@@ -852,10 +852,10 @@ EventQueue *PsiAccount::eventQueue() const
 	return d->eventQueue;
 }
 
-EDB *PsiAccount::edb() const
+/*EDB *PsiAccount::edb() const
 {
 	return d->psi->edb();
-}
+}*/
 
 PsiCon *PsiAccount::psi() const
 {
@@ -4186,16 +4186,17 @@ void PsiAccount::chatMessagesRead(const Jid &j)
 
 void PsiAccount::logEvent(const Jid &j, PsiEvent *e)
 {
-	EDBHandle *h = new EDBHandle(d->psi->edb());
+	HistoryDB::instance()->logEvent(j.bare(),e);
+/*	EDBHandle *h = new EDBHandle(d->psi->edb());
 	connect(h, SIGNAL(finished()), SLOT(edb_finished()));
-	h->append(j, e);
+	h->append(j, e);*/
 }
 
-void PsiAccount::edb_finished()
+/*void PsiAccount::edb_finished()
 {
 	EDBHandle *h = (EDBHandle *)sender();
 	delete h;
-}
+}*/
 
 void PsiAccount::openGroupChat(const Jid &j)
 {

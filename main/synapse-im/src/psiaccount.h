@@ -107,7 +107,7 @@ public:
 	XMPP::Client *client() const;
 	ContactProfile *contactProfile() const;
 	EventQueue *eventQueue() const;
-	EDB *edb() const;
+//	EDB *edb() const;
 	PsiCon *psi() const;
 	AvatarFactory *avatarFactory() const;
 	GArchive *gArchive() const;
@@ -336,7 +336,7 @@ private slots:
 	void chatMessagesRead(const Jid &);
 
 	void slotCheckVCard();
-	void edb_finished();
+//	void edb_finished();
 	//void pgpToggled(bool);
 	void pgpKeysUpdated();
 

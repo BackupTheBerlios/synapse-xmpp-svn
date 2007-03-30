@@ -72,7 +72,7 @@ public:
 
 	PsiContactList* contactList() const;
 	ContactView *contactView() const;
-	EDB *edb() const;
+//	EDB *edb() const;
 	TuneController* tuneController() const;
 	ProxyManager *proxy() const;
 	FileTransDlg *ftdlg() const;

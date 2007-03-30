@@ -7,7 +7,7 @@ TEMPLATE = app
 TARGET    = psi
 CONFIG  += qt thread x11 
 
-QT += xml network qt3support
+QT += xml network qt3support sql
 
 #CONFIG += use_crash
 DEFINES += QT_STATICPLUGIN

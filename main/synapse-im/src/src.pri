@@ -156,7 +156,7 @@ HEADERS += \
 	$$PWD/groupchatdlg.h \
 	$$PWD/infodlg.h \
 	$$PWD/translationmanager.h \
-	$$PWD/eventdb.h \
+	$$PWD/historydb.h \
 	$$PWD/historydlg.h \
 	$$PWD/tipdlg.h \
 	$$PWD/searchdlg.h \
@@ -278,7 +278,7 @@ SOURCES += \
 	$$PWD/infodlg.cpp \
 	$$PWD/translationmanager.cpp \
 	$$PWD/certutil.cpp \
-	$$PWD/eventdb.cpp \
+	$$PWD/historydb.cpp \
 	$$PWD/historydlg.cpp \
 	$$PWD/searchdlg.cpp \
 	$$PWD/registrationdlg.cpp \
@@ -387,6 +387,7 @@ INTERFACES += \
 	$$PWD/accountreg.ui \
 	$$PWD/accountremove.ui \
 	$$PWD/accountmodify.ui \
+	$$PWD/historydlgui.ui \
 	$$PWD/changepw.ui \
 	$$PWD/addurl.ui \
 	$$PWD/adduser.ui \

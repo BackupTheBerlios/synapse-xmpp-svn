@@ -53,7 +53,6 @@
 #include "userlist.h"
 #include "eventdlg.h"
 #include "pgputil.h"
-#include "eventdb.h"
 #include "proxy.h"
 #ifdef PSIMNG
 #include "psimng.h"
@@ -237,7 +236,7 @@ public:
 	Q3PtrList<ChatDlg> tabControlledChats;
 	int eventId;
 	QStringList recentGCList, recentBrowseList, recentNodeList;
-	EDB *edb;
+//	EDB *edb;
 	S5BServer *s5bServer;
 	ProxyManager *proxy;
 	IconSelectPopup *iconSelect;
@@ -268,7 +267,7 @@ PsiCon::PsiCon()
 	d->qcaEventHandler = 0;
 
 	d->eventId = 0;
-	d->edb = new EDBFlatFile;
+//	d->edb = new EDBFlatFile;
 
 	d->s5bServer = 0;
 	d->proxy = 0;
@@ -283,7 +282,7 @@ PsiCon::~PsiCon()
 	deinit();
 
 	delete d->actionList;
-	delete d->edb;
+//	delete d->edb;
 	delete d->defaultMenuBar;
 	delete d;
 }
@@ -516,10 +515,10 @@ PsiContactList* PsiCon::contactList() const
 	return d->contactList;
 }
 
-EDB *PsiCon::edb() const
+/*EDB *PsiCon::edb() const
 {
 	return d->edb;
-}
+}*/
 
 ProxyManager *PsiCon::proxy() const
 {
