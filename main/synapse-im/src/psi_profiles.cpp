@@ -563,6 +563,10 @@ void UserProfile::reset()
 	prefs.color[cGroupBack] = QColor("#fefefe");
 	prefs.color[cAnimFront] = QColor("#ff5500");
 	prefs.color[cAnimBack] 	= QColor("#ffffff");
+	prefs.color[cChatContactName] = QColor("#0000ff");
+	prefs.color[cChatMyName] = QColor("#ff0000");
+	prefs.color[cChatSystem] = QColor("#00A000");
+	prefs.color[cChatSpooled] = QColor("#008000");
 
 	prefs.font[fRoster] = QApplication::font().toString();
 	prefs.font[fMessage] = QApplication::font().toString();
@@ -1045,7 +1049,11 @@ bool UserProfile::toFile(const QString &fname)
 			tag.appendChild(textTag(doc, "groupfore", prefs.color[cGroupFore].name() ));
 			tag.appendChild(textTag(doc, "groupback", prefs.color[cGroupBack].name() ));
 			tag.appendChild(textTag(doc, "animfront", prefs.color[cAnimFront].name() ));
-			tag.appendChild(textTag(doc, "animback", prefs.color[cAnimBack].name() ));
+			tag.appendChild(textTag(doc, "animback", prefs.color[cChatContactName].name() ));
+			tag.appendChild(textTag(doc, "chatcontactnick", prefs.color[cChatContactName].name() ));
+			tag.appendChild(textTag(doc, "chatmynick", prefs.color[cChatMyName].name() ));
+			tag.appendChild(textTag(doc, "chatsystem", prefs.color[cChatSystem].name() ));
+			tag.appendChild(textTag(doc, "chatspooled", prefs.color[cChatSpooled].name() ));
 		}
 
 		{
@@ -1604,6 +1612,10 @@ bool UserProfile::fromFile(const QString &fname)
 				readColorEntry(tag, "profileback", &prefs.color[cProfileBack]);
 				readColorEntry(tag, "animfront", &prefs.color[cAnimFront]);
 				readColorEntry(tag, "animback", &prefs.color[cAnimBack]);
+				readColorEntry(tag, "chatcontactnick", &prefs.color[cChatContactName]);
+				readColorEntry(tag, "chatmynick", &prefs.color[cChatMyName]);
+				readColorEntry(tag, "chatsystem", &prefs.color[cChatSystem]);
+				readColorEntry(tag, "chatspooled", &prefs.color[cChatSpooled]);
 			}
 
 			tag = findSubTag(p_lnf, "fonts", &found);

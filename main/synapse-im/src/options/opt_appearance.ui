@@ -1,15 +1,12 @@
 <ui version="4.0" >
- <author></author>
- <comment></comment>
- <exportmacro></exportmacro>
  <class>OptAppearance</class>
  <widget class="QWidget" name="OptAppearance" >
   <property name="geometry" >
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>402</width>
-    <height>333</height>
+    <width>415</width>
+    <height>452</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -34,31 +31,17 @@
       <property name="spacing" >
        <number>6</number>
       </property>
-      <item row="0" column="3" >
-       <widget class="QLabel" name="tl_cOnline" >
+      <item row="4" column="3" >
+       <widget class="QLabel" name="tl_cListBack" >
         <property name="text" >
-         <string>Online contacts</string>
+         <string>Contact list background</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="3" >
-       <widget class="QLabel" name="TextLabel1_2" >
+      <item row="5" column="0" >
+       <widget class="QLabel" name="tl_cAnimBack" >
         <property name="text" >
-         <string>Away contacts</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3" >
-       <widget class="QLabel" name="tl_cDND" >
-        <property name="text" >
-         <string>DND contacts</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3" >
-       <widget class="QLabel" name="tl_cOffline" >
-        <property name="text" >
-         <string>Offline contacts</string>
+         <string>Nick animation background</string>
         </property>
        </widget>
       </item>
@@ -74,97 +57,6 @@
          </size>
         </property>
        </spacer>
-      </item>
-      <item row="4" column="3" >
-       <widget class="QLabel" name="tl_cListBack" >
-        <property name="text" >
-         <string>Contact list background</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="3" >
-       <widget class="QLabel" name="tl_cStatus" >
-        <property name="text" >
-         <string>Status messages</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4" >
-       <widget class="QToolButton" name="pb_cOnline" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>0</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize" >
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="text" >
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="4" >
-       <widget class="QToolButton" name="pb_cAway" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>0</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize" >
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="text" >
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" >
-       <widget class="QLabel" name="tl_cProfileBack" >
-        <property name="text" >
-         <string>Account heading background</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0" >
-       <widget class="QLabel" name="tl_cGroupBack" >
-        <property name="text" >
-         <string>Group heading background</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1" >
-       <widget class="QToolButton" name="pb_cAnimBack" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>0</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize" >
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="text" >
-         <string/>
-        </property>
-       </widget>
       </item>
       <item row="1" column="1" >
        <widget class="QToolButton" name="pb_cProfileBack" >
@@ -187,141 +79,8 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1" >
-       <widget class="QToolButton" name="pb_cGroupBack" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>0</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize" >
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="text" >
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" >
-       <widget class="QToolButton" name="pb_cProfileFore" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>0</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize" >
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="text" >
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1" >
-       <widget class="QToolButton" name="pb_cGroupFore" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>0</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize" >
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="text" >
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1" >
-       <widget class="QToolButton" name="pb_cAnimFront" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>0</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize" >
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="text" >
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" >
-       <widget class="QLabel" name="tl_cAnimFront" >
-        <property name="text" >
-         <string>Nick animation foreground</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0" >
-       <widget class="QLabel" name="tl_cAnimBack" >
-        <property name="text" >
-         <string>Nick animation background</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" >
-       <widget class="QLabel" name="tl_cProfileFore" >
-        <property name="text" >
-         <string>Account heading foreground</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" >
-       <widget class="QLabel" name="tl_cGroupFore" >
-        <property name="text" >
-         <string>Group heading foreground</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="4" >
        <widget class="QToolButton" name="pb_cDND" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>0</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize" >
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-        <property name="text" >
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="4" >
-       <widget class="QToolButton" name="pb_cOffline" >
         <property name="sizePolicy" >
          <sizepolicy>
           <hsizetype>0</hsizetype>
@@ -362,6 +121,249 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="0" >
+       <widget class="QLabel" name="tl_cAnimFront" >
+        <property name="text" >
+         <string>Nick animation foreground</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4" >
+       <widget class="QToolButton" name="pb_cAway" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>0</hsizetype>
+          <vsizetype>0</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" >
+       <widget class="QLabel" name="tl_cGroupBack" >
+        <property name="text" >
+         <string>Group heading background</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1" >
+       <widget class="QToolButton" name="pb_cAnimBack" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>0</hsizetype>
+          <vsizetype>0</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" >
+       <widget class="QLabel" name="s_cChatContactName" >
+        <property name="text" >
+         <string>Contacts nick in chat</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3" >
+       <widget class="QLabel" name="tl_cStatus" >
+        <property name="text" >
+         <string>Status messages</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3" >
+       <widget class="QLabel" name="s_cChatSystem" >
+        <property name="text" >
+         <string>System messages</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="4" >
+       <widget class="QToolButton" name="pb_cChatSystem" >
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4" >
+       <widget class="QToolButton" name="pb_cOnline" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>0</hsizetype>
+          <vsizetype>0</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <widget class="QLabel" name="tl_cGroupFore" >
+        <property name="text" >
+         <string>Group heading foreground</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" >
+       <widget class="QToolButton" name="pb_cAnimFront" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>0</hsizetype>
+          <vsizetype>0</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" >
+       <widget class="QToolButton" name="pb_cGroupFore" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>0</hsizetype>
+          <vsizetype>0</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1" >
+       <widget class="QToolButton" name="pb_cChatContactName" >
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QToolButton" name="pb_cProfileFore" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>0</hsizetype>
+          <vsizetype>0</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3" >
+       <widget class="QLabel" name="tl_cOffline" >
+        <property name="text" >
+         <string>Offline contacts</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3" >
+       <widget class="QLabel" name="TextLabel1_2" >
+        <property name="text" >
+         <string>Away contacts</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4" >
+       <widget class="QToolButton" name="pb_cOffline" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>0</hsizetype>
+          <vsizetype>0</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="tl_cProfileBack" >
+        <property name="text" >
+         <string>Account heading background</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" >
+       <widget class="QLabel" name="tl_cOnline" >
+        <property name="text" >
+         <string>Online contacts</string>
+        </property>
+       </widget>
+      </item>
       <item row="5" column="4" >
        <widget class="QToolButton" name="pb_cStatus" >
         <property name="sizePolicy" >
@@ -383,6 +385,81 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="1" >
+       <widget class="QToolButton" name="pb_cGroupBack" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>0</hsizetype>
+          <vsizetype>0</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" >
+       <widget class="QLabel" name="tl_cProfileFore" >
+        <property name="text" >
+         <string>Account heading foreground</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3" >
+       <widget class="QLabel" name="tl_cDND" >
+        <property name="text" >
+         <string>DND contacts</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1" >
+       <widget class="QToolButton" name="pb_cChatMyName" >
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="4" >
+       <widget class="QToolButton" name="pb_cChatSpooled" >
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" >
+       <widget class="QLabel" name="s_cChatMyName" >
+        <property name="text" >
+         <string>Your nick in chat</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="3" >
+       <widget class="QLabel" name="s_cChatSpooled" >
+        <property name="text" >
+         <string>Spooled messages</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -399,7 +476,7 @@
        <number>6</number>
       </property>
       <item row="2" column="1" colspan="3" >
-       <widget class="FontLabel" name="le_fChat" />
+       <widget class="FontLabel" native="1" name="le_fChat" />
       </item>
       <item row="2" column="0" >
        <widget class="QLabel" name="tl_fChat" >
@@ -467,32 +544,32 @@
        </widget>
       </item>
       <item row="3" column="1" colspan="3" >
-       <widget class="FontLabel" name="le_fPopup" />
+       <widget class="FontLabel" native="1" name="le_fPopup" />
       </item>
       <item row="1" column="1" colspan="3" >
-       <widget class="FontLabel" name="le_fMessage" />
+       <widget class="FontLabel" native="1" name="le_fMessage" />
       </item>
       <item row="0" column="1" colspan="3" >
-       <widget class="FontLabel" name="le_fRoster" />
+       <widget class="FontLabel" native="1" name="le_fRoster" />
       </item>
       <item row="4" column="0" >
        <widget class="QLabel" name="tl_fStatus" >
         <property name="text" >
-	 <string>Status</string>
-	</property>
+         <string>Status</string>
+        </property>
        </widget>
       </item>
       <item row="4" column="1" colspan="3" >
-       <widget class="FontLabel" name="le_fStatus" />
+       <widget class="FontLabel" native="1" name="le_fStatus" />
       </item>
       <item row="4" column="4" >
-       <widget class="QPushButton" name="pb_fStatus">
+       <widget class="QPushButton" name="pb_fStatus" >
         <property name="enabled" >
-	 <bool>true</bool>
-	</property>
-        <property name="text">
-	 <string>Choose</string>
-	</property>
+         <bool>true</bool>
+        </property>
+        <property name="text" >
+         <string>Choose</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -501,14 +578,11 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11" />
- <pixmapfunction></pixmapfunction>
  <customwidgets>
   <customwidget>
    <class>FontLabel</class>
-   <extends></extends>
+   <extends>QWidget</extends>
    <header>opt_appearance.h</header>
-   <container>0</container>
-   <pixmap></pixmap>
   </customwidget>
  </customwidgets>
  <tabstops>

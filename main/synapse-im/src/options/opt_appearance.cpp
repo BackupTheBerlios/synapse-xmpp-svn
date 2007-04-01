@@ -265,6 +265,10 @@ QWidget *OptionsTabAppearanceGeneral::widget()
 	bg_color->insert(d->pb_cAnimFront);
 	bg_color->insert(d->pb_cAnimBack);
 	bg_color->insert(d->pb_cStatus);
+	bg_color->insert(d->pb_cChatContactName);
+	bg_color->insert(d->pb_cChatMyName);
+	bg_color->insert(d->pb_cChatSystem);
+	bg_color->insert(d->pb_cChatSpooled);
 	connect(bg_color, SIGNAL(buttonClicked(QAbstractButton*)), SLOT(chooseColor(QAbstractButton*)));
 
 	QString s = tr("Specifies the text color for a contact name in the main window when that user is \"%1\".");
@@ -288,6 +292,14 @@ QWidget *OptionsTabAppearanceGeneral::widget()
 		tr("Specifies the foreground animation color for nicks."));
 	QWhatsThis::add(d->pb_cAnimBack,
 		tr("Specifies the background animation color for nicks."));
+	QWhatsThis::add(d->pb_cChatContactName,
+		tr("Specifies the foreground color for contacts nicks in chat dialog."));
+	QWhatsThis::add(d->pb_cChatMyName,
+		tr("Specifies the foreground color for your nick in chat dialog."));
+	QWhatsThis::add(d->pb_cChatSystem,
+		tr("Specifies the foreground color for sytem messages in chat dialog."));
+	QWhatsThis::add(d->pb_cChatSpooled,
+		tr("Specifies the foreground color for spooled messages in chat dialog."));
 
 	// Avatars
 	//QWhatsThis::add(d->ck_avatarsChatdlg,

@@ -47,6 +47,10 @@ enum {
 	cAnimFront, 
 	cAnimBack,
 	cStatus,
+	cChatContactName,
+	cChatMyName,
+	cChatSystem,
+	cChatSpooled,
 	cNumColors // A guard to store the number of colors
 };
 enum { fRoster, fMessage, fChat, fPopup, fStatus };

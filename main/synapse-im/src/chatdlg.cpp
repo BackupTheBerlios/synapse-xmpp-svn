@@ -1068,7 +1068,7 @@ void ChatDlg::incomingMessage(const Message &m)
 void ChatDlg::appendSysMsg(const QString &str)
 {
 	QString timestr = ui_.log->formatTimeStamp(QDateTime::currentDateTime());
-	ui_.log->appendText(QString("<font color=\"#00A000\">[%1]").arg(timestr) + QString(" *** %1</font>").arg(str));
+	ui_.log->appendText(QString("<font color=\"%1\">[%2]").arg(option.color[cChatSystem].name()).arg(timestr) + QString(" *** %1</font>").arg(str));
 }
 
 void ChatDlg::appendMessage(const Message &m, bool local)
@@ -1077,14 +1077,14 @@ void ChatDlg::appendMessage(const Message &m, bool local)
 
 	if(local) {
 		who = d->pa->nick();
-		color = "#FF0000";
+		color = option.color[cChatMyName].name();
 	}
 	else {
 		who = d->dispNick;
-		color = "#0000FF";
+		color = option.color[cChatContactName].name();
 	}
 	if(m.spooled())
-		color = "#008000";
+		color = option.color[cChatSpooled].name();
 
 	// figure out the encryption state
 	bool encChanged = false;
