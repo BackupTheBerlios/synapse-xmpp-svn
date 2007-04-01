@@ -86,6 +86,7 @@
 					<size comment="Maximum size of the avatar" type="int">32</size>
 					<show comment="Show avatars in the chat dialog" type="bool">true</show>
 				</avatars>
+				<style comment="Style of chat dialog" type="QString">Synapse-IM</style>
 			</chat>
 			<contactlist comment="Contact list options">
 				<SynapseStyle type="bool" comment="New view on roster">true</SynapseStyle>

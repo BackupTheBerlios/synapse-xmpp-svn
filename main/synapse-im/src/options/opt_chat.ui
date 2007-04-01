@@ -1,7 +1,4 @@
 <ui version="4.0" >
- <author></author>
- <comment></comment>
- <exportmacro></exportmacro>
  <class>OptChat</class>
  <widget class="QWidget" name="OptChat" >
   <property name="geometry" >
@@ -9,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>319</width>
-    <height>375</height>
+    <height>481</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -65,13 +62,49 @@
     </widget>
    </item>
    <item>
+    <layout class="QHBoxLayout" >
+     <property name="margin" >
+      <number>0</number>
+     </property>
+     <property name="spacing" >
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="s_chatStyle" >
+       <property name="text" >
+        <string>Style of chat</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cb_chatStyle" >
+       <item>
+        <property name="text" >
+         <string>Synapse-IM</string>
+        </property>
+       </item>
+       <item>
+        <property name="text" >
+         <string>Psi (old)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text" >
+         <string>Contact says</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox18" >
      <property name="title" >
       <string>Default Action</string>
      </property>
      <layout class="QHBoxLayout" >
       <property name="margin" >
-       <number>-1</number>
+       <number>9</number>
       </property>
       <property name="spacing" >
        <number>6</number>

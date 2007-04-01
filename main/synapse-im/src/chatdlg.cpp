@@ -1068,7 +1068,12 @@ void ChatDlg::incomingMessage(const Message &m)
 void ChatDlg::appendSysMsg(const QString &str)
 {
 	QString timestr = ui_.log->formatTimeStamp(QDateTime::currentDateTime());
-	ui_.log->appendText(QString("<font color=\"%1\">[%2]").arg(option.color[cChatSystem].name()).arg(timestr) + QString(" *** %1</font>").arg(str));
+	QString style = PsiOptions::instance()->getOption("options.ui.chat.style").toString();
+	if (style == "Synapse-IM")
+		ui_.log->appendText(QString("<hr width=\"98%\"/><table border=\"0\" width=\"100%\"><tr><td><div style=\"color: %1;\"> *** ").arg(option.color[cChatSystem].name()) + str + QString(" ***</div></td><td><div style=\"color: %1; vertical-alignment: baseline\" align=\"right\">").arg(option.color[cChatSystem].name()) + timestr + QString("</div></td></tr></table><hr width=\"98%\"/>"));
+	else
+		ui_.log->appendText(QString("<font color=\"%1\">[%2]").arg(option.color[cChatSystem].name()).arg(timestr) + QString(" *** %1</font>").arg(str));
+
 }
 
 void ChatDlg::appendMessage(const Message &m, bool local)
@@ -1152,10 +1157,19 @@ void ChatDlg::appendMessage(const Message &m, bool local)
 		ui_.log->appendText(QString("<span style=\"color: %1\">").arg(color) + QString("[%1]").arg(timestr) + QString(" *%1 ").arg(who) + txt + "</span>");
 	}
 	else {
-		if(option.chatSays)
-			ui_.log->appendText(QString("<p style=\"color: %1\">").arg(color) + QString("[%1] ").arg(timestr) + tr("%1 says:").arg(who) + "</p>" + txt);
-		else
+		QString style = PsiOptions::instance()->getOption("options.ui.chat.style").toString();
+		if (style == "Synapse-IM")
+		{
+			ui_.log->appendText(QString("<table border=\"0\" width=\"100%\"><tr><td><div style=\"color: %1; font-size: large\" align=\"left\">").arg(color) + who + QString("</div></td><td><div style=\"color: %1; vertical-alignment: baseline\" align=\"right\">").arg(color) + timestr + QString("</div></td></tr></table><span style=\"margin-left: 5px; margin-right: 5px; margin-top: 0px;\">") + txt + QString("</span>"));
+		}
+		else if (style == "Psi (old)")
+		{
 			ui_.log->appendText(QString("<span style=\"color: %1\">").arg(color) + QString("[%1] &lt;").arg(timestr) + who + QString("&gt;</span> ") + txt);
+		}
+		else if (style == "Contact says")
+		{
+			ui_.log->appendText(QString("<p style=\"color: %1\">").arg(color) + QString("[%1] ").arg(timestr) + tr("%1 says:").arg(who) + "</p>" + txt);
+		}
 	}
 	if(!m.subject().isEmpty()) {
 		ui_.log->appendText(QString("<b>") + tr("Subject:") + "</b> " + QString("%1").arg(TextUtil::plain2rich(m.subject())));

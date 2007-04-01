@@ -105,6 +105,7 @@ void OptionsTabChat::applyOptions(Options *opt)
 	opt->delChats        = bg_delChats->buttons().indexOf( bg_delChats->checkedButton() );
 	opt->useTabs		 = d->ck_tabChats->isChecked();
 	opt->chatLineEdit    = d->ck_autoResize->isChecked();
+	PsiOptions::instance()->setOption("options.ui.chat.style",d->cb_chatStyle->currentText());
 	
 	// Soft return.
 	// Only update this if the value actually changed, or else custom presets
@@ -137,5 +138,8 @@ void OptionsTabChat::restoreOptions(const Options *opt)
 	d->ck_autoResize->setChecked( opt->chatLineEdit );
 	bg_delChats->buttons()[opt->delChats]->setChecked(true);
 	d->ck_chatSoftReturn->setChecked(ShortcutManager::instance()->shortcuts("chat.send").contains(QKeySequence(Qt::Key_Return)));
+	for(int i=0; i< d->cb_chatStyle->count(); i++)
+	if(d->cb_chatStyle->itemText(i) == PsiOptions::instance()->getOption("options.ui.chat.style").toString())
+		d->cb_chatStyle->setCurrentIndex(i);
 	
 }
