@@ -46,7 +46,8 @@ DateItem::DateItem(QDate date)
 {
 	date_ = date;
 	setText(0,date.toString(Qt::SystemLocaleDate));
-	setText(1,date.toString(Qt::ISODate));
+	QString sort = QString(date.year()* 10000 +date.month()*100 + date.day());
+	setText(1,sort);
 }
 
 QDate DateItem::date()
@@ -72,8 +73,8 @@ HistoryDlg::HistoryDlg(const XMPP::Jid& j, PsiAccount* pa)
 
 
 	DateTree->setHeaderLabel(tr("Date"));
-	DateTree->sortItems(1,Qt::DescendingOrder);
 	DateTree->setSortingEnabled(true);
+	DateTree->setColumnHidden(1,true);
 
 	EventsTree->setColumnCount(4);
 	QStringList headers;
@@ -92,6 +93,7 @@ HistoryDlg::HistoryDlg(const XMPP::Jid& j, PsiAccount* pa)
 	HistoryDB *h = HistoryDB::instance();
 	h->getDates(this, DateTree, jid_,QDate::currentDate());
 	loadPage(QDate::currentDate().toString());
+	DateTree->sortItems(1,Qt::DescendingOrder);
 
 	EventsTree->resizeColumnToContents(0);
 	EventsTree->resizeColumnToContents(1);
@@ -137,7 +139,13 @@ void HistoryDlg::doLatest()
 {
 	DateItem *di = (DateItem *)DateTree->takeTopLevelItem(0);
 	if(di!=NULL)
+	{
 		loadPage(di->date().toString(),findText);
+		HistoryDB *h = HistoryDB::instance();
+		DateTree->clear();
+		h->getDates(this, DateTree, jid_,di->date());
+		DateTree->sortByColumn(1,Qt::DescendingOrder);
+	}
 }
 
 void HistoryDlg::doFind()

@@ -12,28 +12,6 @@
   <property name="windowTitle" >
    <string>Dialog</string>
   </property>
-  <widget class="QTreeWidget" name="DateTree" >
-   <property name="geometry" >
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>131</width>
-     <height>361</height>
-    </rect>
-   </property>
-   <property name="contextMenuPolicy" >
-    <enum>Qt::NoContextMenu</enum>
-   </property>
-   <property name="horizontalScrollBarPolicy" >
-    <enum>Qt::ScrollBarAlwaysOff</enum>
-   </property>
-   <property name="rootIsDecorated" >
-    <bool>false</bool>
-   </property>
-   <property name="itemsExpandable" >
-    <bool>false</bool>
-   </property>
-  </widget>
   <widget class="QPushButton" name="pb_latest" >
    <property name="geometry" >
     <rect>
@@ -143,6 +121,41 @@
      <height>23</height>
     </rect>
    </property>
+  </widget>
+  <widget class="QTreeWidget" name="DateTree" >
+   <property name="geometry" >
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>131</width>
+     <height>361</height>
+    </rect>
+   </property>
+   <property name="contextMenuPolicy" >
+    <enum>Qt::NoContextMenu</enum>
+   </property>
+   <property name="horizontalScrollBarPolicy" >
+    <enum>Qt::ScrollBarAlwaysOff</enum>
+   </property>
+   <property name="rootIsDecorated" >
+    <bool>false</bool>
+   </property>
+   <property name="itemsExpandable" >
+    <bool>false</bool>
+   </property>
+   <property name="columnCount" >
+    <number>2</number>
+   </property>
+   <column>
+    <property name="text" >
+     <string>1</string>
+    </property>
+   </column>
+   <column>
+    <property name="text" >
+     <string>1</string>
+    </property>
+   </column>
   </widget>
  </widget>
  <resources/>
