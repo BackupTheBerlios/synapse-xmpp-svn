@@ -84,16 +84,15 @@ HistoryDlg::HistoryDlg(const XMPP::Jid& j, PsiAccount* pa)
 	EventsTree->setSortingEnabled(true);
 
 	connect(EventsTree, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), SLOT(actionOpenEvent(QTreeWidgetItem *, int)));
-	connect(pb_latest, SIGNAL(clicked()), SLOT(doLatest()));
+	connect(tb_previousMonth, SIGNAL(clicked()), SLOT(doPrev()));
+	connect(tb_latest, SIGNAL(clicked()), SLOT(doLatest()));
+	connect(tb_nextMonth, SIGNAL(clicked()), SLOT(doNext()));
 	connect(pb_find, SIGNAL(clicked()), SLOT(doFind()));
 	connect(pb_export, SIGNAL(clicked()), SLOT(doExport()));
 	connect(pb_close, SIGNAL(clicked()), SLOT(close()));
 
 	jid_ = j.bare();
-	HistoryDB *h = HistoryDB::instance();
-	h->getDates(this, DateTree, jid_,QDate::currentDate());
-	loadPage(QDate::currentDate().toString());
-	DateTree->sortItems(1,Qt::DescendingOrder);
+	doLatest();
 
 	EventsTree->resizeColumnToContents(0);
 	EventsTree->resizeColumnToContents(1);
@@ -116,7 +115,8 @@ void HistoryDlg::loadPage(QString date,QString searchFor)
 
 void HistoryDlg::dateSelected(QTreeWidgetItem *item, int column)
 {
-	loadPage(((DateItem*)item)->date().toString(),findText);
+	lookDate = ((DateItem*)item)->date();
+	loadPage(lookDate.toString(),findText);
 }
 
 void HistoryDlg::actionOpenEvent(QTreeWidgetItem *item, int column)
@@ -135,29 +135,54 @@ void HistoryDlg::actionOpenEvent(QTreeWidgetItem *item, int column)
 	openEvent(me);
 }
 
+void HistoryDlg::doMonths()
+{
+	HistoryDB *h = HistoryDB::instance();
+	DateTree->clear();
+	h->getDates(this, DateTree, jid_,lookDate, findText);
+	DateTree->sortByColumn(1,Qt::DescendingOrder);
+	DateItem *di = (DateItem*)DateTree->takeTopLevelItem(0);
+	if(di)
+	{
+		printf("Selected.\n");
+		lookDate = di->date();
+		DateTree->insertTopLevelItem(0,di);
+		DateTree->setCurrentItem(di);
+		loadPage(lookDate.toString(),findText);
+	}
+}
+
+void HistoryDlg::doNext()
+{
+	lookDate = lookDate.addMonths(1);
+	doMonths();
+}
+
 void HistoryDlg::doLatest()
 {
-	DateItem *di = (DateItem *)DateTree->takeTopLevelItem(0);
-	if(di!=NULL)
-	{
-		loadPage(di->date().toString(),findText);
-		HistoryDB *h = HistoryDB::instance();
-		DateTree->clear();
-		h->getDates(this, DateTree, jid_,di->date());
-		DateTree->sortByColumn(1,Qt::DescendingOrder);
-	}
+	lookDate = QDate::currentDate();
+	doMonths();
+}
+
+void HistoryDlg::doPrev()
+{
+	lookDate = lookDate.addMonths(-1);
+	doMonths();
 }
 
 void HistoryDlg::doFind()
 {
-	DateItem *di = (DateItem*)DateTree->currentItem();
 	DateTree->clear();
 	findText = le_find->text();
 	HistoryDB *h = HistoryDB::instance();
-	if(di!=NULL)
+	h->getDatesMatching(this, DateTree, jid_, findText);
+	DateItem *di = (DateItem*)DateTree->takeTopLevelItem(0);
+	if(di)
 	{
-		h->getDates(this, DateTree, jid_, di->date(), findText);
-		loadPage(di->date().toString(),findText);
+		DateTree->insertTopLevelItem(0,di);
+		DateTree->setCurrentItem(di);
+		lookDate = di->date();
+		loadPage(lookDate.toString(),findText);
 	}
 }
 
@@ -186,8 +211,8 @@ void HistoryDlg::doExport()
 
 		option.lastSavePath = fi.dirPath();
 		QDate date;
-		if(y!=0 && (DateTree->currentItem() != NULL))
-			date = ((DateItem*)DateTree->currentItem())->date();
+		if(y!=0)
+			date = lookDate;
 		HistoryDB::instance()->exportHistory(pa_, jidFull_, str, date);
 		break;
 	}

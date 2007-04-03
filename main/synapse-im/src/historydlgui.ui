@@ -12,30 +12,97 @@
   <property name="windowTitle" >
    <string>Dialog</string>
   </property>
-  <widget class="QPushButton" name="pb_latest" >
+  <widget class="QLineEdit" name="le_find" >
    <property name="geometry" >
     <rect>
      <x>150</x>
-     <y>320</y>
-     <width>75</width>
-     <height>25</height>
+     <y>350</y>
+     <width>231</width>
+     <height>23</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QTreeWidget" name="DateTree" >
+   <property name="geometry" >
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>131</width>
+     <height>331</height>
+    </rect>
+   </property>
+   <property name="contextMenuPolicy" >
+    <enum>Qt::NoContextMenu</enum>
+   </property>
+   <property name="horizontalScrollBarPolicy" >
+    <enum>Qt::ScrollBarAlwaysOff</enum>
+   </property>
+   <property name="rootIsDecorated" >
+    <bool>false</bool>
+   </property>
+   <property name="itemsExpandable" >
+    <bool>false</bool>
+   </property>
+   <property name="columnCount" >
+    <number>2</number>
+   </property>
+   <column>
+    <property name="text" >
+     <string>1</string>
+    </property>
+   </column>
+   <column>
+    <property name="text" >
+     <string>1</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QToolButton" name="tb_previousMonth" >
+   <property name="geometry" >
+    <rect>
+     <x>90</x>
+     <y>350</y>
+     <width>25</width>
+     <height>24</height>
     </rect>
    </property>
    <property name="text" >
-    <string>&amp;Latest</string>
+    <string>...</string>
+   </property>
+   <property name="icon" >
+    <iconset resource="../iconsets.qrc" >:/iconsets/system/default/arrow_right.png</iconset>
    </property>
   </widget>
-  <widget class="QPushButton" name="pb_export" >
+  <widget class="QToolButton" name="tb_nextMonth" >
+   <property name="geometry" >
+    <rect>
+     <x>30</x>
+     <y>350</y>
+     <width>25</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>...</string>
+   </property>
+   <property name="icon" >
+    <iconset resource="../iconsets.qrc" >:/iconsets/system/default/arrow_left.png</iconset>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pb_find" >
    <property name="geometry" >
     <rect>
      <x>390</x>
-     <y>320</y>
+     <y>350</y>
      <width>75</width>
      <height>25</height>
     </rect>
    </property>
    <property name="text" >
-    <string>&amp;Export</string>
+    <string>&amp;Find</string>
+   </property>
+   <property name="icon" >
+    <iconset resource="../iconsets.qrc" >:/iconsets/system/default/history.png</iconset>
    </property>
   </widget>
   <widget class="QPushButton" name="pb_close" >
@@ -50,6 +117,25 @@
    <property name="text" >
     <string>&amp;Close</string>
    </property>
+   <property name="icon" >
+    <iconset resource="../iconsets.qrc" >:/iconsets/system/default/close.png</iconset>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pb_export" >
+   <property name="geometry" >
+    <rect>
+     <x>470</x>
+     <y>350</y>
+     <width>75</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>&amp;Export</string>
+   </property>
+   <property name="icon" >
+    <iconset resource="../iconsets.qrc" >:/iconsets/system/default/download.png</iconset>
+   </property>
   </widget>
   <widget class="QTreeWidget" name="EventsTree" >
    <property name="geometry" >
@@ -57,7 +143,7 @@
      <x>150</x>
      <y>10</y>
      <width>471</width>
-     <height>301</height>
+     <height>331</height>
     </rect>
    </property>
    <property name="horizontalScrollBarPolicy" >
@@ -99,65 +185,26 @@
     </property>
    </column>
   </widget>
-  <widget class="QPushButton" name="pb_find" >
+  <widget class="QToolButton" name="tb_latest" >
    <property name="geometry" >
     <rect>
-     <x>390</x>
+     <x>60</x>
      <y>350</y>
-     <width>75</width>
-     <height>25</height>
+     <width>25</width>
+     <height>24</height>
     </rect>
    </property>
    <property name="text" >
-    <string>&amp;Find</string>
+    <string>...</string>
    </property>
-  </widget>
-  <widget class="QLineEdit" name="le_find" >
-   <property name="geometry" >
-    <rect>
-     <x>150</x>
-     <y>350</y>
-     <width>231</width>
-     <height>23</height>
-    </rect>
+   <property name="icon" >
+    <iconset resource="../iconsets.qrc" >:/iconsets/system/default/arrow_up.png</iconset>
    </property>
-  </widget>
-  <widget class="QTreeWidget" name="DateTree" >
-   <property name="geometry" >
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>131</width>
-     <height>361</height>
-    </rect>
-   </property>
-   <property name="contextMenuPolicy" >
-    <enum>Qt::NoContextMenu</enum>
-   </property>
-   <property name="horizontalScrollBarPolicy" >
-    <enum>Qt::ScrollBarAlwaysOff</enum>
-   </property>
-   <property name="rootIsDecorated" >
-    <bool>false</bool>
-   </property>
-   <property name="itemsExpandable" >
-    <bool>false</bool>
-   </property>
-   <property name="columnCount" >
-    <number>2</number>
-   </property>
-   <column>
-    <property name="text" >
-     <string>1</string>
-    </property>
-   </column>
-   <column>
-    <property name="text" >
-     <string>1</string>
-    </property>
-   </column>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="../psi.qrc" />
+  <include location="../iconsets.qrc" />
+ </resources>
  <connections/>
 </ui>

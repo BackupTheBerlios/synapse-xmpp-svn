@@ -23,6 +23,8 @@ class HistoryDB : public QObject
 	Q_OBJECT
 public:
 	QTreeWidgetItem *getDates(HistoryDlg *dlg,QTreeWidget *dateTree,QString j, QDate selected, QString searchFor="");
+	QTreeWidgetItem *getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QString searchFor);
+
 	HistoryItem *getEvents(QTreeWidget *eventsTree,QString j, QString date, QString searchFor="");
 	static HistoryDB *instance();
 	bool logEvent(QString j, PsiEvent *e);

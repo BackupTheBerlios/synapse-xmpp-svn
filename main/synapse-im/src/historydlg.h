@@ -61,7 +61,9 @@ public:
 public slots:
 	void dateSelected(QTreeWidgetItem *item, int column);
 	void actionOpenEvent(QTreeWidgetItem *item, int column);
+	void doPrev();
 	void doLatest();
+	void doNext();
 	void doFind();
 	void doExport();
 
@@ -69,10 +71,13 @@ signals:
 	void openEvent(PsiEvent *e);
 
 private:
+	void doMonths();
+
 	PsiAccount *pa_;
 	XMPP::Jid jidFull_;
 	QString jid_;
 	QString findText;
+	QDate lookDate;
 };
 
 #endif

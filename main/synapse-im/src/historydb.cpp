@@ -11,6 +11,7 @@
 //
 #include <QObject>
 #include <QDateTime>
+#include <QVariant>
 #include "historydb.h"
 #include "historydlg.h"
 #include "profiles.h"
@@ -160,7 +161,7 @@ QTreeWidgetItem *HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QSt
 	QSqlQueryModel query;
 	QString tableName;
 	tableName = getTableName(j);
-	query.setQuery("SELECT date,text FROM " + tableName + " ORDER BY date");
+	query.setQuery("SELECT date,text FROM " + tableName + " WHERE date LIKE '%" + selected.shortMonthName(selected.month()) + "%" + QVariant(selected.year()).toString() +"%' ORDER BY date");
 
 	DateItem *last = NULL;
 	QColor red(255,0,0);
@@ -176,6 +177,32 @@ QTreeWidgetItem *HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QSt
 			if(date == selected)
 				dateTree->setCurrentItem(item);
 			
+			last = item;
+		}
+		if(!searchFor.isEmpty() && query.record(i).value("text").toString().contains(searchFor))
+			last->setTextColor(0, red);
+	}
+	return NULL;
+}
+
+QTreeWidgetItem *HistoryDB::getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QString searchFor)
+{
+	QSqlQueryModel query;
+	QString tableName;
+	tableName = getTableName(j);
+	query.setQuery("SELECT date,text FROM " + tableName + " WHERE text LIKE '%"+searchFor+"%' ORDER BY date LIMIT 50");
+
+	DateItem *last = NULL;
+	QColor red(255,0,0);
+	for(int i=0; i< query.rowCount(); i++)
+	{
+		QDate date;
+		date = date.fromString(query.record(i).value("date").toString());
+		if ((last == NULL) || (last->date() != date))
+		{
+			DateItem *item = new DateItem(date);
+			connect(dateTree,SIGNAL(itemClicked(QTreeWidgetItem *, int)),dlg,SLOT(dateSelected(QTreeWidgetItem*,int)));
+			dateTree->addTopLevelItem(item);
 			last = item;
 		}
 		if(!searchFor.isEmpty() && query.record(i).value("text").toString().contains(searchFor))
