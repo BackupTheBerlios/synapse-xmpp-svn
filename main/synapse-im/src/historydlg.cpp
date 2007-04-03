@@ -144,7 +144,6 @@ void HistoryDlg::doMonths()
 	DateItem *di = (DateItem*)DateTree->takeTopLevelItem(0);
 	if(di)
 	{
-		printf("Selected.\n");
 		lookDate = di->date();
 		DateTree->insertTopLevelItem(0,di);
 		DateTree->setCurrentItem(di);
