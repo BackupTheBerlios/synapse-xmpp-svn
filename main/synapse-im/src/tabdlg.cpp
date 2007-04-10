@@ -193,7 +193,9 @@ bool TabDlg::chatOnTop(ChatDlg* chat)
 void TabDlg::addChat(ChatDlg* chat)
 {
 	chats.append(chat);
-	tabs->addTab(chat, chat->getDisplayNick());
+	QString tablabel = chat->getDisplayNick();
+	tablabel.replace("&","&&");
+	tabs->addTab(chat, tablabel);
 	original_color = tabs->tabTextColor(chat);
 	tabs->setTabIconSet(chat, IconsetFactory::icon("psi/start-chat").icon());
 
@@ -352,6 +354,7 @@ void TabDlg::updateTab( ChatDlg* chat)
 	}
 
 	label=prefix+chat->getDisplayNick();
+	label.replace("&", "&&");
 	tabs->setTabLabel( chat, label );
 	//now set text colour based upon whether there are new messages/composing etc
 

@@ -26,6 +26,7 @@
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QCloseEvent>
+#include <QDebug>
 #include <stdlib.h>
 
 #include "gameboard.h"
@@ -1930,7 +1931,7 @@ GameProtocol::send(Q3Socket *sock, const QString &dat)
 		sock->writeBlock(buf, s.length());
 		sock->flush();
 	}*/
-	qDebug(qPrintable(QString("GameProtocol::send(%1)").arg(dat)));
+	qDebug() << (qPrintable(QString("GameProtocol::send(%1)").arg(dat)));
 	emit sendData(dat);
 }
 
