@@ -75,6 +75,7 @@ PsiMain::PsiMain(QObject *par)
 :QObject(par)
 {
 	pcon = 0;
+	printf("PsiMain()\n");
 
 	// load simple registry settings
 	QSettings sUser(QSettings::UserScope, "synapse-im", "Synapse-IM");
@@ -92,7 +93,9 @@ PsiMain::PsiMain(QObject *par)
 		//printf("guessing locale: [%s]\n", lastLang.latin1());
 	}
 
+	printf("TranslationManager::instance()..\n");
 	TranslationManager::instance()->loadTranslation(lastLang);
+	printf("done\n");
 
 	if(autoOpen && !lastProfile.isEmpty() && profileExists(lastProfile)) {
 		// Auto-open the last profile
@@ -234,16 +237,21 @@ void PsiMain::bail()
 
 int main(int argc, char *argv[])
 {
+	printf("main()\n");
 	// it must be initialized first in order for ApplicationInfo::resourcesDir() to work
 	QCA::Initializer init;
+	printf("QCA()\n");
 	PsiApplication app(argc, argv);
+	printf("app()\n");
 	QApplication::addLibraryPath(ApplicationInfo::homeDir());
 	QApplication::addLibraryPath(ApplicationInfo::resourcesDir());
 	QApplication::setQuitOnLastWindowClosed(false);
+	printf("some()\n");
 
 	// Initialize QCA
-	QCA::keyStoreManager()->start();
-	QCA::keyStoreManager()->waitForBusyFinished();
+	QCA::KeyStoreManager keystoremgr;
+	keystoremgr.start();
+	keystoremgr.waitForBusyFinished(); // FIXME get rid of this
 
 #ifdef Q_WS_MAC
 	CocoaUtil::initialize();

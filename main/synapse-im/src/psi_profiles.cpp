@@ -478,7 +478,6 @@ void UserProfile::reset()
 	prefs.dockDCstyle = win ? TRUE: FALSE;
 	prefs.dockHideMW = FALSE;
 	prefs.dockToolMW = FALSE;
-	prefs.isWMDock = false;
 #ifdef Q_WS_MAC
 	prefs.alertStyle = 0;
 #else
@@ -926,7 +925,6 @@ bool UserProfile::toFile(const QString &fname)
 			p_dock.appendChild(textTag(doc, "dockDCstyle", prefs.dockDCstyle));
 			p_dock.appendChild(textTag(doc, "dockHideMW", prefs.dockHideMW));
 			p_dock.appendChild(textTag(doc, "dockToolMW", prefs.dockToolMW));
-			p_dock.appendChild(textTag(doc, "isWMDock", prefs.isWMDock));
 		}
 		/*{
 			QDomElement p_sec = doc.createElement("security");
@@ -1049,7 +1047,7 @@ bool UserProfile::toFile(const QString &fname)
 			tag.appendChild(textTag(doc, "groupfore", prefs.color[cGroupFore].name() ));
 			tag.appendChild(textTag(doc, "groupback", prefs.color[cGroupBack].name() ));
 			tag.appendChild(textTag(doc, "animfront", prefs.color[cAnimFront].name() ));
-			tag.appendChild(textTag(doc, "animback", prefs.color[cChatContactName].name() ));
+			tag.appendChild(textTag(doc, "animback", prefs.color[cAnimBack].name() ));
 			tag.appendChild(textTag(doc, "chatcontactnick", prefs.color[cChatContactName].name() ));
 			tag.appendChild(textTag(doc, "chatmynick", prefs.color[cChatMyName].name() ));
 			tag.appendChild(textTag(doc, "chatsystem", prefs.color[cChatSystem].name() ));
@@ -1485,7 +1483,6 @@ bool UserProfile::fromFile(const QString &fname)
 				readBoolEntry(tag, "dockDCstyle", &prefs.dockDCstyle);
 				readBoolEntry(tag, "dockHideMW", &prefs.dockHideMW);
 				readBoolEntry(tag, "dockToolMW", &prefs.dockToolMW);
-				readBoolEntry(tag, "isWMDock", &prefs.isWMDock);
 			}
 
 			/*tag = findSubTag(p_general, "security", &found);

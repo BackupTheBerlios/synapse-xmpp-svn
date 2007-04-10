@@ -732,7 +732,7 @@ PsiAccount::~PsiAccount()
 #endif	
 	delete d->ahcManager;
 	delete d->cp;
-	//delete d->privacyManager; FIXME: Why does this segfault ?
+	delete d->privacyManager; //!!
 	delete d->capsManager;
 	delete d->pepManager;
 	delete d->serverInfoManager;
@@ -744,6 +744,7 @@ PsiAccount::~PsiAccount()
 	delete d->httpAuthManager;
 	cleanupStream();
 	delete d->eventQueue;
+	delete d->avatarFactory; //!!
 
 	delete d->blockTransportPopupList;
 
@@ -1023,6 +1024,9 @@ void PsiAccount::login()
 	if(d->acc.opt_host) {
 		useHost = true;
 		host = d->acc.host;
+		if (host.isEmpty()) {
+			host = d->jid.domain();
+		}
 		port = d->acc.port;
 	}
 
@@ -1078,7 +1082,7 @@ void PsiAccount::login()
 	else
 		d->stream->setNoopTime(0);
 	connect(d->stream, SIGNAL(connected()), SLOT(cs_connected()));
-	connect(d->stream, SIGNAL(securityLayerActivated(int)), SLOT(cs_securityLayerActivated()));
+	connect(d->stream, SIGNAL(securityLayerActivated(int)), SLOT(cs_securityLayerActivated(int)));
 	connect(d->stream, SIGNAL(needAuthParams(bool, bool, bool)), SLOT(cs_needAuthParams(bool, bool, bool)));
 	connect(d->stream, SIGNAL(authenticated()), SLOT(cs_authenticated()));
 	connect(d->stream, SIGNAL(connectionClosed()), SLOT(cs_connectionClosed()), Qt::QueuedConnection);
@@ -1118,7 +1122,8 @@ void PsiAccount::logout(bool fast, const Status &s)
 	v_isActive = false;
 	stateChanged();
 
-	QTimer::singleShot(0, this, SLOT(disconnect()));
+	// Using 100msecs; See note on disconnect() 
+	QTimer::singleShot(100, this, SLOT(disconnect()));
 }
 
 // skz note: I had to split logout() because server seem to need some time to store status
@@ -1160,18 +1165,18 @@ void PsiAccount::tls_handshaken()
 		while (msgBox.result() != QDialog::Rejected) {
 			msgBox.exec();
 			if (msgBox.clickedButton() == detailsButton) {
-			msgBox.setResult(QDialog::Accepted);
+				msgBox.setResult(QDialog::Accepted);
 				SSLCertDlg::showCert(cert, r, validity);
 			}
-			else if(msgBox.clickedButton() == continueButton) {
+			else if (msgBox.clickedButton() == continueButton) {
 				d->tlsHandler->continueAfterHandshake();
 				break;
 			}
-			else if(msgBox.clickedButton() == cancelButton) {
+			else if (msgBox.clickedButton() == cancelButton) {
 				logout();
 				break;
 			}
-			else {
+			else {	// msgBox was hidden because connection was closed
 				break;
 			}
 		}
@@ -1190,6 +1195,7 @@ void PsiAccount::showCert()
 	SSLCertDlg::showCert(cert, r, validity);
 }
 
+
 void PsiAccount::cs_connected()
 {
 	// get IP address
@@ -1199,10 +1205,14 @@ void PsiAccount::cs_connected()
 	}
 }
 
-void PsiAccount::cs_securityLayerActivated()
+void PsiAccount::cs_securityLayerActivated(int layer)
 {
-	d->usingSSL = true;
-	stateChanged();
+	if ((layer == ClientStream::LayerSASL) && (d->stream->saslSSF() <= 1)) {
+		 // integrity protected only
+	} else {
+		d->usingSSL = true;
+		stateChanged();
+	}
 }
 
 void PsiAccount::cs_needAuthParams(bool user, bool pass, bool realm)
@@ -3369,7 +3379,6 @@ void PsiAccount::actionMetaRemove(const Jid &j, const QString &m)
 
 void PsiAccount::actionGroupAdd(const Jid &j, const QString &g)
 {
-	printf("actionGroupAdd()...\n");
 	UserListItem *u = d->userList.find(j);
 	if(!u)
 		return;
@@ -3381,12 +3390,10 @@ void PsiAccount::actionGroupAdd(const Jid &j, const QString &g)
 	JT_Roster *r = new JT_Roster(d->client->rootTask());
 	r->set(u->jid(), u->name(), u->groups());
 	r->go(true);
-	printf("...actionGroupAdd()\n");
 }
 
 void PsiAccount::actionGroupRemove(const Jid &j, const QString &g)
 {
-	printf("actionGroupRemove()...\n");
 	UserListItem *u = d->userList.find(j);
 	if(!u)
 		return;
@@ -3398,7 +3405,6 @@ void PsiAccount::actionGroupRemove(const Jid &j, const QString &g)
 	JT_Roster *r = new JT_Roster(d->client->rootTask());
 	r->set(u->jid(), u->name(), u->groups());
 	r->go(true);
-	printf("...actionGroupRemove()\n");
 }
 
 void PsiAccount::actionRegister(const Jid &j)
@@ -4163,7 +4169,6 @@ void PsiAccount::openChat(const Jid &j)
 {
 	ChatDlg *c = ensureChatDlg(j);
 	QWidget *w = c;
-	processChats(j);
 	if ( option.useTabs )
 	{
 		if ( !d->psi->isChatTabbed(c) )
@@ -4175,6 +4180,7 @@ void PsiAccount::openChat(const Jid &j)
 		tabSet->selectTab(c);
 		w = tabSet;
 	}
+	processChats(j);
 	bringToFront(w);
 }
 
@@ -4479,13 +4485,17 @@ void PsiAccount::pgp_verifyFinished()
 			continue;
 		UserResource &ur = *rit;
 
-		if(t->success()) {
-			ur.setPublicKeyID(t->signer().key().pgpPublicKey().keyId());
-			ur.setPGPVerifyStatus(t->signer().identityResult());
-			ur.setSigTimestamp(t->signer().timestamp());
+		QCA::SecureMessageSignature signer;
+		if(t->success())
+			signer = t->signer();
+
+		if (signer.identityResult() != QCA::SecureMessageSignature::NoKey) {
+			ur.setPublicKeyID(signer.key().pgpPublicKey().keyId());
+			ur.setPGPVerifyStatus(signer.identityResult());
+			ur.setSigTimestamp(signer.timestamp());
 
 			// if the key doesn't match the assigned key, unassign it
-			if(t->signer().key().pgpPublicKey().keyId() != u->publicKeyID())
+			if(signer.key().pgpPublicKey().keyId() != u->publicKeyID())
 				u->setPublicKeyID("");
 		}
 		else {

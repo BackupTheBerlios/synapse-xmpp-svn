@@ -97,6 +97,8 @@ AddUserDlg::AddUserDlg(const QStringList &services, const QStringList &names, co
 	connect(tb_vCard, SIGNAL(clicked()), SLOT(getVCardActivated()));
 	connect(tb_resolveNick, SIGNAL(clicked()), SLOT(resolveNickActivated()));
 
+	connect(le_jid, SIGNAL(textChanged(QString)), SLOT(jid_Changed()));
+
 	ck_authreq->setChecked(true);
 	ck_close->setChecked(true);
 
@@ -116,14 +118,18 @@ void AddUserDlg::pa_updatedActivity()
 		close();
 }
 
+Jid AddUserDlg::jid() const
+{
+	return Jid(le_jid->text().stripWhiteSpace());
+}
+
 void AddUserDlg::ok()
 {
 	if(le_jid->text().isEmpty()) {
 		QMessageBox::information(this, tr("Add User: Error"), tr("Please fill in the Jabber ID of the person you wish to add."));
 		return;
 	}
-	Jid j(le_jid->text().stripWhiteSpace());
-	if(!j.isValid()) {
+	if(!jid().isValid()) {
 		QMessageBox::information(this, tr("Add User: Error"), tr("The Jabber ID you entered is not valid!\nMake sure you enter a fully qualified Jabber ID."));
 		return;
 	}
@@ -133,9 +139,9 @@ void AddUserDlg::ok()
 	if(gname != tr("<None>"))
 		list += gname;
 
-	add(j, le_nick->text(), list, ck_authreq->isChecked());
+	add(jid(), le_nick->text(), list, ck_authreq->isChecked());
 
-	QMessageBox::information(this, tr("Add User: Success"), tr("Added %1 to your roster.").arg(j.full()));
+	QMessageBox::information(this, tr("Add User: Success"), tr("Added %1 to your roster.").arg(jid().full()));
 
 	if(ck_close->isChecked())
 		accept();
@@ -248,15 +254,13 @@ void AddUserDlg::errorGateway(const QString &str, const QString &err)
 
 void AddUserDlg::getVCardActivated()
 {
-	Jid j(le_jid->text().stripWhiteSpace());
-
-	const VCard *vcard = VCardFactory::instance()->vcard(j);
+	const VCard *vcard = VCardFactory::instance()->vcard(jid());
 
 	VCard tmp;
 	if ( vcard )
 		tmp = *vcard;
 
-	InfoDlg *w = new InfoDlg(InfoDlg::Contact, j, tmp, d->pa, 0, false);
+	InfoDlg *w = new InfoDlg(InfoDlg::Contact, jid(), tmp, d->pa, 0, false);
 	w->show();
 
 	// automatically retrieve info if it doesn't exist
@@ -266,8 +270,7 @@ void AddUserDlg::getVCardActivated()
 
 void AddUserDlg::resolveNickActivated()
 {
-	Jid j(le_jid->text().stripWhiteSpace());
-	JT_VCard *jt = VCardFactory::instance()->getVCard(j, d->pa->client()->rootTask(), this, SLOT(resolveNickFinished()), false);
+	JT_VCard *jt = VCardFactory::instance()->getVCard(jid(), d->pa->client()->rootTask(), this, SLOT(resolveNickFinished()), false);
 	d->tasks->append( jt );
 }
 
@@ -279,4 +282,14 @@ void AddUserDlg::resolveNickFinished()
 		if ( !jt->vcard().nickName().isEmpty() )
 			le_nick->setText( jt->vcard().nickName() );
 	}
+}
+
+/**
+ * Called when the Jid changes to enable the vcard and nick resolution buttons.
+ */
+void AddUserDlg::jid_Changed()
+{
+	bool enableVCardButtons = jid().isValid();
+	tb_vCard->setEnabled(enableVCardButtons);
+	tb_resolveNick->setEnabled(enableVCardButtons);
 }

@@ -357,7 +357,6 @@ whiteboarding {
 		$$PWD/wbitems.h
 	
 	SOURCES += \
-		$$PWD/voicecalldlg.cpp \
 		$$PWD/wbmanager.cpp \
 		$$PWD/wbdlg.cpp \
 		$$PWD/wbwidget.cpp \

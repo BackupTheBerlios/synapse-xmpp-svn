@@ -38,6 +38,7 @@ class AccountModifyDlg : public QDialog, public Ui::AccountModify
 {
 	Q_OBJECT
 public:
+	AccountModifyDlg(PsiCon *,QWidget *parent=0);
 	AccountModifyDlg(PsiAccount *, QWidget *parent=0);
 	~AccountModifyDlg();
 
