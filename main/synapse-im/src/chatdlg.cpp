@@ -1113,7 +1113,7 @@ void ChatDlg::appendMessage(const Message &m, bool local)
 			}
 		}
 	}
-
+	
 	QString timestr = ui_.log->formatTimeStamp(m.timeStamp());
 	bool emote = false;
 
@@ -1157,7 +1157,10 @@ void ChatDlg::appendMessage(const Message &m, bool local)
 		QString style = PsiOptions::instance()->getOption("options.ui.chat.style").toString();
 		if (style == "Synapse-IM")
 		{
-			ui_.log->appendText(QString("<table border=\"0\" width=\"100%\"><tr><td><div style=\"color: %1; font-size: large\" align=\"left\">").arg(color) + who + QString("</div></td><td><div style=\"color: %1; vertical-alignment: baseline\" align=\"right\">").arg(color) + timestr + QString("</div></td></tr></table><span style=\"margin-left: 5px; margin-right: 5px; margin-top: 0px;\">") + txt + QString("</span>"));
+			QString datestr;
+			if(QDateTime::currentDateTime().date() != m.timeStamp().date())
+				datestr = QString().sprintf("%02d-%02d-%04d ", m.timeStamp().date().day(), m.timeStamp().date().month(), m.timeStamp().date().year());
+			ui_.log->appendText(QString("<table border=\"0\" width=\"100%\"><tr><td><div style=\"color: %1; font-size: large\" align=\"left\">").arg(color) + who + QString("</div></td><td><div style=\"color: %1; vertical-alignment: baseline\" align=\"right\">").arg(color) + datestr + timestr + QString("</div></td></tr></table><span style=\"margin-left: 5px; margin-right: 5px; margin-top: 0px;\">") + txt + QString("</span>"));
 		}
 		else if (style == "Psi (old)")
 		{
