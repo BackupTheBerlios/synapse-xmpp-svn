@@ -1721,7 +1721,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 				actionExecuteCommandSpecific(j,"");
 #else
 			else if (type == 2)
-				actionWhiteboardSpecific(j,"");
+				actionOpenWhiteboardSpecific(j);
 			else if (type == 3)
 				actionExecuteCommandSpecific(j,"");
 #endif
@@ -2988,7 +2988,8 @@ RichListViewItem::RichListViewItem( Q3ListViewItem * parent ) : Q3ListViewItem(p
 	noOfflineStatusMsg = false;
 	setStatus(STATUS_OFFLINE);
 	v_avatarShow = v_synapseStyle ||  PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toBool();
-	v_avatarSize = v_synapseStyle ? 0 :  PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt();
+// 	v_avatarSize = v_synapseStyle ? 0 :  PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt();
+	v_avatarSize = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt();
 	v_avatarFactory = NULL;
 }
 
@@ -3122,7 +3123,11 @@ void RichListViewItem::setup()
 
 		scaleAvatar();
 
-		int left =  lv->itemMargin() + ((px)?(px->width() + lv->itemMargin()):0);
+		int left =  lv->itemMargin();
+		if (px)
+			left += px->width() + lv->itemMargin();
+		else
+			left += 0;
 
 		v_active = lv->isActiveWindow();
 		v_selected = isSelected();
@@ -3153,7 +3158,7 @@ void RichListViewItem::setup()
 
 		int sh = (int) v_rt->size().toSize().height();
 		h = QMAX( h, sh );
-		if (pixmap(0) != NULL) h = QMAX( h, pixmap(0)->height() + icon_vpadding);
+		if (px != NULL) h = QMAX( h, px->height() + icon_vpadding);
 		h = QMAX( h, avatar_y);
 
 		if ( h % 2 > 0 )
@@ -3212,7 +3217,7 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 		pxw = px->width();
 		pxh = px->height();
 		pxrect = QRect(r, icon_vpadding, pxw, pxh);
-		r += pxw + (v_synapseStyle) ? 2 : lv->itemMargin();
+		r += pxw + ((v_synapseStyle) ? 2 : lv->itemMargin());
 	}
 
 	//if(px)
@@ -3224,6 +3229,7 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 	QRect rtrect = QRect(v_avatarSize+2, 0, v_widthUsed, height());
 	if(!v_synapseStyle)
 		rtrect = QRect(r, 0, v_widthUsed, height());
+	printf("r = %d\n", r);
 	QAbstractTextDocumentLayout *layout = v_rt->documentLayout();
 	QAbstractTextDocumentLayout::PaintContext context;
 	
@@ -3245,19 +3251,23 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 	if(v_synapseStyle) {
 		avatar_rect = QRect(0, 0, v_avatarSize, avatar_y);
 		p->drawPixmap(avatar_rect, avatar);
-	} else if(v_avatarShow) {
-		avatar_rect = QRect(width-avatar_x, 0, avatar_x, avatar_y);
-		p->drawPixmap(avatar_rect, avatar);
+		if(px && (avatar_x == 0))
+		{
+			pxrect = QRect((v_avatarSize-pxw)/2,0,pxw,pxh);
+			p->drawPixmap(pxrect, *px);
+		} else if (px) {
+			pxrect = QRect(v_avatarSize - pxw,avatar_y - pxh,pxw,pxh);
+			p->drawPixmap(pxrect, *px);
+		}
+	} else {
+		if(v_avatarShow) {
+			avatar_rect = QRect(width-avatar_x, 0, avatar_x, avatar_y);
+			p->drawPixmap(avatar_rect, avatar);
+		}
+		if(px)
+			p->drawPixmap(pxrect, *px);
 	}
 
-	if(px && (avatar_x == 0))
-	{
-		pxrect = QRect((v_avatarSize-pxw)/2,0,pxw,pxh);
-		p->drawPixmap(pxrect, *px);
-	} else if (px) {
-		pxrect = QRect(v_avatarSize - pxw,avatar_y - pxh,pxw,pxh);
-		p->drawPixmap(pxrect, *px);
-	}
 
 	p->restore();
 	delete paper;
