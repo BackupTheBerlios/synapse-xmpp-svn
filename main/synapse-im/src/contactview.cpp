@@ -3229,7 +3229,6 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 	QRect rtrect = QRect(v_avatarSize+2, 0, v_widthUsed, height());
 	if(!v_synapseStyle)
 		rtrect = QRect(r, 0, v_widthUsed, height());
-	printf("r = %d\n", r);
 	QAbstractTextDocumentLayout *layout = v_rt->documentLayout();
 	QAbstractTextDocumentLayout::PaintContext context;
 	
@@ -3470,6 +3469,7 @@ ContactViewItem::ContactViewItem(UserListItem *u, ContactProfile *cp, ContactVie
 
 	resetStatus();
 	resetName();
+
 
 	setDragEnabled(true);
 	setDropEnabled(true);

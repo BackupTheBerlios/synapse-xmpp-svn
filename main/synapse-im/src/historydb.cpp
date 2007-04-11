@@ -161,8 +161,9 @@ QTreeWidgetItem *HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QSt
 	QSqlQueryModel query;
 	QString tableName;
 	tableName = getTableName(j);
-	query.setQuery("SELECT date,text FROM " + tableName + " WHERE date LIKE '%" + selected.shortMonthName(selected.month()) + "%" + QVariant(selected.year()).toString() +"%' ORDER BY date");
-
+ 	query.setQuery(QString("SELECT date") + ((searchFor.isEmpty())?"":",text") +" FROM " + tableName + " WHERE date LIKE '%" + selected.shortMonthName(selected.month()) + "%" + QVariant(selected.year()).toString() +"%' ORDER BY date");
+	while (query.canFetchMore())
+     		query.fetchMore();
 	DateItem *last = NULL;
 	QColor red(255,0,0);
 	for(int i=0; i< query.rowCount(); i++)
@@ -191,6 +192,8 @@ QTreeWidgetItem *HistoryDB::getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateT
 	QString tableName;
 	tableName = getTableName(j);
 	query.setQuery("SELECT date,text FROM " + tableName + " WHERE text LIKE '%"+searchFor+"%' ORDER BY date LIMIT 50");
+	while (query.canFetchMore())
+		query.fetchMore();
 
 	DateItem *last = NULL;
 	QColor red(255,0,0);
