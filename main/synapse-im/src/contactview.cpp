@@ -3566,12 +3566,21 @@ int ContactViewItem::parentGroupType() const
 void ContactViewItem::drawGroupIcon()
 {
 	if ( type_ == Group ) {
-		if ( childCount() == 0 )
-			setIcon(IconsetFactory::iconPtr("psi/groupEmpty"));
-		else if ( isOpen() )
-			setIcon(IconsetFactory::iconPtr("psi/groupOpen"));
-		else
-			setIcon(IconsetFactory::iconPtr("psi/groupClosed"));
+		if (!PsiOptions::instance()->getOption("options.ui.contactlist.SynapseStyle").toBool()) {
+			if ( childCount() == 0 )
+				setIcon(IconsetFactory::iconPtr("psi/groupEmpty"));
+			else if ( isOpen() )
+				setIcon(IconsetFactory::iconPtr("psi/groupOpen"));
+			else
+				setIcon(IconsetFactory::iconPtr("psi/groupClosed"));
+		} else {
+			if ( childCount() == 0 )
+				setIcon(IconsetFactory::iconPtr("synapse-im/groupEmpty"));
+			else if ( isOpen() )
+				setIcon(IconsetFactory::iconPtr("synapse-im/groupOpen"));
+			else
+				setIcon(IconsetFactory::iconPtr("synapse-im/groupClosed"));
+		}
 	}
 	else if ( type_ == Profile ) {
 		if ( !d->alerting )

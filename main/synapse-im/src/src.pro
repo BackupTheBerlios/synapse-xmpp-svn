@@ -75,28 +75,28 @@ LANG_PATH = ../lang
 
 # Translations
 TRANSLATIONS = \
-	$$LANG_PATH/psi_ar.ts \
-	$$LANG_PATH/psi_ca.ts \
-	$$LANG_PATH/psi_cs.ts \
-	$$LANG_PATH/psi_da.ts \
-	$$LANG_PATH/psi_de.ts \
-	$$LANG_PATH/psi_el.ts \
-	$$LANG_PATH/psi_eo.ts \
-	$$LANG_PATH/psi_es.ts \
-	$$LANG_PATH/psi_fi.ts \
-	$$LANG_PATH/psi_fr.ts \
-	$$LANG_PATH/psi_it.ts \
-	$$LANG_PATH/psi_jp.ts \
-	$$LANG_PATH/psi_mk.ts \
-	$$LANG_PATH/psi_nl.ts \
-	$$LANG_PATH/psi_pl.ts \
-	$$LANG_PATH/psi_pt.ts \
-	$$LANG_PATH/psi_ptbr.ts \
-	$$LANG_PATH/psi_ru.ts \
-	$$LANG_PATH/psi_se.ts \
-	$$LANG_PATH/psi_sk.ts \
-	$$LANG_PATH/psi_sr.ts \
-	$$LANG_PATH/psi_zh.ts
+#	$$LANG_PATH/psi_ar.ts \
+#	$$LANG_PATH/psi_ca.ts \
+#	$$LANG_PATH/psi_cs.ts \
+#	$$LANG_PATH/psi_da.ts \
+#	$$LANG_PATH/psi_de.ts \
+#	$$LANG_PATH/psi_el.ts \
+#	$$LANG_PATH/psi_eo.ts \
+#	$$LANG_PATH/psi_es.ts \
+#	$$LANG_PATH/psi_fi.ts \
+#	$$LANG_PATH/psi_fr.ts \
+#	$$LANG_PATH/psi_it.ts \
+#	$$LANG_PATH/psi_jp.ts \
+#	$$LANG_PATH/psi_mk.ts \
+#	$$LANG_PATH/psi_nl.ts \
+	$$LANG_PATH/psi_pl.ts 
+#	$$LANG_PATH/psi_pt.ts \
+#	$$LANG_PATH/psi_ptbr.ts \
+#	$$LANG_PATH/psi_ru.ts \
+#	$$LANG_PATH/psi_se.ts \
+#	$$LANG_PATH/psi_sk.ts \
+#	$$LANG_PATH/psi_sr.ts \
+#	$$LANG_PATH/psi_zh.ts
 
 # Resources
 RESOURCES += ../psi.qrc ../iconsets.qrc

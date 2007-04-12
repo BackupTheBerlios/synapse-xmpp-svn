@@ -305,7 +305,6 @@ PsiCon::~PsiCon()
 bool PsiCon::init()
 {
 	// QCA (needs to be before any gpg usage!)
-	printf("PsiCon::init()..\n");
 	d->qcaEventHandler = new QCA::EventHandler(this);
 	PassphraseDlg::setEventHandler(d->qcaEventHandler);
 	connect(d->qcaEventHandler,SIGNAL(eventReady(int,const QCA::Event&)),SLOT(qcaEvent(int,const QCA::Event&)));
