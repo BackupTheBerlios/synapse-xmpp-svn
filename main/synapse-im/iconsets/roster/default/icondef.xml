@@ -103,15 +103,35 @@
 		<x xmlns='name'>psi/groupClosed</x>
 		<object mime='image/png'>groupclose.png</object>
 	</icon>
-
+	
 	<!-- FIXME -->
 	<icon>
 		<x xmlns='name'>psi/groupEmpty</x>
 		<object mime='image/png'>groupopen.png</object>
 	</icon>
-
+	
 	<icon>
 		<x xmlns='name'>psi/groupOpen</x>
 		<object mime='image/png'>groupopen.png</object>
+	</icon>
+	<icon>
+		<x xmlns='name'>psi/groupClosed</x>
+		<object mime='image/png'>groupclose.png</object>
+	</icon>
+	
+	<!-- FIXME -->
+	<icon>
+		<x xmlns='name'>synapse-im/groupEmpty</x>
+		<object mime='image/png'>synapse/groupopen.png</object>
+	</icon>
+	
+	<icon>
+		<x xmlns='name'>synapse-im/groupOpen</x>
+		<object mime='image/png'>synapse/groupopen.png</object>
+	</icon>
+	
+	<icon>
+		<x xmlns='name'>synapse-im/groupClosed</x>
+		<object mime='image/png'>synapse/groupclose.png</object>
 	</icon>
 </icondef>
