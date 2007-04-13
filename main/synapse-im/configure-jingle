@@ -931,7 +931,7 @@ public:
 			if(QFile::exists(conf->getenv("PREFIX") + "/certs/rootcerts.pem"))
 				path = "\$\$PREFIX/certs/rootcerts.pem";
 			else
-				path = "\$\$DATADIR/psi/certs/rootcerts.pem";
+				path = "\$\$DATADIR/synapse-im/certs/rootcerts.pem";
 
 			QString extra =
 			"qcasharedfiles.path = \$\$DATADIR/psi\n"
@@ -1787,12 +1787,12 @@ public:
 	bool exec()
 	{
 		conf->addExtra(QString("PREFIX=%1").arg(conf->getenv("PREFIX")));
-		conf->addExtra(QString("DATADIR=%1/psi").arg(conf->getenv("DATADIR")));
+		conf->addExtra(QString("DATADIR=%1/synapse-im").arg(conf->getenv("DATADIR")));
 
 		QFile file("src/config.h");
 		if ( file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
 			QTextStream stream( &file );
-			stream << "#define PSI_DATADIR \"" << conf->getenv("DATADIR") << "/psi\"" << endl;
+			stream << "#define PSI_DATADIR \"" << conf->getenv("DATADIR") << "/synapse-im\"" << endl;
 		}
 		
 		conf->addDefine("HAVE_CONFIG");

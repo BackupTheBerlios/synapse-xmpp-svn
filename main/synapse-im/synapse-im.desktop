@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
-Version=0.11-beta5
-Name=Psi
+Version=0.2
+Name=Synapse-IM
 GenericName=Jabber Client
 Comment=Communicate over the Jabber network
-Icon=psi
-Exec=psi
+Icon=synapse-im
+Exec=synapse-im
 Terminal=false
 Categories=Network;InstantMessaging;Qt;
 

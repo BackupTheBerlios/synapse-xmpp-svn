@@ -20,6 +20,9 @@
 		<file>iconsets/roster/default/perr.png</file>
 		<file>iconsets/roster/default/system.png</file>
 		<file>iconsets/roster/default/xa.png</file>
+		<file>iconsets/roster/default/synapse/groupopen.png</file>
+		<file>iconsets/roster/default/synapse/groupclose.png</file>
+		<file>iconsets/roster/default/synapse/groupempty.png</file>
 
 		<file>iconsets/system/default/account.png</file>
 		<file>iconsets/system/default/add.png</file>

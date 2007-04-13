@@ -10,10 +10,12 @@ LIBS += -lssl -lcrypto -lz -lXss -laspell -lexpat -lspeex -lortp -lasound -lglib
 CONFIG += qca-static
 CONFIG += google_ft google_voice
 CONFIG += jingle
+CONFIG += whiteboarding use_crash
 DEFINES += HAVE_DBUS
 CONFIG += qdbus
 CONFIG += dbus
 CONFIG += release
+QT += sql
 PREFIX=/usr
-DATADIR=/usr/share/psi
+DATADIR=/usr/share/synapse-im
 

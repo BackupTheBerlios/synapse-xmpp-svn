@@ -237,6 +237,8 @@ HistoryItem *HistoryDB::getEvents(QTreeWidget *eventsTree, QString j, QString da
 		item->setText(1, query.record(i).value("time").toString());
 		item->setText(2, query.record(i).value("origin").toString());
 		item->setText(3, query.record(i).value("text").toString());
+		for(int j=1; j<4; j++)
+			item->setTextColor(j, ((item->text(2) == "to") ? option.color[cChatMyName] : option.color[cChatContactName]));
 		if(!searchFor.isEmpty() && query.record(i).value("text").toString().contains(searchFor))
 		{
 			QColor red(255,0,0);

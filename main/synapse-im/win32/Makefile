@@ -3,7 +3,7 @@
 #QCADIR=..\..\qca-2.0-beta1
 #QCA_OPENSSLDIR=..\..\qca-openssl
 ASPELLDIR=C:\aspell
-QTDIR=C:\Qt\4.2.1
+QTDIR=C:\Qt\4.2.2
 MINGWDIR=c:\MingW
 WINDOWSDIR=C:\Windows
 
@@ -13,7 +13,7 @@ TARGET_DIR=psi
 all:
 	cd .. && $(MAKE)
 	-mkdir $(TARGET_DIR)
-	copy ..\src\release\psi.exe $(TARGET_DIR)
+	copy ..\src\release\synapse-im.exe $(TARGET_DIR)
 	rem copy $(QCADIR)\lib\qca2.dll $(TARGET_DIR)
 	copy $(QTDIR)\bin\QtCore4.dll $(TARGET_DIR)
 	copy $(QTDIR)\bin\QtGui4.dll $(TARGET_DIR)
@@ -34,5 +34,5 @@ all:
 	copy $(WINDOWSDIR)\system32\libeay32.dll $(TARGET_DIR)
 	copy $(WINDOWSDIR)\system32\ssleay32.dll $(TARGET_DIR)
 	xcopy /i /e /q /y $(QTDIR)\plugins\imageformats $(TARGET_DIR)\imageformats
-	copy ..\psi_pl.qm $(TARGET_DIR)
+	copy ..\synapse-im_pl.qm $(TARGET_DIR)
 	copy ..\qt_pl.qm $(TARGER_DIR)

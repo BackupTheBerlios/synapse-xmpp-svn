@@ -1,1 +1,1 @@
-#define PSI_DATADIR "/usr/share/psi"
+#define PSI_DATADIR "/usr/share/synapse-im"

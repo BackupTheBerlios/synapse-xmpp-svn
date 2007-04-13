@@ -4,7 +4,7 @@
 
 # Configuration
 TEMPLATE = app
-TARGET    = psi
+TARGET    = synapse-im
 CONFIG  += qt thread x11 
 
 QT += xml network qt3support sql
@@ -38,17 +38,17 @@ exists(../conf.pri) {
 
 	# icons and desktop files
 	dt.path=$$PREFIX/share/applications/
-	dt.files = ../psi.desktop 
+	dt.files = ../synapse-im.desktop 
 	icon1.path=$$PREFIX/share/icons/hicolor/16x16/apps
-	icon1.extra = cp -f ../iconsets/system/default/logo_16.png $(INSTALL_ROOT)$$icon1.path/psi.png
+	icon1.extra = cp -f ../iconsets/system/default/logo_16.png $(INSTALL_ROOT)$$icon1.path/synapse-im.png
 	icon2.path=$$PREFIX/share/icons/hicolor/32x32/apps
-	icon2.extra = cp -f ../iconsets/system/default/logo_32.png $(INSTALL_ROOT)$$icon2.path/psi.png
+	icon2.extra = cp -f ../iconsets/system/default/logo_32.png $(INSTALL_ROOT)$$icon2.path/synapse-im.png
 	icon3.path=$$PREFIX/share/icons/hicolor/48x48/apps
-	icon3.extra = cp -f ../iconsets/system/default/logo_48.png $(INSTALL_ROOT)$$icon3.path/psi.png
+	icon3.extra = cp -f ../iconsets/system/default/logo_48.png $(INSTALL_ROOT)$$icon3.path/synapse-im.png
 	icon4.path=$$PREFIX/share/icons/hicolor/64x64/apps
-	icon4.extra = cp -f ../iconsets/system/default/logo_64.png $(INSTALL_ROOT)$$icon4.path/psi.png
+	icon4.extra = cp -f ../iconsets/system/default/logo_64.png $(INSTALL_ROOT)$$icon4.path/synapse-im.png
 	icon5.path=$$PREFIX/share/icons/hicolor/128x128/apps
-	icon5.extra = cp -f ../iconsets/system/default/logo_128.png $(INSTALL_ROOT)$$icon5.path/psi.png
+	icon5.extra = cp -f ../iconsets/system/default/logo_128.png $(INSTALL_ROOT)$$icon5.path/synapse-im.png
 	INSTALLS += dt icon1 icon2 icon3 icon4 icon5
 }
 
@@ -103,7 +103,7 @@ RESOURCES += ../psi.qrc ../iconsets.qrc
 
 # Platform specifics
 unix:!mac {
-	QMAKE_POST_LINK = rm -f ../psi ; ln -s src/psi ../psi
+	QMAKE_POST_LINK = rm -f ../synapse-im ; ln -s src/synapse-im ../synapse-im
 }
 win32 {
 	RC_FILE = ../win32/psi_win32.rc
@@ -122,5 +122,5 @@ mac {
 
 	QMAKE_INFO_PLIST = ../mac/Info.plist
 	RC_FILE = ../mac/application.icns
-	QMAKE_POST_LINK = cp -R ../certs ../iconsets ../sound `dirname $(TARGET)`/../Resources ; echo "APPLpsi " > `dirname $(TARGET)`/../PkgInfo
+	QMAKE_POST_LINK = cp -R ../certs ../iconsets ../sound `dirname $(TARGET)`/../Resources ; echo "APPLsynapse-im " > `dirname $(TARGET)`/../PkgInfo
 }
