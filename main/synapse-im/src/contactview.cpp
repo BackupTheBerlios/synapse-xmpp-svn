@@ -784,7 +784,7 @@ int ContactProfile::contactSizeFromCVGroup(ContactViewItem *group) const
 	int total = 0;
 
 	for(ContactViewItem *item = (ContactViewItem *)group->firstChild(); item ; item = (ContactViewItem *)item->nextSibling()) {
-		if(item->type() != ContactViewItem::Contact)
+		if((item->type() != ContactViewItem::Contact) && (item->type() != ContactViewItem::Meta))
 			continue;
 
 		++total;
@@ -799,7 +799,7 @@ int ContactProfile::contactsOnlineFromCVGroup(ContactViewItem *group) const
 	int total = 0;
 
 	for(ContactViewItem *item = (ContactViewItem *)group->firstChild(); item ; item = (ContactViewItem *)item->nextSibling()) {
-		if(item->type() == ContactViewItem::Contact && item->u()->isAvailable())
+		if(((item->type() == ContactViewItem::Contact) || (item->type() == ContactViewItem::Meta)) && item->u()->isAvailable())
 			++total;
 	}
 
@@ -867,14 +867,14 @@ void ContactProfile::updateGroupInfo(ContactViewItem *group)
 	int type = group->groupType();
 	if(type == ContactViewItem::gGeneral || type == ContactViewItem::gAgents || type == ContactViewItem::gPrivate || type == ContactViewItem::gUser) {
 		int online = contactsOnlineFromCVGroup(group);
-		int total;
+		int total=0;
 		if(type == ContactViewItem::gGeneral || type == ContactViewItem::gUser) {
-			QString gname;
-			if(type == ContactViewItem::gUser)
-				gname = group->groupName();
-			else
-				gname = "";
-			total = contactSizeFromGroup(gname);
+// 			QString gname;
+// 			if(type == ContactViewItem::gUser)
+// 				gname = group->groupName();
+// 			else
+// 				gname = "";
+			total = contactSizeFromCVGroup(group);
 		}
 		else {
 			total = group->childCount();
@@ -3532,9 +3532,12 @@ int ContactViewItem::groupType() const
 	return d->groupType;
 }
 
-UserListItem *ContactViewItem::u() const
+UserListItem *ContactViewItem::u()
 {
-	return d->u;
+	if(type_ == Contact)
+		return d->u;
+	else
+		return priority();
 }
 
 int ContactViewItem::status() const
@@ -3958,6 +3961,7 @@ void ContactViewItem::resetMetaStatus()
 	// If the status is shown, update the text of the item too
 	if (static_cast<ContactView*>(Q3ListViewItem::listView())->isShowStatusMsg())
 		resetMetaName();
+	updatePosition();
 }
 
 void ContactViewItem::resetName(bool forceNoStatusMsg)

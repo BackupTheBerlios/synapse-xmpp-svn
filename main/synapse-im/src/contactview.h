@@ -378,7 +378,7 @@ public:
 	const QString & groupName() const;
 	const QString & groupInfo() const;
 	const QString & metaName() const;
-	UserListItem *u() const;
+	UserListItem *u();
 	int status() const;
 	bool isAgent() const;
 	bool isAlerting() const;
