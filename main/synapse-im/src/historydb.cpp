@@ -214,12 +214,12 @@ QTreeWidgetItem *HistoryDB::getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateT
 	return NULL;
 }
 
-HistoryItem *HistoryDB::getEvents(QTreeWidget *eventsTree, QString j, QString date, QString searchFor)
+HistoryItem *HistoryDB::getEvents(QTreeWidget *eventsTree, QString j, QDate date, QString searchFor)
 {
 	QString tableName;
 	tableName = getTableName(j);
 	QSqlQueryModel query;
-	query.setQuery("SELECT type,origin,time,text,html FROM " + tableName + " WHERE date='"+date+"' ORDER BY time");
+	query.setQuery("SELECT type,origin,time,text,html FROM " + tableName + " WHERE date='"+date.toString()+"' ORDER BY time");
 	for(int i=0; i< query.rowCount(); i++)
 	{
 		QString icon;
@@ -249,6 +249,11 @@ HistoryItem *HistoryDB::getEvents(QTreeWidget *eventsTree, QString j, QString da
 		eventsTree->addTopLevelItem(item);
 	}
 	return NULL;
+}
+
+void HistoryDB::deleteEvents(QString j,QDate date,QTime time)
+{
+	QSqlQuery query(QString("DELETE FROM '") + getTableName(j) + "' WHERE date='" + date.toString() + ((time.isValid()) ? (QString("' and time='") + time.toString()) : "") + "'");
 }
 
 void HistoryDB::exportHistory(PsiAccount *pa, XMPP::Jid jid, QString path, QDate date)

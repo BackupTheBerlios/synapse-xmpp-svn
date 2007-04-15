@@ -137,6 +137,22 @@
     <iconset resource="../iconsets.qrc" >:/iconsets/system/default/download.png</iconset>
    </property>
   </widget>
+  <widget class="QToolButton" name="tb_latest" >
+   <property name="geometry" >
+    <rect>
+     <x>60</x>
+     <y>350</y>
+     <width>25</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>...</string>
+   </property>
+   <property name="icon" >
+    <iconset resource="../iconsets.qrc" >:/iconsets/system/default/arrow_up.png</iconset>
+   </property>
+  </widget>
   <widget class="QTreeWidget" name="EventsTree" >
    <property name="geometry" >
     <rect>
@@ -145,6 +161,9 @@
      <width>471</width>
      <height>331</height>
     </rect>
+   </property>
+   <property name="contextMenuPolicy" >
+    <enum>Qt::CustomContextMenu</enum>
    </property>
    <property name="horizontalScrollBarPolicy" >
     <enum>Qt::ScrollBarAlwaysOff</enum>
@@ -184,22 +203,6 @@
      <string>2</string>
     </property>
    </column>
-  </widget>
-  <widget class="QToolButton" name="tb_latest" >
-   <property name="geometry" >
-    <rect>
-     <x>60</x>
-     <y>350</y>
-     <width>25</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <property name="text" >
-    <string>...</string>
-   </property>
-   <property name="icon" >
-    <iconset resource="../iconsets.qrc" >:/iconsets/system/default/arrow_up.png</iconset>
-   </property>
   </widget>
  </widget>
  <resources>

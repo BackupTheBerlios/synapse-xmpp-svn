@@ -13,7 +13,7 @@
 
 #include "historydlg.h"
 
-#include <q3popupmenu.h>
+#include <qmenu.h>
 #include <q3header.h>
 #include <qlayout.h>
 #include <qlabel.h>
@@ -75,6 +75,7 @@ HistoryDlg::HistoryDlg(const XMPP::Jid& j, PsiAccount* pa)
 	DateTree->setHeaderLabel(tr("Date"));
 	DateTree->setSortingEnabled(true);
 	DateTree->setColumnHidden(1,true);
+	connect(DateTree, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(doDateContextMenu(const QPoint &)));
 
 	EventsTree->setColumnCount(4);
 	QStringList headers;
@@ -84,6 +85,7 @@ HistoryDlg::HistoryDlg(const XMPP::Jid& j, PsiAccount* pa)
 	EventsTree->setSortingEnabled(true);
 
 	connect(EventsTree, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), SLOT(actionOpenEvent(QTreeWidgetItem *, int)));
+	connect(EventsTree, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(doEventContextMenu(const QPoint &)));
 	connect(tb_previousMonth, SIGNAL(clicked()), SLOT(doPrev()));
 	connect(tb_latest, SIGNAL(clicked()), SLOT(doLatest()));
 	connect(tb_nextMonth, SIGNAL(clicked()), SLOT(doNext()));
@@ -106,7 +108,7 @@ HistoryDlg::~HistoryDlg()
 	pa_->dialogUnregister(this);
 }
 
-void HistoryDlg::loadPage(QString date,QString searchFor)
+void HistoryDlg::loadPage(QDate date,QString searchFor)
 {
 	EventsTree->clear();
 	HistoryDB *h = HistoryDB::instance();
@@ -116,7 +118,7 @@ void HistoryDlg::loadPage(QString date,QString searchFor)
 void HistoryDlg::dateSelected(QTreeWidgetItem *item, int column)
 {
 	lookDate = ((DateItem*)item)->date();
-	loadPage(lookDate.toString(),findText);
+	loadPage(lookDate,findText);
 }
 
 void HistoryDlg::actionOpenEvent(QTreeWidgetItem *item, int column)
@@ -135,6 +137,49 @@ void HistoryDlg::actionOpenEvent(QTreeWidgetItem *item, int column)
 	openEvent(me);
 }
 
+void HistoryDlg::actionDeleteDate(QTreeWidgetItem *item)
+{
+	HistoryDB *h = HistoryDB::instance();
+	h->deleteEvents(jid_,lookDate,QTime());
+	loadPage(lookDate,findText);
+}
+
+void HistoryDlg::actionDeleteEvent(QTreeWidgetItem *item)
+{
+	HistoryDB *h = HistoryDB::instance();
+	QString sTime;
+	h->deleteEvents(jid_,lookDate,QTime::fromString(item->text(1)));
+	loadPage(lookDate,findText);
+}
+
+void HistoryDlg::doDateContextMenu(const QPoint &pos)
+{
+	QMenu cm;
+	QAction* _open = cm.addAction(tr("Open"));
+	QAction* _delete = cm.addAction(tr("Delete"));
+
+	QAction* x = cm.exec(DateTree->mapToGlobal(pos));
+	
+	if(x == _open)
+		loadPage(lookDate, findText);
+	else if (x == _delete)
+		actionDeleteDate(DateTree->currentItem());
+}
+
+void HistoryDlg::doEventContextMenu(const QPoint &pos)
+{
+	QMenu cm;
+	QAction* _open = cm.addAction(tr("Open"));
+	QAction* _delete = cm.addAction(tr("Delete"));
+
+	QAction* x = cm.exec(EventsTree->mapToGlobal(pos));
+	
+	if(x == _open)
+		actionOpenEvent(EventsTree->currentItem(),1);
+	else if (x == _delete)
+		actionDeleteEvent(EventsTree->currentItem());
+}
+
 void HistoryDlg::doMonths()
 {
 	HistoryDB *h = HistoryDB::instance();
@@ -147,7 +192,7 @@ void HistoryDlg::doMonths()
 		lookDate = di->date();
 		DateTree->insertTopLevelItem(0,di);
 		DateTree->setCurrentItem(di);
-		loadPage(lookDate.toString(),findText);
+		loadPage(lookDate,findText);
 	}
 }
 
@@ -181,7 +226,7 @@ void HistoryDlg::doFind()
 		DateTree->insertTopLevelItem(0,di);
 		DateTree->setCurrentItem(di);
 		lookDate = di->date();
-		loadPage(lookDate.toString(),findText);
+		loadPage(lookDate,findText);
 	}
 }
 

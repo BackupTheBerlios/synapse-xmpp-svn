@@ -56,7 +56,7 @@ public:
 	HistoryDlg(const XMPP::Jid& j, PsiAccount* pa);
 	~HistoryDlg();
 
-	void loadPage(QString date, QString searchFor="");
+	void loadPage(QDate date, QString searchFor="");
 
 public slots:
 	void dateSelected(QTreeWidgetItem *item, int column);
@@ -66,11 +66,15 @@ public slots:
 	void doNext();
 	void doFind();
 	void doExport();
+	void doDateContextMenu(const QPoint &pos);
+	void doEventContextMenu(const QPoint &pos);
 
 signals:
 	void openEvent(PsiEvent *e);
 
 private:
+	void actionDeleteEvent(QTreeWidgetItem *item);
+	void actionDeleteDate(QTreeWidgetItem *item);
 	void doMonths();
 
 	PsiAccount *pa_;

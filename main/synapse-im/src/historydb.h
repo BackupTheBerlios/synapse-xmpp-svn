@@ -25,10 +25,12 @@ public:
 	QTreeWidgetItem *getDates(HistoryDlg *dlg,QTreeWidget *dateTree,QString j, QDate selected, QString searchFor="");
 	QTreeWidgetItem *getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QString searchFor);
 
-	HistoryItem *getEvents(QTreeWidget *eventsTree,QString j, QString date, QString searchFor="");
+	HistoryItem *getEvents(QTreeWidget *eventsTree,QString j, QDate date, QString searchFor="");
 	static HistoryDB *instance();
 	bool logEvent(QString j, PsiEvent *e);
 	void exportHistory(PsiAccount *pa, XMPP::Jid jid, QString path, QDate selectedDate);
+
+	void deleteEvents(QString j,QDate date,QTime time);
 private:
 	HistoryDB();
 	~HistoryDB();
