@@ -70,6 +70,18 @@ void PsiTabWidget::mouseDoubleClickTab( int tab )
 	emit mouseDoubleClickTab(widget(tab));
 }
 
+void PsiTabWidget::tabInserted(int index) 
+{
+	if (count() > 1)
+		tabBar()->show();
+	else
+		tabBar()->hide();
+}
 
-
-
+void PsiTabWidget::tabRemoved(int index) 
+{
+	if (count() > 1)
+		tabBar()->show();
+	else
+		tabBar()->hide();
+}

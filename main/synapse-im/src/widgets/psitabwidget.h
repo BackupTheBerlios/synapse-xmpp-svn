@@ -44,6 +44,9 @@ public:
 signals:
 	void mouseDoubleClickTab( QWidget* tab );
 
+protected:
+	virtual void tabInserted(int index);
+	virtual void tabRemoved(int index);
 
 private slots:
 	void mouseDoubleClickTab( int tab );
