@@ -5,19 +5,27 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>537</width>
+    <height>362</height>
    </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy>
+    <hsizetype>7</hsizetype>
+    <vsizetype>7</vsizetype>
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle" >
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" >
+  <layout class="QHBoxLayout" >
    <property name="margin" >
     <number>4</number>
    </property>
    <property name="spacing" >
-    <number>6</number>
+    <number>4</number>
    </property>
    <item>
     <widget class="ChatSplitter" name="splitter" >
@@ -136,6 +144,9 @@
          </item>
          <item>
           <widget class="QToolButton" name="tb_pgp" >
+           <property name="toolTip" >
+            <string>Toggle encryption</string>
+           </property>
            <property name="text" >
             <string/>
            </property>
@@ -144,14 +155,14 @@
              <width>16</width>
              <height>16</height>
             </size>
-           </property>
-           <property name="toolTip" >
-            <string>Toggle encryption</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="tb_emoticons" >
+           <property name="toolTip" >
+            <string>Select icon</string>
+           </property>
            <property name="text" >
             <string/>
            </property>
@@ -160,14 +171,14 @@
              <width>16</width>
              <height>16</height>
             </size>
-           </property>
-           <property name="toolTip" >
-            <string>Select icon</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="tb_actions" >
+           <property name="toolTip" >
+            <string>Actions</string>
+           </property>
            <property name="text" >
             <string/>
            </property>
@@ -176,9 +187,6 @@
              <width>16</width>
              <height>16</height>
             </size>
-           </property>
-           <property name="toolTip" >
-            <string>Actions</string>
            </property>
            <property name="arrowType" >
             <enum>Qt::DownArrow</enum>
@@ -279,25 +287,86 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QToolButton" name="tb_showToolBox" >
+           <property name="sizePolicy" >
+            <sizepolicy>
+             <hsizetype>0</hsizetype>
+             <vsizetype>7</vsizetype>
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text" >
+            <string>></string>
+           </property>
+           <property name="iconSize" >
+            <size>
+             <width>6</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="toolButtonStyle" >
+            <enum>Qt::ToolButtonIconOnly</enum>
+           </property>
+           <property name="arrowType" >
+            <enum>Qt::RightArrow</enum>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
       </layout>
      </widget>
     </widget>
    </item>
+   <item>
+    <widget class="QToolBox" name="toolBox" >
+     <property name="sizePolicy" >
+      <sizepolicy>
+       <hsizetype>0</hsizetype>
+       <vsizetype>7</vsizetype>
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="autoFillBackground" >
+      <bool>true</bool>
+     </property>
+     <property name="currentIndex" >
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="page_3" >
+      <property name="geometry" >
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>90</width>
+        <height>296</height>
+       </rect>
+      </property>
+      <attribute name="label" >
+       <string>Page 1</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="page_4" >
+      <property name="geometry" >
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>96</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <attribute name="label" >
+       <string>Page 2</string>
+      </attribute>
+     </widget>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>AccountLabel</class>
-   <extends>QLabel</extends>
-   <header>accountlabel.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ChatSplitter</class>
-   <extends>QSplitter</extends>
-   <header>chatsplitter.h</header>
-  </customwidget>
   <customwidget>
    <class>ChatEditProxy</class>
    <extends>QTextEdit</extends>
@@ -313,7 +382,20 @@
    <extends>QLabel</extends>
    <header>iconlabel.h</header>
   </customwidget>
+  <customwidget>
+   <class>AccountLabel</class>
+   <extends>QLabel</extends>
+   <header>accountlabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ChatSplitter</class>
+   <extends>QSplitter</extends>
+   <header>chatsplitter.h</header>
+  </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../psi.qrc" />
+  <include location="../iconsets.qrc" />
+ </resources>
  <connections/>
 </ui>

@@ -45,6 +45,19 @@ class QDragEnterEvent;
 
 #include "ui_chatdlg.h"
 
+class RichStatus : public QWidget
+{
+	Q_OBJECT
+public:
+	RichStatus(QWidget *parent);
+	~RichStatus();
+
+	void setStatusString(QString txt, int width);
+	void paintEvent(QPaintEvent *pe);
+private:
+	QTextDocument *v_rs;
+};
+
 class ChatDlg : public AdvancedWidget<QWidget>
 {
 	Q_OBJECT
@@ -96,6 +109,7 @@ public slots:
 	void activated();
 	void updateAvatar();
 	void updateAvatar(const Jid&);
+	void resizeToolBox(QSize size);
 
 private slots:
 	void scrollUp();
@@ -124,6 +138,8 @@ private slots:
 	void updateIdentityVisibility();
 	void chatEditCreated();
 	void initComposing();
+
+	void showToolBox();
 
 public:
 	class Private;

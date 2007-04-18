@@ -405,7 +405,8 @@ INTERFACES += \
 	$$PWD/privacyrule.ui \
 	$$PWD/mood.ui \
 	$$PWD/voicecall.ui \
-	$$PWD/chatdlg.ui
+	$$PWD/chatdlg.ui \
+	$$PWD/chat/chatcontact.ui
 
 # options dialog
 include($$PWD/options/options.pri)

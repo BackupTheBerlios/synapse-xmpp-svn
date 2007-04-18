@@ -219,39 +219,13 @@ private:
 };
 //! \endif
 
-//----------------------------------------------------------------------------
-// IconSelect -- the widget that does all dirty work
-//----------------------------------------------------------------------------
 
-class IconSelect : public QWidget
-{
-	Q_OBJECT
-
-private:
-	IconSelectPopup *menu;
-	Iconset is;
-	QGridLayout *grid;
-	bool shown;
-
-public:
-	IconSelect(IconSelectPopup *parentMenu);
-	~IconSelect();
-
-	void setIconset(const Iconset &);
-	const Iconset &iconset() const;
-
-protected:
-	void noIcons();
-
-protected slots:
-	void closeMenu();
-};
-
-IconSelect::IconSelect(IconSelectPopup *parentMenu)
+IconSelect::IconSelect(QWidget *parentMenu)
 : QWidget(parentMenu)
 {
-	menu = parentMenu;
-	connect(menu, SIGNAL(textSelected(QString)), SLOT(closeMenu()));
+	menu = (IconSelectPopup *)parentMenu;
+	if (menu)
+		connect(menu, SIGNAL(textSelected(QString)), SLOT(closeMenu()));
 
 	grid = 0;
 	noIcons();
@@ -316,9 +290,12 @@ void IconSelect::setIconset(const Iconset &iconset)
 	const int margin = 2;
 	int tileSize = (int)QMAX(w, h) + 2*margin;
 
-	QRect r = QApplication::desktop()->availableGeometry( menu );
-	int maxSize = QMIN(r.width(), r.height())*3/4;
-
+	QRect r;
+	int maxSize = 270; //Limit number of emoticons so toolbar want be too big.
+	if (menu) {
+		r = QApplication::desktop()->availableGeometry( menu );
+		maxSize = QMIN(r.width(), r.height())*3/4;
+	}
 	int size = (int)ceil( sqrt( count ) );
 
 	if ( size*tileSize > maxSize ) { // too many icons. find reasonable size.
@@ -329,7 +306,10 @@ void IconSelect::setIconset(const Iconset &iconset)
 	}
 
 	// now, fill grid with elements
-	grid = new QGridLayout(this, size, size);
+	if (menu)
+		grid = new QGridLayout(this, size, size);
+	else
+		grid = new QGridLayout(this, 500/tileSize, 100/tileSize);
 
 	count = 0;
 
@@ -342,11 +322,17 @@ void IconSelect::setIconset(const Iconset &iconset)
 		grid->addWidget(b);
 		b->setIcon( it.next() );
 		b->setSizeHint( QSize(tileSize, tileSize) );
-		connect (b, SIGNAL(iconSelected(const PsiIcon *)), menu, SIGNAL(iconSelected(const PsiIcon *)));
-		connect (b, SIGNAL(textSelected(QString)), menu, SIGNAL(textSelected(QString)));
+		if (menu) {
+			connect (b, SIGNAL(iconSelected(const PsiIcon *)), menu, SIGNAL(iconSelected(const PsiIcon *)));
+			connect (b, SIGNAL(textSelected(QString)), menu, SIGNAL(textSelected(QString)));
 
-		connect (menu, SIGNAL(aboutToShow()), b, SLOT(aboutToShow()));
-		connect (menu, SIGNAL(aboutToHide()), b, SLOT(aboutToHide()));
+			connect (menu, SIGNAL(aboutToShow()), b, SLOT(aboutToShow()));
+			connect (menu, SIGNAL(aboutToHide()), b, SLOT(aboutToHide()));
+		} else {
+			b->aboutToShow();
+			connect (b, SIGNAL(iconSelected(const PsiIcon *)), this, SIGNAL(iconSelected(const PsiIcon *)));
+			connect (b, SIGNAL(textSelected(QString)), this, SIGNAL(textSelected(QString)));
+		}
 	}
 }
 

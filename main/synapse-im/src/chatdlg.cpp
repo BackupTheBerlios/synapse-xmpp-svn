@@ -75,9 +75,110 @@
 #include "serverinfomanager.h"
 #include "garchive.h"
 
+#include <QPainter>
+#include <QAbstractTextDocumentLayout>
+#include "psirichtext.h"
+
+#include "ui_chatcontact.h"
+
 #ifdef Q_WS_WIN
 #include <windows.h>
 #endif
+
+RichStatus::RichStatus(QWidget *parent)
+: QWidget(parent)
+{
+	v_rs = 0;
+}
+
+RichStatus::~RichStatus()
+{
+	delete v_rs;
+}
+
+void RichStatus::setStatusString(QString txt, int width)
+{
+	if(txt.isEmpty())
+	{
+		delete v_rs;
+		v_rs = 0;
+		return;
+	}
+
+	if(v_rs)
+		delete v_rs;
+
+
+	v_rs = new QTextDocument();
+	v_rs->setUndoRedoEnabled(false);
+
+	PsiRichText::install(v_rs);
+	PsiRichText::setText(v_rs, txt);
+
+	PsiRichText::ensureTextLayouted(v_rs, width);
+}
+
+void RichStatus::paintEvent(QPaintEvent *pe)
+{
+	if(v_rs)
+	{
+		QPainter p((QWidget*)this);
+		QRect rect(pe->rect());
+		p.setClipRect(rect);
+		p.fillRect( rect, backgroundColor() );
+		QAbstractTextDocumentLayout *layout = v_rs->documentLayout();
+		QAbstractTextDocumentLayout::PaintContext context;
+	
+		context.palette = palette();
+		//context.palette.setColor(QPalette::Text,cg.text());
+	
+		layout->draw(&p, context);
+	}
+}
+
+class ChatContactBoxUI : public QWidget, public Ui::ChatContactBox
+{
+	Q_OBJECT
+public:
+	ChatContactBoxUI() : QWidget() 
+	{ 
+		setupUi(this);
+		this->lb_keyIcon->hide();
+		this->lb_keyIcon->setPsiIcon(IconsetFactory::iconPtr("psi/cryptoYes"));
+	}
+
+	void updateAvatar(QPixmap ava)
+	{
+		if (ava.isNull()) {
+			this->avatar->hide();
+		}
+		else {
+			this->avatar->setPixmap(ava.scaled(QSize(100, 100), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+			this->avatar->show();
+		}
+	}
+
+	void updateStatus(const PsiIcon *icon, QString nickname, QString statusString, QString key)
+	{
+		lb_status->setPsiIcon(icon);
+		lb_nickname->setText(nickname);
+		resizeToolBox(QSize(lb_nickname->sizeHint().width() + 30, 500));
+		if (key.isEmpty())
+		{
+			lb_key->hide();
+			lb_keyIcon->hide();
+		} else {
+			lb_key->show();
+			lb_keyIcon->show();
+			lb_key->setText(key);
+		}
+		rs_statusString->setStatusString(statusString, lb_nickname->sizeHint().width()+22);
+		repaint();
+	}
+	
+signals:
+	void resizeToolBox(QSize size);
+};
 
 //----------------------------------------------------------------------------
 // ChatDlg
@@ -100,6 +201,7 @@ public:
 	QMenu *pm_settings;
 	IconAction *act_clear, *act_history, *act_info, *act_pgp, *act_icon, *act_file, *act_compact, *act_voice, *act_otr;
 	QAction *act_send, *act_scrollup, *act_scrolldown, *act_close;
+	QAction *act_tb;
 
 	int pending;
 	bool keepOpen, warnSend;
@@ -119,7 +221,9 @@ public:
 	QString eventId;
 	ChatState contactChatState;
 	ChatState lastChatState; 
+	ChatContactBoxUI *contactBox;
 
+	bool showToolBox_;
 signals:
 	// Signals if user (re)started/stopped composing
 	void composing(bool);
@@ -189,6 +293,25 @@ public slots:
 			isComposing = false;
 		}
 	}
+
+	void setToolBox(QToolBox *toolBox)
+	{
+		contactBox = 0;
+		while( toolBox->count() > 0 ) 
+			toolBox->removeItem(0);
+		if(showToolBox_)
+		{
+			contactBox = new ChatContactBoxUI();
+			connect (contactBox, SIGNAL(resizeToolBox(QSize)), dlg, SLOT(resizeToolBox(QSize)));
+			toolBox->setItemIcon( toolBox->addItem(contactBox, tr("Contact")), IconsetFactory::icon("psi/vCard").icon() );
+			IconSelect *iconSelect = new IconSelect(0);
+//		connect (iconSelect, SIGNAL(iconSelected(const PsiIcon *)), menu, SIGNAL(iconSelected(const PsiIcon *)));
+			connect (iconSelect, SIGNAL(textSelected(QString)), this, SLOT(addEmoticon(QString)));
+
+			iconSelect->setIconset(pa->psi()->iconSelectPopup()->iconset());
+			toolBox->setItemIcon( toolBox->addItem(iconSelect, tr("Emoticons")), IconsetFactory::icon("psi/smile").icon());
+		}
+	}
 };
 
 ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
@@ -214,6 +337,7 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 	ui_.lb_ident->setAccount(d->pa);
 	ui_.lb_ident->setShowJid(false);
 
+
 	PsiToolTip::install(ui_.lb_status);
 	ui_.lb_status->setPsiIcon(IconsetFactory::iconPtr("status/noauth"));
 
@@ -236,6 +360,21 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 	d->act_icon = new IconAction( tr( "Select icon" ), "psi/smile", tr( "Select icon" ), 0, this );
 	d->act_icon->setMenu( pa->psi()->iconSelectPopup() );
 	ui_.tb_emoticons->setMenu( pa->psi()->iconSelectPopup());
+
+	d->setToolBox(ui_.toolBox);
+	if(d->showToolBox_)
+	{	
+		ui_.toolBox->show();
+		ui_.tb_showToolBox->setArrowType(Qt::LeftArrow);
+	} else {
+		ui_.toolBox->hide();
+		ui_.tb_showToolBox->setArrowType(Qt::RightArrow);
+	}
+
+	d->act_tb = new QAction( tr( "Show toolbox" ), this);
+	ui_.tb_showToolBox->setDefaultAction(d->act_tb);
+	connect(ui_.tb_showToolBox, SIGNAL( triggered(QAction *) ), SLOT( showToolBox() ));
+
 
 	d->act_voice = new IconAction( tr( "Voice Call" ), "psi/voice", tr( "Voice Call" ), 0, this );
 	connect(d->act_voice, SIGNAL(activated()), SLOT(doVoice()));
@@ -645,11 +784,18 @@ void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
 			d->statusString = statusString;
 		}
 
-		if(statusChanged) {
-			if(status == -1 || !u)
+		if(statusChanged || d->contactBox) {
+			if(status == -1 || !u) {
 				ui_.lb_status->setPsiIcon(IconsetFactory::iconPtr("status/noauth"));
-			else
+				if (d->contactBox)
+					d->contactBox->updateStatus(IconsetFactory::iconPtr("status/noauth"), Qt::escape(d->dispNick), statusString, key);
+			} else {
 				ui_.lb_status->setPsiIcon(PsiIconset::instance()->statusPtr(jid, status));
+				if (d->contactBox)
+					d->contactBox->updateStatus(PsiIconset::instance()->statusPtr(jid, status), Qt::escape(d->dispNick), statusString, key);
+			}
+//			if(d->contactBox && (d->contactBox->width() != ui_.toolBox->width()))
+//				ui_.toolBox->setFixedSize(QSize(16+d->contactBox->width(),300));
 		}
 
 		if(u)
@@ -748,8 +894,14 @@ void ChatDlg::updateAvatar()
 	else {
 		int size = PsiOptions::instance()->getOption("options.ui.chat.avatars.size").toInt();
 		ui_.avatar->setPixmap(p.scaled(QSize(size, size), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-		ui_.avatar->show();
+		ui_.avatar->setPixmap(p.scaled(QSize(size, size), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+		if(!d->showToolBox_)
+			ui_.avatar->show();
+		else 
+			ui_.avatar->hide();
 	}
+	if(d->contactBox)
+		d->contactBox->updateAvatar(p);
 }
 
 
@@ -1307,6 +1459,33 @@ void ChatDlg::setContactChatState(ChatState state)
 	emit contactStateChanged( state );
 	updateCaption();
 }
+
+void ChatDlg::showToolBox()
+{
+	d->showToolBox_ = !d->showToolBox_;
+	if(!d->showToolBox_)
+	{	
+		ui_.toolBox->hide();
+		ui_.avatar->show();
+		ui_.tb_showToolBox->setArrowType(Qt::RightArrow);
+	} else {
+		if (!d->contactBox)
+		{
+			d->setToolBox(ui_.toolBox);
+			updateContact(d->jid, true);
+			updateAvatar();
+		}
+		ui_.toolBox->show();
+		ui_.avatar->hide();
+		ui_.tb_showToolBox->setArrowType(Qt::LeftArrow);
+	}
+}
+
+void ChatDlg::resizeToolBox(QSize size)
+{
+	ui_.toolBox->setFixedSize(size);
+}
+
 
 void ChatDlg::toggleSmallChat()
 {

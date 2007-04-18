@@ -22,6 +22,8 @@
 #define ICONSELECT_H
 
 #include <QMenu>
+#include <QLayout>
+#include "iconset.h"
 
 class PsiIcon;
 class Iconset;
@@ -47,6 +49,39 @@ signals:
 private:
 	class Private;
 	Private *d;
+};
+
+
+//----------------------------------------------------------------------------
+// IconSelect -- the widget that does all dirty work
+//----------------------------------------------------------------------------
+
+class IconSelect : public QWidget
+{
+	Q_OBJECT
+
+private:
+	IconSelectPopup *menu;
+	Iconset is;
+	QGridLayout *grid;
+	bool shown;
+
+public:
+	IconSelect(QWidget *parentMenu);
+	~IconSelect();
+
+	void setIconset(const Iconset &);
+	const Iconset &iconset() const;
+
+signals:
+	void iconSelected(const PsiIcon *);
+	void textSelected(QString);
+
+protected:
+	void noIcons();
+
+protected slots:
+	void closeMenu();
 };
 
 #endif

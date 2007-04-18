@@ -544,7 +544,7 @@ void MainWin::setUseDock(bool use)
 	if(d->tray)
 		return;
 
-	d->tray = new PsiTrayIcon("Psi", d->trayMenu, d->old_trayicon);
+	d->tray = new PsiTrayIcon("Synapse-IM", d->trayMenu, d->old_trayicon);
 	if (d->old_trayicon) {
 		connect(d->tray, SIGNAL(closed()), SLOT(dockActivated()));
 		connect(qApp, SIGNAL(trayOwnerDied()), SLOT(dockActivated()));
