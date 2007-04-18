@@ -2,6 +2,8 @@
 CONFIG += release
 CONFIG += qca-static
 DEFINES += HAVE_SNARL
+CONFIG += whiteboarding
+QT += sql
 
 # OpenSSL
 qca-static {

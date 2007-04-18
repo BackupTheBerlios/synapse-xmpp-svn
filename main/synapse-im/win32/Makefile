@@ -4,10 +4,11 @@
 #QCA_OPENSSLDIR=..\..\qca-openssl
 ASPELLDIR=C:\aspell
 QTDIR=C:\Qt\4.2.2
+OPENSSL=C:\OpenSSL\lib\MinGW
 MINGWDIR=c:\MingW
 WINDOWSDIR=C:\Windows
 
-TARGET_DIR=psi
+TARGET_DIR=synapse-im
 
 .PHONY: all
 all:
@@ -27,12 +28,10 @@ all:
 	xcopy /i /e /q /y ..\iconsets $(TARGET_DIR)\iconsets
 	xcopy /i /e /q /y ..\sound $(TARGET_DIR)\sound
 	copy ..\COPYING $(TARGET_DIR)
-	tod ..\README $(TARGET_DIR)\ReadMe.txt
-	tod ..\INSTALL $(TARGET_DIR)\Install.txt
 	rem -mkdir $(TARGET_DIR)\crypto
 	rem copy $(QCA_OPENSSLDIR)\release\qca-openssl.dll $(TARGET_DIR)\crypto
 	copy $(WINDOWSDIR)\system32\libeay32.dll $(TARGET_DIR)
 	copy $(WINDOWSDIR)\system32\ssleay32.dll $(TARGET_DIR)
 	xcopy /i /e /q /y $(QTDIR)\plugins\imageformats $(TARGET_DIR)\imageformats
-	copy ..\synapse-im_pl.qm $(TARGET_DIR)
-	copy ..\qt_pl.qm $(TARGER_DIR)
+	-mkdir $(TARGET_DIR)\sqldrivers
+	copy $(QTDIR)\plugins\sqldrivers\qsqlite.dll $(TARGET_DIR)\sqldrivers
