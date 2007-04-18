@@ -351,7 +351,7 @@ private:
 	int v_avatarSize;
 	Jid v_jid;
 	AvatarFactory *v_avatarFactory;
-	QPixmap avatar;
+	QPixmap *avatar;
 	int avatar_x;
 	int avatar_y;
     // ------
