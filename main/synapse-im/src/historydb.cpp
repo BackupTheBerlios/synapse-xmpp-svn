@@ -82,8 +82,8 @@ HistoryDB::HistoryDB()
 	db = QSqlDatabase::addDatabase("QSQLITE");
 	db.setDatabaseName(pathToProfile(activeProfile) + "/history.db");
 	if (!db.open()) {
-		QMessageBox::critical(0, qApp->tr("Cannot open database"),
-		qApp->tr("Unable to establish a database connection.\n"
+		QMessageBox::critical(0, tr("Cannot open database"),
+		tr("Unable to establish a database connection.\n"
 			"This example needs SQLite support. Please read "
 			"the Qt SQL driver documentation for information how "
 			"to build it.\n\n"

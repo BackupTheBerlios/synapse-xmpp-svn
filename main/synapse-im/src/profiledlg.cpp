@@ -105,10 +105,10 @@ ProfileOpenDlg::ProfileOpenDlg(const QString &def, const VarList &_langs, const 
 	cb_profile->setWhatsThis(
 		tr("Select a profile to open from this list."));
 	cb_lang->setWhatsThis(
-		tr("Select a language you would like Psi to use from this "
-		"list.  You can download extra language packs from the Psi homepage."));
+		tr("Select a language you would like Synapse-IM to use from this "
+		"list.  You can download extra language packs from the Synapse-IM homepage."));
 	ck_auto->setWhatsThis(
-		tr("Automatically open this profile when Psi is started.  Useful if "
+		tr("Automatically open this profile when Synapse-IM is started.  Useful if "
 		"you only have one profile."));
 
 	reload(def);

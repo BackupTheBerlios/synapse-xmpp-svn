@@ -30,7 +30,7 @@ TranslationManager::TranslationManager()
 {
 	// Initialize
 	currentLanguage_ = "en";
-	QString currentLanguageName = QT_TR_NOOP("language_name");
+//	QString currentLanguageName = QT_TR_NOOP("language_name");
 
 	// The application translator
 	translator_ = new QTranslator(0);
@@ -92,7 +92,7 @@ void TranslationManager::loadTranslation(const QString& language)
 	for(QStringList::Iterator it = dirs.begin(); it != dirs.end(); ++it) {
 		if(!QFile::exists(*it))
 			continue;
-		if (translator_->load("psi_" + language, *it)) {
+		if (translator_->load("synapse-im_" + language, *it)) {
 			// try to load qt library translation
 			qt_translator_->load("qt_" + language, *it);
 			if (currentLanguage_ == "en") {
@@ -124,14 +124,14 @@ VarList TranslationManager::availableTranslations()
 
 			QString str = *it2;
 			// verify that it is a language file
-			if(str.left(4) != "psi_")
+			if(str.left(11) != "synapse-im_")
 				continue;
-			int n = str.find('.', 4);
+			int n = str.find('.', 11);
 			if(n == -1)
 				continue;
 			if(str.mid(n) != ".qm")
 				continue;
-			QString lang = str.mid(4, n-4);
+			QString lang = str.mid(11, n-11);
 
 			//printf("found [%s], lang=[%s]\n", str.latin1(), lang.latin1());
 

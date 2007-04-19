@@ -89,7 +89,7 @@ TRANSLATIONS = \
 #	$$LANG_PATH/psi_jp.ts \
 #	$$LANG_PATH/psi_mk.ts \
 #	$$LANG_PATH/psi_nl.ts \
-	$$LANG_PATH/psi_pl.ts 
+	$$LANG_PATH/synapse-im_pl.ts 
 #	$$LANG_PATH/psi_pt.ts \
 #	$$LANG_PATH/psi_ptbr.ts \
 #	$$LANG_PATH/psi_ru.ts \
