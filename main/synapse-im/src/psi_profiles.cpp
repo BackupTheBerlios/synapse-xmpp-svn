@@ -458,6 +458,11 @@ void UserProfile::reset()
 	// global
 	mwgeom.setRect(64, 64, 150, 360);
 	lastStatusString = "";
+	for(int i=0; i<5; i++)
+	{
+		lastStatusStrings[i].status = "";
+		lastStatusStrings[i].type = XMPP::Status::Offline;
+	}
 	useSound = TRUE;
 	proxyList.clear();
 	acc.clear();
@@ -822,6 +827,16 @@ bool UserProfile::toFile(const QString &fname)
 	base.appendChild(stringListToXml(doc, "recentBrowseList", recentBrowseList));
 	base.appendChild(textTag(doc, "lastStatusString", lastStatusString));
 	base.appendChild(textTag(doc, "useSound", useSound));
+
+	QDomElement p_last = doc.createElement("lastStatusStrings");
+	base.appendChild(p_last);
+	for(int i=0; i<5; i++)
+	{
+		QDomElement p_statusString = doc.createElement("statusString");
+		p_statusString.setAttribute("status", lastStatusStrings[i].status);
+		p_statusString.setAttribute("type", lastStatusStrings[i].type);
+		p_last.appendChild(p_statusString);
+	}
 
 	QDomElement accs = doc.createElement("accounts");
 	base.appendChild(accs);
@@ -1332,6 +1347,23 @@ bool UserProfile::fromFile(const QString &fname)
 	readBoolEntry(base, "useSound", &useSound);
 
 	bool found;
+	QDomElement p_last = findSubTag(base, "lastStatusStrings", &found);
+	if(found)
+	{
+		int i=0;
+		for(QDomNode n = p_last.firstChild(); !n.isNull(); n = n.nextSibling()) {
+			QDomElement a = n.toElement();
+			if(a.isNull())
+				continue;
+
+			if((a.tagName() == "statusString") && (i<5)) {
+				lastStatusStrings[i].status = a.attribute("status");
+				lastStatusStrings[i].type = (XMPP::Status::Type) a.attribute("type").toInt();
+				i++;
+			}
+		}
+	}
+
 	QDomElement accs = findSubTag(base, "accounts", &found);
 	if(found) {
 		for(QDomNode n = accs.firstChild(); !n.isNull(); n = n.nextSibling()) {

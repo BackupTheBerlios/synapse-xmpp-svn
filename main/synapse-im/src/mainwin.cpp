@@ -91,7 +91,7 @@ public:
 
 	QVBoxLayout *vb_main;
 	bool onTop, asTool;
-	QMenu *mainMenu, *statusMenu, *optionsMenu, *toolsMenu;
+	QMenu *mainMenu, *statusMenu, *statusLastMenu, *optionsMenu, *toolsMenu;
 	int sbState;
 	QString nickname;
 	PsiTrayIcon *tray;
@@ -105,11 +105,13 @@ public:
 	MainWin *mainWin;
 
 	QSignalMapper *statusMapper;
+	QSignalMapper *statusLastMapper;
 
 	PsiIcon *nextAnim;
 	int nextAmount;
 
 	QMap<QAction *, int> statusActions;
+	QAction *statusLastAction[5];
 
 	int lastStatus;
 	bool old_trayicon;
@@ -132,6 +134,9 @@ MainWin::Private::Private(PsiCon *_psi, MainWin *_mainWin)
 
 	statusMapper = new QSignalMapper(mainWin, "statusMapper");
 	mainWin->connect(statusMapper, SIGNAL(mapped(int)), mainWin, SLOT(activatedStatusAction(int)));
+
+	statusLastMapper = new QSignalMapper();
+	mainWin->connect(statusLastMapper, SIGNAL(mapped(int)), mainWin, SLOT(activatedStatusLastAction(int)));
 }
 
 MainWin::Private::~Private()
@@ -149,7 +154,6 @@ void MainWin::Private::registerActions()
 		{ "status_away",      STATUS_AWAY      },
 		{ "status_xa",        STATUS_XA        },
 		{ "status_dnd",       STATUS_DND       },
-		{ "status_invisible", STATUS_INVISIBLE },
 		{ "status_offline",   STATUS_OFFLINE   },
 		{ "", 0 }
 	};
@@ -559,6 +563,61 @@ void MainWin::setUseDock(bool use)
 	d->tray->show();
 }
 
+void MainWin::updateStatusLastMenu()
+{
+	LastStatus *ls;
+	for(int i=0; i<5; i++)
+	{
+		ls = getLastStatus(i);
+		QString t;
+		switch(ls->type) {
+			case STATUS_OFFLINE:
+				t="status/offline";
+				break;
+			case STATUS_AWAY:
+				t="status/away";
+				break;
+			case STATUS_XA:
+				t="status/xa";
+				break;
+			case STATUS_DND:
+				t="status/dnd";
+				break;
+			case STATUS_CHAT:
+				t="status/chat";
+				break;
+			case STATUS_ONLINE:	
+			default:
+				t="status/online";
+				break;
+		}
+		d->statusLastAction[i]->setIcon(IconsetFactory::iconPtr(t)->icon());
+		d->statusLastAction[i]->setText(ls->status.left(15));
+	}
+}
+
+void MainWin::buildStatusLastMenu()
+{
+//	d->getAction("status_lastly")->addTo(d->statusMenu);
+	if(d->statusLastMenu)
+		delete d->statusLastMenu;
+
+//	d->statusLastMenu = new QMenu(0);
+	d->statusLastMenu = d->statusMenu->addMenu(IconsetFactory::iconPtr("status/ask")->icon(),tr("Lastly used.."));
+//	d->statusLastMapper = new QSignalMapper();
+	for(int i=0; i<5; i++)
+	{
+		d->statusLastAction[i] = d->statusLastMenu->addAction("Last 1");
+		d->statusLastMapper->setMapping(d->statusLastAction[i], i);
+		connect (d->statusLastAction[i], SIGNAL(activated()), d->statusLastMapper, SLOT(map()));
+	}
+
+// 		IconAction *action = getAction( aName );
+
+// 		statusMapper->setMapping(action, statuslist[i].id);
+// 		statusActions[action] = statuslist[i].id;
+}
+
 void MainWin::buildStatusMenu()
 {
 	d->statusMenu->clear();
@@ -570,10 +629,10 @@ void MainWin::buildStatusMenu()
 	if (PsiOptions::instance()->getOption("options.ui.menu.status.xa").toBool())
 		d->getAction("status_xa")->addTo(d->statusMenu);
 	d->getAction("status_dnd")->addTo(d->statusMenu);
-	if (PsiOptions::instance()->getOption("options.ui.menu.status.invisible").toBool()) {
-		d->statusMenu->insertSeparator();
-		d->getAction("status_invisible")->addTo(d->statusMenu);
-	}
+	d->statusMenu->insertSeparator();
+
+	buildStatusLastMenu();
+
 	d->statusMenu->insertSeparator();
 	d->getAction("status_offline")->addTo(d->statusMenu);
 	d->statusMenu->insertSeparator();
@@ -589,6 +648,19 @@ void MainWin::activatedStatusAction(int id)
 	}
 
 	statusChanged(id);
+}
+
+void MainWin::activatedStatusLastAction(int id)
+{
+	QObjectList l = d->statusGroup->queryList( "IconAction" );
+	for (QObjectList::Iterator it = l.begin() ; it != l.end(); ++it) {
+		IconAction *action = (IconAction *)(*it);
+		action->setChecked ( false );
+	}
+
+	printf("clicked %d\n",id);
+//	statusChanged(id);
+	statusLastChanged(id);
 }
 
 QMenuBar* MainWin::mainMenuBar() const

@@ -26,6 +26,7 @@
 #include <QList>
 #include <QString>
 #include <QStringList>
+#include "profiles.h"
 
 #include "advwidget.h"
 #ifdef HAVE_DBUS
@@ -81,6 +82,8 @@ protected:
 
 signals:
 	void statusChanged(int);
+	LastStatus *getLastStatus(int);
+	void statusLastChanged(int);
 	void changeProfile();
 	void blankMessage();
 	void closeProgram();
@@ -95,6 +98,7 @@ signals:
 	void geomChanged(QRect saveableGeometry);
 
 private slots:
+	void buildStatusLastMenu();
 	void buildStatusMenu();
 	void buildOptionsMenu();
 	void buildTrayMenu();
@@ -104,6 +108,7 @@ private slots:
 	void setTrayToolTip(int);
 
 	void activatedStatusAction(int);
+	void activatedStatusLastAction(int);
 
 	void trayClicked(const QPoint &, int);
 	void trayDoubleClicked();
@@ -137,6 +142,8 @@ private slots:
 	void registerAction( IconAction * );
 
 public slots:
+	void updateStatusLastMenu();
+
 	void setWindowIcon(const QPixmap&);
 	void showNoFocus();
 

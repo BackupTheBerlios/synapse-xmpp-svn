@@ -75,7 +75,7 @@ StatusShowDlg::StatusShowDlg(const UserListItem &u)
 //----------------------------------------------------------------------------
 // StatusSetDlg
 //----------------------------------------------------------------------------
-static XMPP::Status::Type combomap[7] = { STATUS_CHAT, STATUS_ONLINE, STATUS_AWAY, STATUS_XA, STATUS_DND, STATUS_INVISIBLE, STATUS_OFFLINE };
+static XMPP::Status::Type combomap[7] = { STATUS_CHAT, STATUS_ONLINE, STATUS_AWAY, STATUS_XA, STATUS_DND, STATUS_OFFLINE };
 
 class StatusSetDlg::Private
 {
@@ -150,9 +150,9 @@ void StatusSetDlg::init()
 	hb1->addWidget(l);
 	d->cb_type = new QComboBox(this);
 	int n;
-	for(n = 0; n < 7; ++n)
+	for(n = 0; n < 6; ++n)
 		d->cb_type->insertItem(status2txt(combomap[n]));
-	for(n = 0; n < 7; ++n) {
+	for(n = 0; n < 6; ++n) {
 		if(type == combomap[n]) {
 			d->cb_type->setCurrentItem(n);
 			break;

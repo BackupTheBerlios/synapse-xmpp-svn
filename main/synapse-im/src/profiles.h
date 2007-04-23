@@ -80,6 +80,13 @@ public:
 
 typedef QList<UserAccount> UserAccountList;
 
+class LastStatus
+{
+public:
+	QString status;
+	XMPP::Status::Type type;	
+};
+
 
 class UserProfile
 {
@@ -98,6 +105,7 @@ public:
 	QStringList recentGCList;
 	QStringList recentBrowseList;
 	QString lastStatusString;
+	LastStatus lastStatusStrings[5];
 	bool useSound;
 
 	ProxyItemList proxyList;

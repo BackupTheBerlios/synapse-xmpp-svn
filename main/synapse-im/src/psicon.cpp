@@ -190,6 +190,8 @@ public:
 	{
 		pro.recentGCList = recentGCList;
 		pro.recentBrowseList = recentBrowseList;
+		for(int i=0; i<5; i++)
+			pro.lastStatusStrings[i] = lastStatusStrings[i];
 		pro.lastStatusString = lastStatusString;
 		pro.useSound = useSound;
 		pro.prefs = option;
@@ -243,6 +245,7 @@ public:
 	PsiContactList* contactList;
 	UserProfile pro;
 	QString lastStatusString;
+	LastStatus lastStatusStrings[5];
 	MainWin *mainwin;
 	Idle idle;
 	QList<item_dialog*> dialogList;
@@ -275,7 +278,11 @@ PsiCon::PsiCon()
 
 	d = new Private(this);
 
-	d->lastStatusString = "";
+	for(int i=0; i<5; i++)
+	{
+		d->lastStatusStrings[i].status = "";
+		d->lastStatusStrings[i].type = Status::Offline;
+	}
 	useSound = true;
 	d->mainwin = 0;
 	d->ftwin = 0;
@@ -357,7 +364,8 @@ bool PsiCon::init()
 
 	d->recentGCList = d->pro.recentGCList;
 	d->recentBrowseList = d->pro.recentBrowseList;
-	d->lastStatusString = d->pro.lastStatusString;
+	for(int i=0; i<5; i++)
+		d->lastStatusStrings[i] = d->pro.lastStatusStrings[i];
 	useSound = d->pro.useSound;
 
 	option = d->pro.prefs;
@@ -391,6 +399,8 @@ bool PsiCon::init()
 	connect(d->mainwin, SIGNAL(doGroupChat()), SLOT(doGroupChat()));
 	connect(d->mainwin, SIGNAL(blankMessage()), SLOT(doNewBlankMessage()));
 	connect(d->mainwin, SIGNAL(statusChanged(int)), SLOT(statusMenuChanged(int)));
+	connect(d->mainwin, SIGNAL(getLastStatus(int)), SLOT(getLastStatus(int)));
+	connect(d->mainwin, SIGNAL(statusLastChanged(int)), SLOT(setLastStatusGlobal(int)));
 	connect(d->mainwin, SIGNAL(doOptions()), SLOT(doOptions()));
 	connect(d->mainwin, SIGNAL(doToolbars()), SLOT(doToolbars()));
 	connect(d->mainwin, SIGNAL(doFileTransDlg()), SLOT(doFileTransDlg()));
@@ -401,6 +411,7 @@ bool PsiCon::init()
 	connect(this, SIGNAL(emitOptionsUpdate()), d->mainwin->cvlist, SLOT(optionsUpdate()));
 
 	d->mainwin->restoreSavedGeometry(d->pro.mwgeom);
+	d->mainwin->updateStatusLastMenu();
 	
 	if(!(option.useDock && option.dockHideMW))
 		d->mainwin->show();
@@ -870,9 +881,25 @@ void PsiCon::statusMenuChanged(int x)
 	}
 }
 
-void PsiCon::setStatusFromDialog(const Status &s, bool withPriority)
+LastStatus *PsiCon::getLastStatus(int i)
 {
-	d->lastStatusString = s.status();
+	return &d->lastStatusStrings[i];
+}
+
+void PsiCon::setStatusFromDialog(const Status &s, bool withPriority, int pos)
+{
+	if(!s.status().isEmpty())
+	{
+		if(pos == -1)
+			pos = 4;
+		for(int i=pos-1; i>-1; i--)
+			d->lastStatusStrings[i+1] = d->lastStatusStrings[i];
+
+		d->lastStatusStrings[0].status = s.status();
+		d->lastStatusStrings[0].type = s.type();
+		d->mainwin->updateStatusLastMenu();
+	}
+	lastStatusString = s.status();
 	setGlobalStatus(s, withPriority);
 }
 
@@ -891,6 +918,11 @@ void PsiCon::setGlobalStatus(const Status &s,  bool withPriority)
 	foreach(PsiAccount* account, d->contactList->enabledAccounts())
 		if (allOffline || account->isActive())
 			account->setStatus(s, withPriority);
+}
+
+void PsiCon::setLastStatusGlobal(int i)
+{
+	setStatusFromDialog(Status(d->lastStatusStrings[i].type, d->lastStatusStrings[i].status), false);
 }
 
 void PsiCon::pa_updatedActivity()

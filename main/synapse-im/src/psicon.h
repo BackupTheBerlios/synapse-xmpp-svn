@@ -135,6 +135,8 @@ signals:
 
 public slots:
 	void setGlobalStatus(const Status &, bool withPriority = false);
+	LastStatus *getLastStatus(int i);
+	void setLastStatusGlobal(int);
 	void doToolbars();
 	void checkAccountsEmpty();
 
@@ -154,7 +156,7 @@ public slots:
 	void slotApplyOptions(const Options &);
 	void queueChanged();
 	void recvNextEvent();
-	void setStatusFromDialog(const XMPP::Status &, bool withPriority);
+	void setStatusFromDialog(const XMPP::Status &, bool withPriority, int pos = -1);
 	void pgp_keysUpdated();
 	void keyStoreAvailable(const QString&);
 	void proxy_settingsChanged();

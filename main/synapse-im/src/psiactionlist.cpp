@@ -284,8 +284,13 @@ void PsiActionList::Private::createMainWin()
 
 		statusGroup->addSeparator();
 
-		IconAction *statusInvisible = new IconAction (status2txt(STATUS_INVISIBLE), "status/invisible", status2txt(STATUS_INVISIBLE), 0, statusGroup, QString::number(STATUS_INVISIBLE), statusExl);
-		statusInvisible->setWhatsThis (setStatusStr.arg(tr("Invisible")));
+		IconAction *statusLastly = new IconAction (tr("Lastly used.."), "status/ask", tr("Lastly used.."), 0, statusGroup, tr("Lastly used.."), statusExl);
+		statusLastly->setWhatsThis (setStatusStr.arg(tr("Lastly used..")));
+
+		QMenu *statusLastlyMenu = new QMenu(0);
+		IconAction *statusLastly1 = new IconAction (tr("L1"), "status/ask", tr("L1"), 0, statusLastlyMenu,tr("L1"), statusExl);
+		IconAction *statusLastly2 = new IconAction (tr("L2"), "status/ask", tr("L2"), 0, statusLastlyMenu,tr("L2"), statusExl);
+		statusLastly->setMenu(statusLastlyMenu);
 
 		statusGroup->addSeparator();
 
@@ -299,7 +304,7 @@ void PsiActionList::Private::createMainWin()
 			{ "status_away",      statusAway      },
 			{ "status_xa",        statusXa        },
 			{ "status_dnd",       statusDnd       },
-			{ "status_invisible", statusInvisible },
+			{ "status_lastly",    statusLastly    },
 			{ "status_offline",   statusOffline   },
 			{ "", 0 }
 		};
