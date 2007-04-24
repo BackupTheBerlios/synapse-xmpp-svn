@@ -3016,16 +3016,17 @@ void RichListViewItem::setStatus(int status)
 
 void RichListViewItem::greyscaleAvatar()
 {
-	QImage result = avatar->toImage();
-	for (int y = 0; y < result.height(); ++y) {
-		for (int x = 0; x < result.width(); ++x) {
-			int pixel = result.pixel(x, y);
+	QImage *result = new QImage(avatar->toImage());
+	for (int y = 0; y < result->height(); ++y) {
+		for (int x = 0; x < result->width(); ++x) {
+			int pixel = result->pixel(x, y);
 			int gray = qGray(pixel);
 			int alpha = qAlpha(pixel);
-			result.setPixel(x, y, qRgba(gray, gray, gray, alpha));
+			result->setPixel(x, y, qRgba(gray, gray, gray, alpha));
 		}
 	}
-	*avatar = avatar->fromImage(result);
+	*avatar = avatar->fromImage(*result);
+	delete result;
 }
 
 void RichListViewItem::scaleAvatar()
