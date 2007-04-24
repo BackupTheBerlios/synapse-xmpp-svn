@@ -32,7 +32,7 @@
     </rect>
    </property>
    <property name="contextMenuPolicy" >
-    <enum>Qt::NoContextMenu</enum>
+    <enum>Qt::CustomContextMenu</enum>
    </property>
    <property name="horizontalScrollBarPolicy" >
     <enum>Qt::ScrollBarAlwaysOff</enum>
