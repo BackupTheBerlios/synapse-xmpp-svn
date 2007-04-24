@@ -910,6 +910,11 @@ bool PsiAccount::useAMP() const
 	return d->acc.opt_amp;
 }
 
+bool PsiAccount::notifyNewMail() const
+{
+	return d->acc.opt_newMail;
+}
+
 void PsiAccount::setUserAccount(const UserAccount &acc)
 {
 	bool renamed = false;

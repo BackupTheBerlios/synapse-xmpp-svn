@@ -109,6 +109,7 @@ void UserAccount::reset()
 	opt_compress = TRUE;
 	opt_log = TRUE;
 	opt_amp = FALSE;
+	opt_newMail = FALSE;
 	opt_login_as = FALSE;
 	opt_login_status = "";
 	opt_login_message = "";
@@ -154,6 +155,8 @@ QDomElement UserAccount::toXml(QDomDocument &doc, const QString &tagName)
 	setBoolAttribute(a, "reconn", opt_reconn);
 	setBoolAttribute(a, "ignoreSSLWarnings", opt_ignoreSSLWarnings);
 	//setBoolAttribute(a, "gpg", opt_gpg);
+
+	setBoolAttribute(a, "newMail", opt_newMail);
 
 	a.appendChild(textTag(doc, "autostatus-status", opt_login_status));
 	a.appendChild(textTag(doc, "autostatus-message", opt_login_message));
@@ -284,6 +287,8 @@ void UserAccount::fromXml(const QDomElement &a)
 	readBoolAttribute(a, "log", &opt_log);
 	if (a.hasAttribute("amp"))
 		readBoolAttribute(a, "amp", &opt_amp);
+	if (a.hasAttribute("newMail"))
+		readBoolAttribute(a, "newMail", &opt_newMail);
 	if (a.hasAttribute("autostatus"))
 	{
 		readBoolAttribute(a, "autostatus", &opt_login_as);

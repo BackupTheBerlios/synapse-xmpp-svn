@@ -127,6 +127,7 @@ public:
 	QHostAddress *localAddress() const;
 	
 	bool useAMP() const;
+	bool notifyNewMail() const;
 
 	template<typename T>
 	inline T findDialog(const Jid& jid = Jid(), bool compareResource = true) const { 

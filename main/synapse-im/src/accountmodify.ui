@@ -165,6 +165,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="ck_newMail" >
+            <property name="text" >
+             <string>Notify about new Email by new message (GTalk type)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="ck_amp" >
             <property name="text" >
              <string>Use Advanced Message Processing (XEP-0079)</string>
@@ -295,7 +302,7 @@
              <number>6</number>
             </property>
             <item>
-             <widget class="IconLabel" name="lb_keyicon" />
+             <widget class="IconLabel" native="1" name="lb_keyicon" />
             </item>
             <item>
              <widget class="QLabel" name="lb_keyname" >
@@ -923,11 +930,11 @@
          </property>
          <item>
           <widget class="QLabel" name="lb_authid" >
-           <property name="text" >
-            <string>User:</string>
-           </property>
            <property name="enabled" >
             <bool>false</bool>
+           </property>
+           <property name="text" >
+            <string>User:</string>
            </property>
           </widget>
          </item>
@@ -946,23 +953,23 @@
            </property>
           </widget>
          </item>
-		 <item>
-		  <widget class="QLabel" name="lb_realm" >
-		   <property name="text" >
-		    <string>Realm:</string>
-		   </property>
+         <item>
+          <widget class="QLabel" name="lb_realm" >
            <property name="enabled" >
             <bool>false</bool>
            </property>
-		  </widget>
-		 </item>
+           <property name="text" >
+            <string>Realm:</string>
+           </property>
+          </widget>
+         </item>
          <item>
-		  <widget class="QLineEdit" name="le_realm" >
-		   <property name="enabled" >
-		    <bool>false</bool>
-		   </property>
-		   <property name="sizePolicy" >
-		    <sizepolicy>
+          <widget class="QLineEdit" name="le_realm" >
+           <property name="enabled" >
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy" >
+            <sizepolicy>
              <hsizetype>7</hsizetype>
              <vsizetype>0</vsizetype>
              <horstretch>3</horstretch>
@@ -970,7 +977,7 @@
             </sizepolicy>
            </property>
           </widget>
-		 </item>
+         </item>
         </layout>
        </item>
        <item>
@@ -1078,7 +1085,6 @@
    <extends>QWidget</extends>
    <header>iconlabel.h</header>
    <container>1</container>
-   <pixmap></pixmap>
   </customwidget>
  </customwidgets>
  <tabstops>

@@ -149,6 +149,8 @@ void AccountModifyDlg::init()
 	ck_ignoreSSLWarnings->setChecked(acc.opt_ignoreSSLWarnings);
 	le_dtProxy->setText(acc.dtProxy.full());
 	
+	ck_newMail->setChecked(acc.opt_newMail);
+
 	ck_login_as->setChecked(acc.opt_login_as);
 	cb_login_status->clear();
 	QStringList status;
@@ -550,6 +552,8 @@ void AccountModifyDlg::save()
 	acc.opt_keepAlive = ck_keepAlive->isChecked();
 	acc.opt_ignoreSSLWarnings = ck_ignoreSSLWarnings->isChecked();
 	acc.dtProxy = le_dtProxy->text();
+	
+	acc.opt_newMail = ck_newMail->isChecked();
 	
 	acc.opt_login_as = ck_login_as->isChecked();
 	acc.opt_login_status = statusmap[cb_login_status->currentIndex()];

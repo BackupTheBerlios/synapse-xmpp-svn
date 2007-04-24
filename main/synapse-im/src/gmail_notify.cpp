@@ -189,7 +189,7 @@ void GMailNotify::setJid(const XMPP::Jid& j)
 
 void GMailNotify::done()
 {
-	if(task_->isNewMail())
+	if(task_->isNewMail() && pa_->notifyNewMail())
 	{
 	// jest nowa poczta
 	pa_->processIncomingMessage(*task_->newMailInfo());
