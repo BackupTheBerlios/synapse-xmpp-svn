@@ -124,13 +124,13 @@ StatusSetDlg::StatusSetDlg(PsiAccount *pa, const Status &s)
 	init();
 }
 
-void StatusSetDlg::setJid(const Jid &j)
+void StatusSetDlg::setJid(const Jid &j, bool x)  // ugly hack
 {
 	d->j = j;
 	d->setStatusMode = setStatusForJid;
 }
 
-void StatusSetDlg::setJidList(const QList<XMPP::Jid> &jl)
+void StatusSetDlg::setJidList(const QList<XMPP::Jid> &jl, bool x) // ugly hack
 {
 	d->jl = jl;
 	d->setStatusMode = setStatusForJidList;
@@ -266,10 +266,10 @@ void StatusSetDlg::doButton()
 				emit set(makeStatus(type,str), false);
 				break;
 			case setStatusForJid:
-				emit setJid(d->j, makeStatus(type,str));
+				emit setForJid(d->j, makeStatus(type,str), false);
 				break;
 			case setStatusForJidList:
-				emit setJidList(d->jl, makeStatus(type,str));
+				emit setForJidList(d->jl, makeStatus(type,str), false);
 				break;
 		}
  	else 
@@ -278,10 +278,10 @@ void StatusSetDlg::doButton()
 				emit set(makeStatus(type,str), d->le_priority->text().toInt());
 				break;
 			case setStatusForJid:
-				emit setJid(d->j, makeStatus(type,str));
+				emit setForJid(d->j, makeStatus(type,str), d->le_priority->text().toInt());
 				break;
 			case setStatusForJidList:
-				emit setJidList(d->jl, makeStatus(type,str));
+				emit setForJidList(d->jl, makeStatus(type,str), d->le_priority->text().toInt());
 				break;
 		}
 

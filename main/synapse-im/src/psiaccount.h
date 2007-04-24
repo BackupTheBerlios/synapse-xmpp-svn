@@ -117,6 +117,7 @@ public:
 	Status status() const;
 	void setStatusDirect(const Status &, bool withPriority = false);
 	void setStatusActual(const Status &);
+	int priority();
 	void login();
 	void logout(bool fast=false, const Status &s = Status("", "Logged out", 0, false));
 	bool loggedIn() const;

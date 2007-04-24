@@ -51,14 +51,14 @@ class StatusSetDlg : public QDialog
 public:
 	StatusSetDlg(PsiCon *, const Status &);
 	StatusSetDlg(PsiAccount *, const Status &);
-	void setJid(const Jid &);
-	void setJidList(const QList<XMPP::Jid> &);
+	void setJid(const Jid &, bool x = false); // ugly hack
+	void setJidList(const QList<XMPP::Jid> &, bool x = false); // ugly hack
 	~StatusSetDlg();
 
 signals:
 	void set(const XMPP::Status &, bool withPriority);
-	void setJid(const Jid &, const Status &);
-	void setJidList(const QList<XMPP::Jid> &, const Status &);
+	void setForJid(const Jid &, Status, bool withPriority);
+	void setForJidList(const QList<XMPP::Jid> &, Status, bool withPriority);
 	void cancelled();
 
 private slots:

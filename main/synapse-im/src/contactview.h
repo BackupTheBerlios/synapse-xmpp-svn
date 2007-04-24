@@ -134,8 +134,8 @@ signals:
 private slots:
 	void updateGroups();
 public slots:
-	void setStatusFromDialog(const Jid &j, const Status &s);
-	void setStatusFromDialog(const QList<XMPP::Jid> &j, const Status &s);
+	void setStatusFromDialog(const Jid &j, Status s, bool withPriority = false);
+	void setStatusFromDialog(const QList<XMPP::Jid> &j, Status s, bool withPriority = false);
 
 public:
 	class Entry;

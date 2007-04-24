@@ -1199,7 +1199,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 			StatusSetDlg *w = new StatusSetDlg(d->pa->psi(), makeStatus(STATUS_ONLINE, d->pa->psi()->lastStatusString));
 			QList<XMPP::Jid> list = contactListFromGroup(i->groupName());
 			w->setJidList(list);
-			connect(w, SIGNAL(setJidList(const QList<XMPP::Jid> &, const Status &)), SLOT(setStatusFromDialog(const QList<XMPP::Jid> &, const Status &)));
+			connect(w, SIGNAL(setForJidList(const QList<XMPP::Jid> &, Status, bool)), SLOT(setStatusFromDialog(const QList<XMPP::Jid> &, Status, bool)));
 			w->show();
 		}
 	}
@@ -1688,7 +1688,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		else if (x == 29 && online) {
 			StatusSetDlg *w = new StatusSetDlg(d->pa->psi(), makeStatus(STATUS_ONLINE, d->pa->psi()->lastStatusString));
 			w->setJid(u->jid());
-			connect(w, SIGNAL(setJid(const Jid &, const Status &)), SLOT(setStatusFromDialog(const Jid &, const Status &)));
+			connect(w, SIGNAL(setForJid(const Jid &, Status, bool)), SLOT(setStatusFromDialog(const Jid &, Status, bool)));
 			w->show();
 		}
 		else if(x >= base_sendto && x < base_hidden) {
@@ -1853,15 +1853,19 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 	}
 }
 
-void ContactProfile::setStatusFromDialog(const Jid &j, const Status &s)
+void ContactProfile::setStatusFromDialog(const Jid &j, Status s, bool withPriority)
 {
+	if (!withPriority)
+		s.setPriority(d->pa->priority());
 	JT_Presence *p = new JT_Presence(d->pa->client()->rootTask());
 	p->pres(j,s);
 	p->go(true);
 }
 
-void ContactProfile::setStatusFromDialog(const QList<XMPP::Jid> &j, const Status &s)
+void ContactProfile::setStatusFromDialog(const QList<XMPP::Jid> &j, Status s, bool withPriority)
 {
+	if (!withPriority)
+		s.setPriority(d->pa->priority());
 	for(QList<Jid>::const_iterator it = j.begin(); it != j.end(); ++it)
 	{
 		JT_Presence *p = new JT_Presence(d->pa->client()->rootTask());

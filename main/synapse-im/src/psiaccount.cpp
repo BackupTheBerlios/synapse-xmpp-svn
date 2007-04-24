@@ -2281,6 +2281,11 @@ void PsiAccount::setStatusActual(const Status &_s)
 	}
 }
 
+int PsiAccount::priority()
+{
+	return d->acc.priority;
+}
+
 void PsiAccount::doFile()
 {
 	if (loggedIn() && d->options->getOption("options.file.status").toBool() && d->options->getOption("options.extended-presence.tune.publish").toBool()) {
