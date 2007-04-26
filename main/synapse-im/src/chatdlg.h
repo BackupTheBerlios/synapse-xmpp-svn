@@ -109,6 +109,7 @@ public slots:
 	void activated();
 	void updateAvatar();
 	void updateAvatar(const Jid&);
+	void updatePEP();
 	void resizeToolBox(QSize size);
 
 private slots:

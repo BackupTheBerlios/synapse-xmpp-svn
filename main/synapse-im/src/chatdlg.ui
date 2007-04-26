@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>537</width>
-    <height>362</height>
+    <width>430</width>
+    <height>267</height>
    </rect>
   </property>
   <property name="sizePolicy" >
@@ -325,7 +325,7 @@
      <property name="sizePolicy" >
       <sizepolicy>
        <hsizetype>0</hsizetype>
-       <vsizetype>7</vsizetype>
+       <vsizetype>3</vsizetype>
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -342,7 +342,7 @@
         <x>0</x>
         <y>0</y>
         <width>90</width>
-        <height>296</height>
+        <height>201</height>
        </rect>
       </property>
       <attribute name="label" >
@@ -373,24 +373,24 @@
    <header>chateditproxy.h</header>
   </customwidget>
   <customwidget>
-   <class>ChatView</class>
-   <extends>QTextEdit</extends>
-   <header>msgmle.h</header>
-  </customwidget>
-  <customwidget>
-   <class>IconLabel</class>
-   <extends>QLabel</extends>
-   <header>iconlabel.h</header>
-  </customwidget>
-  <customwidget>
    <class>AccountLabel</class>
    <extends>QLabel</extends>
    <header>accountlabel.h</header>
   </customwidget>
   <customwidget>
+   <class>ChatView</class>
+   <extends>QTextEdit</extends>
+   <header>msgmle.h</header>
+  </customwidget>
+  <customwidget>
    <class>ChatSplitter</class>
    <extends>QSplitter</extends>
    <header>chatsplitter.h</header>
+  </customwidget>
+  <customwidget>
+   <class>IconLabel</class>
+   <extends>QLabel</extends>
+   <header>iconlabel.h</header>
   </customwidget>
  </customwidgets>
  <resources>

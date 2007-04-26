@@ -224,8 +224,7 @@ IconSelect::IconSelect(QWidget *parentMenu)
 : QWidget(parentMenu)
 {
 	menu = (IconSelectPopup *)parentMenu;
-	if (menu)
-		connect(menu, SIGNAL(textSelected(QString)), SLOT(closeMenu()));
+	connect(menu, SIGNAL(textSelected(QString)), SLOT(closeMenu()));
 
 	grid = 0;
 	noIcons();
@@ -290,12 +289,9 @@ void IconSelect::setIconset(const Iconset &iconset)
 	const int margin = 2;
 	int tileSize = (int)QMAX(w, h) + 2*margin;
 
-	QRect r;
-	int maxSize = 270; //Limit number of emoticons so toolbar want be too big.
-	if (menu) {
-		r = QApplication::desktop()->availableGeometry( menu );
-		maxSize = QMIN(r.width(), r.height())*3/4;
-	}
+	QRect r = QApplication::desktop()->availableGeometry( menu );
+	int maxSize = QMIN(r.width(), r.height())*3/4;
+
 	int size = (int)ceil( sqrt( count ) );
 
 	if ( size*tileSize > maxSize ) { // too many icons. find reasonable size.
@@ -306,10 +302,7 @@ void IconSelect::setIconset(const Iconset &iconset)
 	}
 
 	// now, fill grid with elements
-	if (menu)
-		grid = new QGridLayout(this, size, size);
-	else
-		grid = new QGridLayout(this, 500/tileSize, 100/tileSize);
+	grid = new QGridLayout(this, size, size);
 
 	count = 0;
 
@@ -322,17 +315,11 @@ void IconSelect::setIconset(const Iconset &iconset)
 		grid->addWidget(b);
 		b->setIcon( it.next() );
 		b->setSizeHint( QSize(tileSize, tileSize) );
-		if (menu) {
-			connect (b, SIGNAL(iconSelected(const PsiIcon *)), menu, SIGNAL(iconSelected(const PsiIcon *)));
-			connect (b, SIGNAL(textSelected(QString)), menu, SIGNAL(textSelected(QString)));
+		connect (b, SIGNAL(iconSelected(const PsiIcon *)), menu, SIGNAL(iconSelected(const PsiIcon *)));
+		connect (b, SIGNAL(textSelected(QString)), menu, SIGNAL(textSelected(QString)));
 
-			connect (menu, SIGNAL(aboutToShow()), b, SLOT(aboutToShow()));
-			connect (menu, SIGNAL(aboutToHide()), b, SLOT(aboutToHide()));
-		} else {
-			b->aboutToShow();
-			connect (b, SIGNAL(iconSelected(const PsiIcon *)), this, SIGNAL(iconSelected(const PsiIcon *)));
-			connect (b, SIGNAL(textSelected(QString)), this, SIGNAL(textSelected(QString)));
-		}
+		connect (menu, SIGNAL(aboutToShow()), b, SLOT(aboutToShow()));
+		connect (menu, SIGNAL(aboutToHide()), b, SLOT(aboutToHide()));
 	}
 }
 

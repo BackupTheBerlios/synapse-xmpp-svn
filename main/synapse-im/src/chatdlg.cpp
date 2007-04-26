@@ -143,8 +143,10 @@ public:
 	ChatContactBoxUI() : QWidget() 
 	{ 
 		setupUi(this);
-		this->lb_keyIcon->hide();
-		this->lb_keyIcon->setPsiIcon(IconsetFactory::iconPtr("psi/cryptoYes"));
+		lb_keyIcon->setPsiIcon(IconsetFactory::iconPtr("psi/cryptoYes"));
+		lb_keyIcon->hide();
+		lb_PEP->hide();
+		timer_ = NULL;
 	}
 
 	void updateAvatar(QPixmap ava)
@@ -158,26 +160,90 @@ public:
 		}
 	}
 
-	void updateStatus(const PsiIcon *icon, QString nickname, QString statusString, QString key)
+	void updatePEP(QString *mood, QString *tune)
 	{
+		printf("updatePEP()\n");
+		QString PEP_;
+		if (mood && !mood->isEmpty())
+			PEP_ = QString("<qt>") + tr("Mood") + " : " + *mood;
+		if (tune && !tune->isEmpty())
+		{
+			if (!PEP_.isEmpty())
+				PEP_ += "<br/>";
+			else
+				PEP_ += "<qt>";
+			PEP_ = PEP_ + tr("Listen to") +" : <br/>" + *tune;
+		}
+		if(!PEP_.isEmpty()) 
+		{
+			PEP_ += QString("</qt>");
+			lb_PEP->setText(PEP_);
+			lb_PEP->show();
+		} else {
+			lb_PEP->hide();
+		}
+		if (hasPEP_)
+			timer_->start();
+		else {
+			timer_->stop();
+			delete timer_;
+			timer_ = NULL;
+		}
+		repaint();
+	}
+
+	void updateStatus(const PsiIcon *icon, QString nickname, QString *statusString, QString *key, bool hasPEP)
+	{
+		hasPEP_ = hasPEP;
+		if (hasPEP)
+		{
+			if(!timer_)
+			{
+				timer_ = new QTimer();
+				timer_->setInterval(5000);
+				connect(timer_, SIGNAL(timeout()), this, SIGNAL(PEP_shot()));
+				timer_->setSingleShot(true);
+			}
+			timer_->start();
+		}
 		lb_status->setPsiIcon(icon);
 		lb_nickname->setText(nickname);
-		resizeToolBox(QSize(lb_nickname->sizeHint().width() + 30, 500));
-		if (key.isEmpty())
+		QSize size(((lb_nickname->sizeHint().width() + 30) > 108) ? (lb_nickname->sizeHint().width() + 30) : 108, 0);
+		resizeToolBox(size);
+		if (!key || key->isEmpty())
 		{
 			lb_key->hide();
 			lb_keyIcon->hide();
 		} else {
 			lb_key->show();
 			lb_keyIcon->show();
-			lb_key->setText(key);
+			lb_key->setText(QString("<qt><font color=\"#2A993B\">") + *key + "</font></qt>");
 		}
-		rs_statusString->setStatusString(statusString, lb_nickname->sizeHint().width()+22);
+		rs_statusString->setStatusString(*statusString, size.width()-8);
 		repaint();
 	}
 	
+	void show()
+	{
+		PEP_shot();
+		if (hasPEP_ && timer_)
+			timer_->start();
+		QWidget::show();
+	}
+	void hide()
+	{
+		if(timer_)
+			timer_->stop();
+		QWidget::hide();
+	}
+
 signals:
 	void resizeToolBox(QSize size);
+	void PEP_shot();
+
+private:
+	QTimer *timer_;
+	bool hasPEP_;
 };
 
 //----------------------------------------------------------------------------
@@ -303,13 +369,8 @@ public slots:
 		{
 			contactBox = new ChatContactBoxUI();
 			connect (contactBox, SIGNAL(resizeToolBox(QSize)), dlg, SLOT(resizeToolBox(QSize)));
+			connect (contactBox, SIGNAL(PEP_shot()), dlg, SLOT(updatePEP()));
 			toolBox->setItemIcon( toolBox->addItem(contactBox, tr("Contact")), IconsetFactory::icon("psi/vCard").icon() );
-			IconSelect *iconSelect = new IconSelect(0);
-//		connect (iconSelect, SIGNAL(iconSelected(const PsiIcon *)), menu, SIGNAL(iconSelected(const PsiIcon *)));
-			connect (iconSelect, SIGNAL(textSelected(QString)), this, SLOT(addEmoticon(QString)));
-
-			iconSelect->setIconset(pa->psi()->iconSelectPopup()->iconset());
-			toolBox->setItemIcon( toolBox->addItem(iconSelect, tr("Emoticons")), IconsetFactory::icon("psi/smile").icon());
 		}
 	}
 };
@@ -322,6 +383,8 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 	d = new Private(this);
 	d->jid = jid;
 	d->pa = pa;
+
+	d->showToolBox_ = PsiOptions::instance()->getOption("options.ui.chat.toolbox").toBool();
 
 	d->pending = 0;
 	d->keepOpen = false;
@@ -729,6 +792,26 @@ QSize ChatDlg::defaultSize()
 	return QSize(320, 280);
 }
 
+void ChatDlg::updatePEP()
+{
+	QString rname = d->jid.resource();
+	QList<UserListItem*> ul = d->pa->findRelevant(d->jid);
+	UserListItem *u = 0;
+	QString mood, tune;
+	if(!ul.isEmpty()) {
+		u = ul.first();
+		if (!u->mood().isNull())
+		{
+			mood = u->mood().typeText();
+			if (!u->mood().text().isEmpty())
+				mood += "<br/>" + u->mood().text();
+		}
+		if (!u->tune().isEmpty())
+			tune = u->tune();
+	}
+	d->contactBox->updatePEP(&mood, &tune);
+}
+
 void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
 {
 	// if groupchat, only update if the resource matches
@@ -740,9 +823,11 @@ void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
 		QList<UserListItem*> ul = d->pa->findRelevant(jid);
 		UserListItem *u = 0;
 		int status = -1;
+		bool hasPEP;
 		QString statusString, key;
 		if(!ul.isEmpty()) {
 			u = ul.first();
+
 			if(rname.isEmpty()) {
 				// use priority
 				if(!u->isAvailable())
@@ -751,7 +836,8 @@ void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
 					const UserResource &r = *u->userResourceList().priority();
 					status = makeSTATUS(r.status());
 					statusString = r.status().status();
-					key = r.publicKeyID();
+					hasPEP = r.status().capsExt().contains("ep-notify");
+					key = r.publicKeyID().right(8);
 
 					// Chat state
 					//d->sendChatState = d->sendChatState || d->pa->capsManager()->features(jid.withResource(r.name())).canChatState();
@@ -763,7 +849,8 @@ void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
 				if(rit != u->userResourceList().end()) {
 					status = makeSTATUS((*rit).status());
 					statusString = (*rit).status().status();
-					key = (*rit).publicKeyID();
+					hasPEP = (*rit).status().capsExt().contains("ep-notify");
+					key = (*rit).publicKeyID().right(8);
 
 					// Chat state
 					//d->sendChatState = d->sendChatState || d->pa->capsManager()->features(d->jid).canChatState();
@@ -771,6 +858,7 @@ void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
 				else {
 					status = STATUS_OFFLINE;
 					statusString = u->lastUnavailableStatus().status();
+					hasPEP = false;
 					key = "";
 					d->contactChatState = StateNone;
 				}
@@ -788,11 +876,11 @@ void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
 			if(status == -1 || !u) {
 				ui_.lb_status->setPsiIcon(IconsetFactory::iconPtr("status/noauth"));
 				if (d->contactBox)
-					d->contactBox->updateStatus(IconsetFactory::iconPtr("status/noauth"), Qt::escape(d->dispNick), statusString, key);
+					d->contactBox->updateStatus(IconsetFactory::iconPtr("status/noauth"), Qt::escape(d->dispNick), &statusString, NULL, hasPEP);
 			} else {
 				ui_.lb_status->setPsiIcon(PsiIconset::instance()->statusPtr(jid, status));
 				if (d->contactBox)
-					d->contactBox->updateStatus(PsiIconset::instance()->statusPtr(jid, status), Qt::escape(d->dispNick), statusString, key);
+					d->contactBox->updateStatus(PsiIconset::instance()->statusPtr(jid, status), Qt::escape(d->dispNick), &statusString, &key, hasPEP);
 			}
 //			if(d->contactBox && (d->contactBox->width() != ui_.toolBox->width()))
 //				ui_.toolBox->setFixedSize(QSize(16+d->contactBox->width(),300));
@@ -1462,19 +1550,20 @@ void ChatDlg::setContactChatState(ChatState state)
 
 void ChatDlg::showToolBox()
 {
-	d->showToolBox_ = !d->showToolBox_;
-	if(!d->showToolBox_)
+	bool show = !d->showToolBox_;
+	d->showToolBox_ = show;
+	if(!show)
 	{	
 		ui_.toolBox->hide();
-		ui_.avatar->show();
+		updateAvatar();
 		ui_.tb_showToolBox->setArrowType(Qt::RightArrow);
 	} else {
-		if (!d->contactBox)
+		if (d->contactBox == NULL)
 		{
 			d->setToolBox(ui_.toolBox);
-			updateContact(d->jid, true);
-			updateAvatar();
 		}
+		updateContact(d->jid, true);
+		updateAvatar();
 		ui_.toolBox->show();
 		ui_.avatar->hide();
 		ui_.tb_showToolBox->setArrowType(Qt::LeftArrow);
@@ -1483,7 +1572,7 @@ void ChatDlg::showToolBox()
 
 void ChatDlg::resizeToolBox(QSize size)
 {
-	ui_.toolBox->setFixedSize(size);
+	ui_.toolBox->setMinimumWidth(size.width());
 }
 
 
