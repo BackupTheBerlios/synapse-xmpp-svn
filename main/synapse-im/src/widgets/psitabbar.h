@@ -37,6 +37,8 @@ public:
 signals:
 	void mouseDoubleClickTab( int tab );
 	void tabDropped( int tab, PsiTabBar* source);
+	// context menu on the blank space will have tab==-1
+	void contextMenu( QContextMenuEvent * event, int tab);
 
 protected:
 	void mouseDoubleClickEvent( QMouseEvent* event );
@@ -44,10 +46,13 @@ protected:
 	//void dragEnterEvent(QDragEnterEvent *event);
 	//void dropEvent(QDropEvent *event);
 	void mousePressEvent(QMouseEvent *event);
+	void contextMenuEvent ( QContextMenuEvent * event );
+	void wheelEvent(QWheelEvent *event);
 
 private:
 	int findTabUnder(const QPoint& pos);
 	QPoint dragStartPosition_;
+	int dragTab_;
 	
 };
 

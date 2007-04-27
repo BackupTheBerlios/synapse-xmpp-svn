@@ -75,8 +75,10 @@ int PsiTabBar::findTabUnder( const QPoint& pos )
 void PsiTabBar::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
+		int tabno = findTabUnder( event->pos() );
         dragStartPosition_ = event->pos();
-		setCurrentIndex( findTabUnder( event->pos() ) );
+		dragTab_ = tabno;
+		if (tabno != -1) setCurrentIndex( tabno );
  	}
 	event->accept();
 }
@@ -91,21 +93,46 @@ void PsiTabBar::mouseMoveEvent(QMouseEvent *event)
 	if ( (event->pos() - dragStartPosition_).manhattanLength() 
 		< QApplication::startDragDistance() )
 		return;
-	QDrag *drag = new QDrag(this);
-	QMimeData *mimeData = new QMimeData;
-	QByteArray data;
-	QPixmap icon;
 
-	int tab=findTabUnder( event->pos() );
-	data.setNum(tab);
+	if (dragTab_ != -1) {
 
-	mimeData->setData("psiTabDrag",data);
-	drag->setMimeData(mimeData);
-	drag->setPixmap(icon);
-		
-	Qt::DropAction dropAction = drag->start(Qt::MoveAction);
-	Q_UNUSED(dropAction);
+		QDrag *drag = new QDrag(this);
+		QMimeData *mimeData = new QMimeData;
+		QByteArray data;
+		QPixmap icon;
+	
+		data.setNum(dragTab_);
+	
+		mimeData->setData("psiTabDrag",data);
+		drag->setMimeData(mimeData);
+		drag->setPixmap(icon);
+			
+		Qt::DropAction dropAction = drag->start(Qt::MoveAction);
+		Q_UNUSED(dropAction);
+	}
 
 	event->accept();
  }
+
+void PsiTabBar::contextMenuEvent ( QContextMenuEvent * event )
+{
+	event->accept();
+	emit contextMenu(event, findTabUnder(event->pos()));
+}
+
+void PsiTabBar::wheelEvent(QWheelEvent *event)
+{
+	int numDegrees = event->delta() / 8;
+	int numSteps = numDegrees / 15;
+	
+	int newIndex = currentIndex() - numSteps;
+
+	while (newIndex < 0) newIndex += count();
+	newIndex = newIndex % count();
+
+	setCurrentIndex(newIndex);
+
+	event->accept();	
+}
+
 

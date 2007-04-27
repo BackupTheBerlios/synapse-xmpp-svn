@@ -75,346 +75,11 @@
 #include "shortcutmanager.h"
 #include "psicontactlist.h"
 #include "accountlabel.h"
+#include "gcuserview.h"
 
 #ifdef Q_WS_WIN
 #include <windows.h>
 #endif
-
-static bool caseInsensitiveLessThan(const QString &s1, const QString &s2)
-{
-	return s1.toLower() < s2.toLower();
-}
-
-//----------------------------------------------------------------------------
-// GCUserViewItem
-//----------------------------------------------------------------------------
-
-GCUserViewItem::GCUserViewItem(GCUserViewGroupItem *par)
-	: QObject()
-	, Q3ListViewItem(par)
-{
-	setDragEnabled(true);
-}
-
-void GCUserViewItem::paintFocus(QPainter *, const QColorGroup &, const QRect &)
-{
-	// re-implimented to do nothing.  selection is enough of a focus
-}
-
-void GCUserViewItem::paintBranches(QPainter *p, const QColorGroup &cg, int w, int, int h)
-{
-	// paint a square of nothing
-	p->fillRect(0, 0, w, h, cg.base());
-}
-
-//----------------------------------------------------------------------------
-// GCUserViewGroupItem
-//----------------------------------------------------------------------------
-
-GCUserViewGroupItem::GCUserViewGroupItem(GCUserView *par, const QString& t, int k)
-:Q3ListViewItem(par,t), key_(k)
-{
-	setDragEnabled(false);
-}
-
-void GCUserViewGroupItem::paintCell(QPainter *p, const QColorGroup & cg, int column, int width, int alignment)
-{
-	QColorGroup xcg = cg;
-	QFont f = p->font();
-	f.setPointSize(option.smallFontSize);
-	p->setFont(f);
-	xcg.setColor(QColorGroup::Text, option.color[cGroupFore]);
-	if (!option.clNewHeadings) {
-		#if QT_VERSION >= 0x040103 
-			xcg.setColor(QColorGroup::Background, option.color[cGroupBack]);
-		#else
-			xcg.setColor(QColorGroup::WindowText, option.color[cGroupBack]);
-		#endif
-	}
-	Q3ListViewItem::paintCell(p, xcg, column, width, alignment);
-	if (option.clNewHeadings && !isSelected()) {
-		QFontMetrics fm(p->font());
-		int x = fm.width(text(column)) + 8;
-		if(x < width - 8) {
-			int h = (height() / 2) - 1;
-			p->setPen(QPen(option.color[cGroupBack]));
-			p->drawLine(x, h, width - 8, h);
-			h++;
-			p->setPen(QPen(option.color[cGroupFore]));
-			p->drawLine(x, h, width - 8, h);
-		}
-	}
-}
-
-void GCUserViewGroupItem::paintFocus(QPainter *, const QColorGroup &, const QRect &)
-{
-	// re-implimented to do nothing.  selection is enough of a focus
-}
-
-void GCUserViewGroupItem::paintBranches(QPainter *p, const QColorGroup &cg, int w, int, int h)
-{
-	// paint a square of nothing
-	p->fillRect(0, 0, w, h, cg.base());
-}
-
-int GCUserViewGroupItem::compare(Q3ListViewItem *i, int col, bool ascending) const
-{
-	Q_UNUSED(ascending);	// Qt docs say: "your code can safely ignore it"
-
-	if (col == 0)
-		// groups are never compared to users, so static_cast is safe
-		return this->key_ - static_cast<GCUserViewGroupItem*>(i)->key_;
-	else
-		return Q3ListViewItem::compare(i, col, ascending);
-}
-
-//----------------------------------------------------------------------------
-// GCUserView
-//----------------------------------------------------------------------------
-
-GCUserView::GCUserView(GCMainDlg* dlg, QWidget *parent, const char *name)
-:Q3ListView(parent, name)
-{
-	gcDlg_ = dlg;
-	setResizeMode(Q3ListView::AllColumns);
-	setTreeStepSize(0);
-	setShowToolTips(false);
-	header()->hide();
-	addColumn("");
-	setSortColumn(0);
-	Q3ListViewItem* i;
-	i = new GCUserViewGroupItem(this, tr("Visitors"), 3);
-	i->setOpen(true);
-	i = new GCUserViewGroupItem(this, tr("Participants"), 2);
-	i->setOpen(true);
-	i = new GCUserViewGroupItem(this, tr("Moderators"), 1);
-	i->setOpen(true);
-
-	connect(this, SIGNAL(doubleClicked(Q3ListViewItem *)), SLOT(qlv_doubleClicked(Q3ListViewItem *)));
-	connect(this, SIGNAL(contextMenuRequested(Q3ListViewItem *, const QPoint &, int)), SLOT(qlv_contextMenuRequested(Q3ListViewItem *, const QPoint &, int)));
-}
-
-GCUserView::~GCUserView()
-{
-}
-
-Q3DragObject* GCUserView::dragObject() 
-{
-	Q3ListViewItem* it = currentItem();
-	if (it) {
-		// WARNING: We are assuming that group items can never be dragged
-		GCUserViewItem* u = (GCUserViewItem*) it;
-		if (!u->s.mucItem().jid().isEmpty())
-			return new Q3TextDrag(u->s.mucItem().jid().bare(),this);
-	}
-	return NULL;
-}
-
-void GCUserView::clear()
-{
-	for (Q3ListViewItem *j = firstChild(); j; j = j->nextSibling())
-		while (GCUserViewItem* i = (GCUserViewItem*) j->firstChild()) {
-			delete i;
-		}
-}
-
-void GCUserView::updateAll()
-{
-	for (Q3ListViewItem *j = firstChild(); j; j = j->nextSibling())
-		for(GCUserViewItem *i = (GCUserViewItem *)j->firstChild(); i; i = (GCUserViewItem *)i->nextSibling())
-			i->setPixmap(0, PsiIconset::instance()->status(i->s).impix());
-}
-
-QStringList GCUserView::nickList() const
-{
-	QStringList list;
-
-	for (Q3ListViewItem *j = firstChild(); j; j = j->nextSibling())
-		for(Q3ListViewItem *lvi = j->firstChild(); lvi; lvi = lvi->nextSibling())
-			list << lvi->text(0);
-
-	qSort(list.begin(), list.end(), caseInsensitiveLessThan);
-	return list;
-}
-
-bool GCUserView::hasJid(const Jid& jid) 
-{
-	for (Q3ListViewItem *j = firstChild(); j; j = j->nextSibling())
-		for(GCUserViewItem *lvi = (GCUserViewItem*) j->firstChild(); lvi; lvi = (GCUserViewItem*) lvi->nextSibling()) {
-			if(!lvi->s.mucItem().jid().isEmpty() && lvi->s.mucItem().jid().compare(jid,false))
-				return true;
-		}
-	return false;
-}
-
-Q3ListViewItem *GCUserView::findEntry(const QString &nick)
-{
-	for (Q3ListViewItem *j = firstChild(); j; j = j->nextSibling())
-		for(Q3ListViewItem *lvi = j->firstChild(); lvi; lvi = lvi->nextSibling()) {
-			if(lvi->text(0) == nick)
-				return lvi;
-		}
-	return 0;
-}
-
-void GCUserView::updateEntry(const QString &nick, const Status &s)
-{
-	GCUserViewItem *lvi = (GCUserViewItem *)findEntry(nick);
-	if (lvi && lvi->s.mucItem().role() != s.mucItem().role()) {
-		delete lvi;
-		lvi = NULL;
-	}
-
-	if(!lvi) {
-		lvi = new GCUserViewItem(findGroup(s.mucItem().role()));
-		lvi->setText(0, nick);
-	}
-
-	lvi->s = s;
-	lvi->setPixmap(0, PsiIconset::instance()->status(lvi->s).impix());
-}
-
-GCUserViewGroupItem* GCUserView::findGroup(MUCItem::Role a) const
-{
-	Role r = Visitor;
-	if (a == MUCItem::Moderator)
-		r = Moderator;
-	else if (a == MUCItem::Participant)
-		r = Participant;
-
-	int i = 0;
-	for (Q3ListViewItem *j = firstChild(); j; j = j->nextSibling()) {
-		if (i == (int) r)
-			return (GCUserViewGroupItem*) j;
-		i++;
-	}
-	
-	return NULL;
-}
-
-void GCUserView::removeEntry(const QString &nick)
-{
-	Q3ListViewItem *lvi = findEntry(nick);
-	if(lvi)
-		delete lvi;
-}
-
-bool GCUserView::maybeTip(const QPoint &pos)
-{
-	Q3ListViewItem *qlvi = itemAt(pos);
-	if(!qlvi || !qlvi->parent())
-		return false;
-
-	GCUserViewItem *lvi = (GCUserViewItem *) qlvi;
-	QRect r(itemRect(lvi));
-
-	const QString &nick = lvi->text(0);
-	const Status &s = lvi->s;
-	UserListItem u;
-	// SICK SICK SICK SICK
-	GCMainDlg* dlg = (GCMainDlg*) window();
-	u.setJid(dlg->jid().withResource(nick));
-	u.setName(nick);
-
-	// Find out capabilities info
-	Jid caps_jid(s.mucItem().jid().isEmpty() ? dlg->jid().withResource(nick) : s.mucItem().jid());
-	QString client_name = dlg->account()->capsManager()->clientName(caps_jid);
-	QString client_version = (client_name.isEmpty() ? QString() : dlg->account()->capsManager()->clientVersion(caps_jid));
-	
-	// make a resource so the contact appears online
-	UserResource ur;
-	ur.setName(nick);
-	ur.setStatus(s);
-	ur.setClient(client_name,client_version,"");
-	u.userResourceList().append(ur);
-
-	PsiToolTip::showText(mapToGlobal(pos), u.makeTip(), this);
-	return true;
-}
-
-bool GCUserView::event(QEvent* e)
-{
-	if (e->type() == QEvent::ToolTip) {
-		QPoint pos = ((QHelpEvent*) e)->pos();
-		e->setAccepted(maybeTip(pos));
-		return true;
-	}
-	return Q3ListView::event(e);
-}
-
-void GCUserView::qlv_doubleClicked(Q3ListViewItem *i)
-{
-	if(!i || !i->parent())
-		return;
-
-	GCUserViewItem *lvi = (GCUserViewItem *)i;
-	if(option.defaultAction == 0)
-		action(lvi->text(0), lvi->s, 0);
-	else
-		action(lvi->text(0), lvi->s, 1);
-}
-
-void GCUserView::qlv_contextMenuRequested(Q3ListViewItem *i, const QPoint &pos, int)
-{
-	if(!i || !i->parent())
-		return;
-
-	QPointer<GCUserViewItem> lvi = (GCUserViewItem *)i;
-	bool self = gcDlg_->nick() == i->text(0);
-	GCUserViewItem* c = (GCUserViewItem*) findEntry(gcDlg_->nick());
-	if (!c) {
-		qWarning(QString("groupchatdlg.cpp: Self ('%1') not found in contactlist").arg(gcDlg_->nick()));
-		return;
-	}
-	Q3PopupMenu *pm = new Q3PopupMenu;
-	pm->insertItem(IconsetFactory::icon("psi/sendMessage").icon(), tr("Send &message"), 0);
-	pm->insertItem(IconsetFactory::icon("psi/start-chat").icon(), tr("Open &chat window"), 1);
-	pm->insertSeparator();
-	pm->insertItem(tr("&Kick"),10);
-	pm->setItemEnabled(10, MUCManager::canKick(c->s.mucItem(),lvi->s.mucItem()));
-	pm->insertItem(tr("&Ban"),11);
-	pm->setItemEnabled(11, MUCManager::canBan(c->s.mucItem(),lvi->s.mucItem()));
-
-	Q3PopupMenu* rm = new Q3PopupMenu(pm);
-	rm->insertItem(tr("Visitor"),12);
-	rm->setItemChecked(12, lvi->s.mucItem().role() == MUCItem::Visitor);
-	rm->setItemEnabled(12, (!self || lvi->s.mucItem().role() == MUCItem::Visitor) && MUCManager::canSetRole(c->s.mucItem(),lvi->s.mucItem(),MUCItem::Visitor));
-	rm->insertItem(tr("Participant"),13);
-	rm->setItemChecked(13, lvi->s.mucItem().role() == MUCItem::Participant);
-	rm->setItemEnabled(13, (!self || lvi->s.mucItem().role() == MUCItem::Participant) && MUCManager::canSetRole(c->s.mucItem(),lvi->s.mucItem(),MUCItem::Participant));
-	rm->insertItem(tr("Moderator"),14);
-	rm->setItemChecked(14, lvi->s.mucItem().role() == MUCItem::Moderator);
-	rm->setItemEnabled(14, (!self || lvi->s.mucItem().role() == MUCItem::Moderator) && MUCManager::canSetRole(c->s.mucItem(),lvi->s.mucItem(),MUCItem::Moderator));
-	pm->insertItem(tr("Change role"),rm);
-
-	/*Q3PopupMenu* am = new Q3PopupMenu(pm);
-	am->insertItem(tr("Unaffiliated"),15);
-	am->setItemChecked(15, lvi->s.mucItem().affiliation() == MUCItem::NoAffiliation);
-	am->setItemEnabled(15, (!self || lvi->s.mucItem().affiliation() == MUCItem::NoAffiliation) && MUCManager::canSetAffiliation(c->s.mucItem(),lvi->s.mucItem(),MUCItem::NoAffiliation));
-	am->insertItem(tr("Member"),16);
-	am->setItemChecked(16, lvi->s.mucItem().affiliation() == MUCItem::Member);
-	am->setItemEnabled(16,  (!self || lvi->s.mucItem().affiliation() == MUCItem::Member) && MUCManager::canSetAffiliation(c->s.mucItem(),lvi->s.mucItem(),MUCItem::Member));
-	am->insertItem(tr("Administrator"),17);
-	am->setItemChecked(17, lvi->s.mucItem().affiliation() == MUCItem::Admin);
-	am->setItemEnabled(17,  (!self || lvi->s.mucItem().affiliation() == MUCItem::Admin) && MUCManager::canSetAffiliation(c->s.mucItem(),lvi->s.mucItem(),MUCItem::Admin));
-	am->insertItem(tr("Owner"),18);
-	am->setItemChecked(18, lvi->s.mucItem().affiliation() == MUCItem::Owner);
-	am->setItemEnabled(18,  (!self || lvi->s.mucItem().affiliation() == MUCItem::Owner) && MUCManager::canSetAffiliation(c->s.mucItem(),lvi->s.mucItem(),MUCItem::Owner));
-	pm->insertItem(tr("Change affiliation"),am);*/
-	pm->insertSeparator();
-	//pm->insertItem(tr("Send &file"), 4);
-	//pm->insertSeparator();
-	pm->insertItem(tr("Check &Status"), 2);
-	pm->insertItem(IconsetFactory::icon("psi/vCard").icon(), tr("User &Info"), 3);
-	int x = pm->exec(pos);
-	bool enabled = pm->isItemEnabled(x) || rm->isItemEnabled(x);
-	delete pm;
-
-	if(x == -1 || !enabled || lvi.isNull())
-		return;
-	action(lvi->text(0), lvi->s, x);
-}
-
 
 //----------------------------------------------------------------------------
 // GCMainDlg
@@ -440,19 +105,11 @@ public:
 	Jid jid;
 	QString self, prev_self;
 	QString password;
-	ChatView *te_log;
-	ChatEdit *mle;
-	QLineEdit *le_topic;
-	GCUserView *lv_users;
-	QPushButton *pb_topic;
-	QToolBar *toolbar;
-	QToolButton *tb_actions, *tb_emoticons, *tb_find;
 	IconAction *act_find, *act_clear, *act_icon, *act_configure;
 #ifdef WHITEBOARDING
 	IconAction *act_whiteboard;
 #endif
 	QAction *act_send, *act_scrollup, *act_scrolldown, *act_close;
-	AccountLabel* lb_ident;
 	Q3PopupMenu *pm_settings;
 	int pending;
 	bool connecting;
@@ -473,6 +130,10 @@ public:
 protected:
 	int  oldTrackBarPosition;
 
+private:
+	ChatEdit* mle() const { return dlg->ui_.mle->chatEdit(); }
+	ChatView* te_log() const { return dlg->ui_.log; }
+
 public slots:
 	void addEmoticon(const PsiIcon *icon) {
 		if ( !dlg->isActiveWindow() )
@@ -489,37 +150,37 @@ public slots:
 		}
 
 		if ( !text.isEmpty() )
-			mle->insert( text );
+			mle()->insert( text );
 	}
 
 	void addEmoticon(QString text) {
 		if ( !dlg->isActiveWindow() )
 		     return;
 
-		mle->insert( text + " " );
+		mle()->insert( text + " " );
 	}
 
 	void deferredScroll() {
 		//QTimer::singleShot(250, this, SLOT(slotScroll()));
-		te_log->scrollToBottom();
+		te_log()->scrollToBottom();
 	}
 
 protected slots:
 	void slotScroll() {
-		te_log->scrollToBottom();
+		te_log()->scrollToBottom();
 	}
 
 public:
 	bool internalFind(QString str, bool startFromBeginning = false)
 	{
 		if (startFromBeginning) {
-			QTextCursor cursor = te_log->textCursor();
+			QTextCursor cursor = te_log()->textCursor();
 			cursor.movePosition(QTextCursor::Start, QTextCursor::KeepAnchor);
 			cursor.clearSelection();
-			te_log->setTextCursor(cursor);
+			te_log()->setTextCursor(cursor);
 		}
 		
-		bool found = te_log->find(str);
+		bool found = te_log()->find(str);
 		if(!found) {
 			if (!startFromBeginning)
 				return internalFind(str, true);
@@ -558,20 +219,20 @@ public:
 		trackBar = false;
 
 		// save position, because our manipulations could change it
-		int scrollbarValue = te_log->verticalScrollBar()->value();
+		int scrollbarValue = te_log()->verticalScrollBar()->value();
 
-		QTextCursor cursor = te_log->textCursor();
+		QTextCursor cursor = te_log()->textCursor();
 		cursor.beginEditBlock();
-		PsiTextView::Selection selection = te_log->saveSelection(cursor);
+		PsiTextView::Selection selection = te_log()->saveSelection(cursor);
 
 		removeTrackBar(cursor);
 		addTrackBar(cursor);
 
-		te_log->restoreSelection(cursor, selection);
+		te_log()->restoreSelection(cursor, selection);
 		cursor.endEditBlock();
-		te_log->setTextCursor(cursor);
+		te_log()->setTextCursor(cursor);
 
-		te_log->verticalScrollBar()->setValue(scrollbarValue);
+		te_log()->verticalScrollBar()->setValue(scrollbarValue);
 	}
 
 public:
@@ -608,7 +269,7 @@ protected:
 			nickText   = text.mid(beforeNick.length());
 		}
 
-		QStringList nicks = lv_users->nickList();
+		QStringList nicks = dlg->ui_.lv_users->nickList();
 		QStringList::Iterator it = nicks.begin();
 		QStringList suggestedNicks;
 		for ( ; it != nicks.end(); ++it) {
@@ -647,7 +308,7 @@ protected:
 	QString insertNick(bool fromStart, QString beforeNick = "") {
 		typingStatus = Typing_MultipleSuggestions;
 		suggestedFromStart = fromStart;
-		suggestedNicks = lv_users->nickList();
+		suggestedNicks = dlg->ui_.lv_users->nickList();
 		QStringList::Iterator it = suggestedNicks.begin();
 		for ( ; it != suggestedNicks.end(); ++it)
 			*it = beforeNick + *it;
@@ -701,7 +362,7 @@ protected:
 
 public:		
 	void doAutoNickInsertion() {
-		QTextCursor cursor = mle->textCursor();
+		QTextCursor cursor = mle()->textCursor();
 		
 		// we need to get index from beginning of current block
 		int index = cursor.position();
@@ -749,7 +410,7 @@ public:
 		}
 
 		if ( replaced ) {
-			mle->setUpdatesEnabled( false );
+			mle()->setUpdatesEnabled( false );
 			int position = cursor.position() + newText.length();
 			
 			cursor.beginEditBlock();
@@ -758,18 +419,18 @@ public:
 			cursor.setPosition(position, QTextCursor::KeepAnchor);
 			cursor.clearSelection();
 			cursor.endEditBlock();
-			mle->setTextCursor(cursor);
+			mle()->setTextCursor(cursor);
 			
-			mle->setUpdatesEnabled( true );
-			mle->viewport()->update();
+			mle()->setUpdatesEnabled( true );
+			mle()->viewport()->update();
 		}
 	}
 
 	bool eventFilter( QObject *obj, QEvent *ev ) {
-		if (te_log->handleCopyEvent(obj, ev, mle))
+		if (te_log()->handleCopyEvent(obj, ev, mle()))
 			return true;
 	
-		if ( obj == mle && ev->type() == QEvent::KeyPress ) {
+		if ( obj == mle() && ev->type() == QEvent::KeyPress ) {
 			QKeyEvent *e = (QKeyEvent *)ev;
 
 			if ( e->key() == Qt::Key_Tab ) {
@@ -824,95 +485,35 @@ GCMainDlg::GCMainDlg(PsiAccount *pa, const Jid &j)
 
 	d->state = Private::Connected;
 
+	setAcceptDrops(true);
+
 #ifndef Q_WS_MAC
 	setWindowIcon(IconsetFactory::icon("psi/groupChat").icon());
 #endif
 
-	QVBoxLayout *dlg_layout = new QVBoxLayout(this, 4);
+	ui_.setupUi(this);
+	ui_.lb_ident->setAccount(d->pa);
+	ui_.lb_ident->setShowJid(false);
 
-	QWidget *vsplit;
-	if ( !option.chatLineEdit ) {
-		vsplit = new QSplitter(this);
-		((QSplitter *)vsplit)->setOrientation( Qt::Vertical );
-		dlg_layout->addWidget(vsplit);
-	}
-	else
-		vsplit = this;
+	connect(ui_.pb_topic, SIGNAL(clicked()), SLOT(doTopic()));
+	PsiToolTip::install(ui_.le_topic);
 
-	// --- top part ---
-	QWidget *sp_top = new QWidget(vsplit);
-	sp_top->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum );
-	if ( option.chatLineEdit )
-		dlg_layout->addWidget( sp_top );
-	QVBoxLayout *vb_top = new QVBoxLayout(sp_top, 0, 4);
-
-	// top row
-	QWidget *sp_top_top = new QWidget( sp_top );
-	vb_top->addWidget( sp_top_top );
-	QHBoxLayout *hb_top = new QHBoxLayout( sp_top_top, 0, 4 );
-
-	d->pb_topic = new QPushButton(tr("Topic:"), sp_top_top);
-	connect(d->pb_topic, SIGNAL(clicked()), SLOT(doTopic()));
-	hb_top->addWidget(d->pb_topic);
-
-	d->le_topic = new QLineEdit(sp_top_top);
-	d->le_topic->setReadOnly(true);
-	PsiToolTip::install(d->le_topic);
-	hb_top->addWidget(d->le_topic);
-
-	d->lb_ident = new AccountLabel(sp_top_top);
-	d->lb_ident->setAccount(d->pa);
-	d->lb_ident->setShowJid(false);
-	d->lb_ident->setSizePolicy(QSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum ));
-	hb_top->addWidget(d->lb_ident);
 	connect(d->pa->psi(), SIGNAL(accountCountChanged()), this, SLOT(updateIdentityVisibility()));
 	updateIdentityVisibility();
 
 	d->act_find = new IconAction(tr("Find"), "psi/search", tr("&Find"), 0, this);
 	connect(d->act_find, SIGNAL(activated()), SLOT(openFind()));
-	d->tb_find = new QToolButton(sp_top);
-	d->tb_find->setIconSize(QSize(16, 16));
-	d->tb_find->setDefaultAction(d->act_find);
-	hb_top->addWidget(d->tb_find);
+	ui_.tb_find->setDefaultAction(d->act_find);
 
-	d->tb_emoticons = new QToolButton(sp_top);
-	d->tb_emoticons->setToolTip(tr("Select icon"));
-	d->tb_emoticons->setIconSize(QSize(16, 16));
-	d->tb_emoticons->setPopupMode(QToolButton::InstantPopup);
-	d->tb_emoticons->setIcon(IconsetFactory::icon("psi/smile").icon());
-	hb_top->addWidget(d->tb_emoticons);
+	ui_.tb_emoticons->setIcon(IconsetFactory::icon("psi/smile").icon());
 
-	d->tb_actions = new QToolButton(sp_top);
-	d->tb_actions->setToolTip(tr("Actions"));
-	d->tb_actions->setIconSize(QSize(16, 16));
-	d->tb_actions->setPopupMode(QToolButton::InstantPopup);
-	d->tb_actions->setArrowType(Qt::DownArrow);
-	hb_top->addWidget(d->tb_actions);
-
-	// bottom row
-	QSplitter *hsp = new QSplitter(sp_top);
-	hsp->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding));
-	vb_top->addWidget(hsp);
-	hsp->setOrientation(Qt::Horizontal);
-
-	d->te_log = new ChatView(hsp);
 #ifdef Q_WS_MAC
-	connect(d->te_log,SIGNAL(selectionChanged()),SLOT(logSelectionChanged()));
-	d->te_log->setFocusPolicy(Qt::NoFocus);
+	connect(ui_.log, SIGNAL(selectionChanged()), SLOT(logSelectionChanged()));
 #endif
 
-	d->lv_users = new GCUserView(this,hsp);
-	d->lv_users->setMinimumWidth(20);
-	connect(d->lv_users, SIGNAL(action(const QString &, const Status &, int)), SLOT(lv_action(const QString &, const Status &, int)));
+	ui_.lv_users->setMainDlg(this);
+	connect(ui_.lv_users, SIGNAL(action(const QString &, const Status &, int)), SLOT(lv_action(const QString &, const Status &, int)));
 
-	// --- bottom part ---
-	QWidget *sp_bottom = new QWidget(vsplit);
-	sp_bottom->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Maximum );
-	if ( option.chatLineEdit )
-		dlg_layout->addWidget( sp_bottom );
-	QVBoxLayout *vb_bottom = new QVBoxLayout(sp_bottom, 0, 4);
-
-	// toolbar
 	d->act_clear = new IconAction (tr("Clear chat window"), "psi/clearChat", tr("Clear chat window"), 0, this);
 	connect( d->act_clear, SIGNAL( activated() ), SLOT( doClearButton() ) );
 	
@@ -927,19 +528,17 @@ GCMainDlg::GCMainDlg(PsiAccount *pa, const Jid &j)
 	connect(pa->psi()->iconSelectPopup(), SIGNAL(textSelected(QString)), d, SLOT(addEmoticon(QString)));
 	d->act_icon = new IconAction( tr( "Select icon" ), "psi/smile", tr( "Select icon" ), 0, this );
 	d->act_icon->setMenu( pa->psi()->iconSelectPopup() );
-	d->tb_emoticons->setMenu(pa->psi()->iconSelectPopup());
+	ui_.tb_emoticons->setMenu(pa->psi()->iconSelectPopup());
 
-	d->toolbar = new QToolBar( tr("Groupchat toolbar"), 0);
-	d->toolbar->setIconSize(QSize(16,16));
-	d->toolbar->addAction(d->act_clear);
-	d->toolbar->addAction(d->act_configure);
+	ui_.toolbar->setIconSize(QSize(16,16));
+	ui_.toolbar->addAction(d->act_clear);
+	ui_.toolbar->addAction(d->act_configure);
 #ifdef WHITEBOARDING
-	d->toolbar->addAction(d->act_whiteboard);
+	ui_.toolbar->addAction(d->act_whiteboard);
 #endif
-	d->toolbar->addWidget(new StretchWidget(d->toolbar));
-	d->toolbar->addAction(d->act_icon);
-	d->toolbar->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
-	vb_bottom->addWidget( d->toolbar );
+	ui_.toolbar->addWidget(new StretchWidget(ui_.toolbar));
+	ui_.toolbar->addAction(d->act_icon);
+	ui_.toolbar->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 
 	// Common actions
 	d->act_send = new QAction(this);
@@ -955,50 +554,28 @@ GCMainDlg::GCMainDlg(PsiAccount *pa, const Jid &j)
 	addAction(d->act_scrolldown);
 	connect(d->act_scrolldown,SIGNAL(activated()), SLOT(scrollDown()));
 
-	// chat edit
-	if ( !option.chatLineEdit ) {
-		d->mle = new ChatEdit(sp_bottom);
-		d->mle->setDialog(this);
-		vb_bottom->addWidget(d->mle);
-	}
-	else {
-		QHBoxLayout *hb5 = new QHBoxLayout( dlg_layout );
-		d->mle = new LineEdit(vsplit);
-		d->mle->setDialog(this);
-#ifdef Q_WS_MAC
-		hb5->addSpacing( 16 );
-#endif
-		hb5->addWidget( d->mle );
-#ifdef Q_WS_MAC
-		hb5->addSpacing( 16 );
-#endif
-	}
-
-	d->mle->installEventFilter( d );
+	connect(ui_.mle, SIGNAL(textEditCreated(QTextEdit*)), SLOT(chatEditCreated()));
+	chatEditCreated();
 
 	d->pm_settings = new Q3PopupMenu(this);
 	connect(d->pm_settings, SIGNAL(aboutToShow()), SLOT(buildMenu()));
-	d->tb_actions->setMenu(d->pm_settings);
+	ui_.tb_actions->setMenu(d->pm_settings);
 
 	// resize the horizontal splitter
 	QList<int> list;
 	list << 500;
 	list << 80;
-	hsp->setSizes(list);
+	ui_.hsplitter->setSizes(list);
 
 	list.clear();
 	list << 324;
 	list << 10;
-	if ( !option.chatLineEdit )
-		(( QSplitter *)vsplit)->setSizes(list);
-
-	resize(PsiOptions::instance()->getOption("options.ui.muc.size").toSize());
+	ui_.vsplitter->setSizes(list);
 
 	X11WM_CLASS("groupchat");
 
-	d->mle->setFocus();
-
-	setAcceptDrops(true);
+	ui_.mle->chatEdit()->setFocus();
+	resize(PsiOptions::instance()->getOption("options.ui.muc.size").toSize());
 
 	// Connect signals from MUC manager
 	connect(d->mucManager,SIGNAL(action_error(MUCManager::Action, int, const QString&)), SLOT(action_error(MUCManager::Action, int, const QString&)));
@@ -1014,8 +591,8 @@ GCMainDlg::~GCMainDlg()
 	if(d->state != Private::Idle)
 		d->pa->groupChatLeave(d->jid.host(), d->jid.user());
 
-	//QMimeSourceFactory *m = d->te_log->mimeSourceFactory();
-	//d->te_log->setMimeSourceFactory(0);
+	//QMimeSourceFactory *m = ui_.log->mimeSourceFactory();
+	//ui_.log->setMimeSourceFactory(0);
 	//delete m;
 
 	d->pa->dialogUnregister(this);
@@ -1034,11 +611,11 @@ void GCMainDlg::setShortcuts()
 }
 
 void GCMainDlg::scrollUp() {
-	d->te_log->verticalScrollBar()->setValue(d->te_log->verticalScrollBar()->value() - d->te_log->verticalScrollBar()->pageStep()/2);
+	ui_.log->verticalScrollBar()->setValue(ui_.log->verticalScrollBar()->value() - ui_.log->verticalScrollBar()->pageStep()/2);
 }
 
 void GCMainDlg::scrollDown() {
-	d->te_log->verticalScrollBar()->setValue(d->te_log->verticalScrollBar()->value() + d->te_log->verticalScrollBar()->pageStep()/2);
+	ui_.log->verticalScrollBar()->setValue(ui_.log->verticalScrollBar()->value() + ui_.log->verticalScrollBar()->pageStep()/2);
 }
 
 // FIXME: This should be unnecessary, since these keys are all registered as
@@ -1081,7 +658,7 @@ void GCMainDlg::windowActivationChange(bool oldstate)
 		}
 		doFlash(false);
 
-		d->mle->setFocus();
+		ui_.mle->chatEdit()->setFocus();
 		d->trackBar = false;
 	} else {
 		d->trackBar = true;
@@ -1106,10 +683,10 @@ void GCMainDlg::logSelectionChanged()
 {
 #ifdef Q_WS_MAC
 	// A hack to only give the message log focus when text is selected
-	if (d->te_log->hasSelectedText()) 
-		d->te_log->setFocus();
+	if (ui_.log->hasSelectedText()) 
+		ui_.log->setFocus();
 	else 
-		d->mle->setFocus();
+		ui_.mle->chatEdit()->setFocus();
 #endif
 }
 
@@ -1121,7 +698,7 @@ void GCMainDlg::setConnecting()
 
 void GCMainDlg::updateIdentityVisibility()
 {
-	d->lb_ident->setVisible(d->pa->psi()->contactList()->enabledAccounts().count() > 1);
+	ui_.lb_ident->setVisible(d->pa->psi()->contactList()->enabledAccounts().count() > 1);
 }
 
 #ifdef WHITEBOARDING
@@ -1143,16 +720,16 @@ void GCMainDlg::action_error(MUCManager::Action, int, const QString& err)
 
 void GCMainDlg::mle_returnPressed()
 {
-	if(d->mle->text().isEmpty())
+	if(ui_.mle->chatEdit()->text().isEmpty())
 		return;
 
-	QString str = d->mle->text();
+	QString str = ui_.mle->chatEdit()->text();
 	if(str == "/clear") {
 		doClear();
 
 		d->histAt = 0;
 		d->hist.prepend(str);
-		d->mle->setText("");
+		ui_.mle->chatEdit()->setText("");
 		return;
 	}
 
@@ -1163,7 +740,7 @@ void GCMainDlg::mle_returnPressed()
 			d->self = nick;
 			d->pa->groupChatChangeNick(d->jid.host(), d->jid.user(), d->self, d->pa->status());
 		}
-		d->mle->setText("");
+		ui_.mle->chatEdit()->setText("");
 		return;
 	}
 
@@ -1179,7 +756,7 @@ void GCMainDlg::mle_returnPressed()
 
 	d->histAt = 0;
 	d->hist.prepend(str);
-	d->mle->setText("");
+	ui_.mle->chatEdit()->setText("");
 }
 
 /*void GCMainDlg::le_upPressed()
@@ -1207,7 +784,7 @@ void GCMainDlg::doTopic()
 	QString str = QInputDialog::getText(
 		tr("Set Groupchat Topic"),
 		tr("Enter a topic:"),
-		QLineEdit::Normal, d->le_topic->text(), &ok, this);
+		QLineEdit::Normal, ui_.le_topic->text(), &ok, this);
 
 	if(ok) {
 		Message m(d->jid);
@@ -1220,7 +797,7 @@ void GCMainDlg::doTopic()
 
 void GCMainDlg::doClear()
 {
-	d->te_log->setText("");
+	ui_.log->setText("");
 }
 
 void GCMainDlg::doClearButton()
@@ -1246,7 +823,7 @@ void GCMainDlg::configureRoom()
 	if(d->configDlg)
 		bringToFront(d->configDlg);
 	else {
-		GCUserViewItem* c = (GCUserViewItem*) d->lv_users->findEntry(d->self);
+		GCUserViewItem* c = (GCUserViewItem*)ui_.lv_users->findEntry(d->self);
 		d->configDlg = new MUCConfigDlg(d->mucManager, this);
 		d->configDlg->setRoleAffiliation(c->s.mucItem().role(), c->s.mucItem().affiliation());
 		d->configDlg->show();
@@ -1266,9 +843,9 @@ void GCMainDlg::goDisc()
 {
 	if(d->state != Private::Idle) {
 		d->state = Private::Idle;
-		d->pb_topic->setEnabled(false);
+		ui_.pb_topic->setEnabled(false);
 		appendSysMsg(tr("Disconnected."), true);
-		d->mle->setEnabled(false);
+		ui_.mle->chatEdit()->setEnabled(false);
 	}
 }
 
@@ -1297,7 +874,7 @@ void GCMainDlg::dragEnterEvent(QDragEnterEvent *e)
 void GCMainDlg::dropEvent(QDropEvent *e)
 {
 	Jid jid(e->mimeData()->text());
-	if (jid.isValid() && !d->lv_users->hasJid(jid)) {
+	if (jid.isValid() && !ui_.lv_users->hasJid(jid)) {
 		Message m;
 		m.setTo(d->jid);
 		m.addMUCInvite(MUCInvite(jid));
@@ -1336,7 +913,7 @@ PsiAccount* GCMainDlg::account() const
 
 void GCMainDlg::error(int, const QString &str)
 {
-	d->pb_topic->setEnabled(false);
+	ui_.pb_topic->setEnabled(false);
 
 	if(d->state == Private::Connecting)
 		appendSysMsg(tr("Unable to join groupchat.  Reason: %1").arg(str), true);
@@ -1377,7 +954,7 @@ void GCMainDlg::presence(const QString &nick, const Status &s)
 				QTimer::singleShot(0, this, SLOT(configureRoom()));
 		}
 
-		GCUserViewItem* contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem* contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		if (contact == NULL) {
 			//contact joining
 			if ( !d->connecting && options_->getOption("options.muc.show-joins").toBool() ) {
@@ -1437,7 +1014,7 @@ void GCMainDlg::presence(const QString &nick, const Status &s)
 				}
 			}
 		}
-		d->lv_users->updateEntry(nick, s);
+		ui_.lv_users->updateEntry(nick, s);
 	} 
 	else {
 		// Unavailable
@@ -1464,7 +1041,7 @@ void GCMainDlg::presence(const QString &nick, const Status &s)
 		if ( !d->connecting && options_->getOption("options.muc.show-joins").toBool() ) {
 			QString message;
 			QString nickJid;
-			GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+			GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 			if (contact && !contact->s.mucItem().jid().isEmpty())
 				nickJid = QString("%1 (%2)").arg(nick).arg(contact->s.mucItem().jid().full());
 			else
@@ -1489,7 +1066,7 @@ void GCMainDlg::presence(const QString &nick, const Status &s)
 
 				case 303:
 					message = tr("%1 is now known as %2").arg(nick).arg(s.mucItem().nick());
-					d->lv_users->updateEntry(s.mucItem().nick(), s);
+					ui_.lv_users->updateEntry(s.mucItem().nick(), s);
 					break;
 					
 				case 307:
@@ -1547,7 +1124,7 @@ void GCMainDlg::presence(const QString &nick, const Status &s)
 			}
 			appendSysMsg(message, false, QDateTime::currentDateTime());
 		}
-		d->lv_users->removeEntry(nick);
+		ui_.lv_users->removeEntry(nick);
 	}
 	
 	if (!s.capsNode().isEmpty()) {
@@ -1564,9 +1141,9 @@ void GCMainDlg::message(const Message &_m)
 	bool alert = false;
 
 	if(!m.subject().isEmpty()) {
-		d->le_topic->setText(m.subject());
-		d->le_topic->setCursorPosition(0);
-		d->le_topic->setToolTip(QString("<qt><p>%1</p></qt>").arg(m.subject()));
+		ui_.le_topic->setText(m.subject());
+		ui_.le_topic->setCursorPosition(0);
+		ui_.le_topic->setToolTip(QString("<qt><p>%1</p></qt>").arg(m.subject()));
 		if (d->connecting)
 			return;
 		if(m.body().isEmpty()) {
@@ -1615,10 +1192,10 @@ void GCMainDlg::message(const Message &_m)
 void GCMainDlg::joined()
 {
 	if(d->state == Private::Connecting) {
-		d->lv_users->clear();
+		ui_.lv_users->clear();
 		d->state = Private::Connected;
-		d->pb_topic->setEnabled(true);
-		d->mle->setEnabled(true);
+		ui_.pb_topic->setEnabled(true);
+		ui_.mle->chatEdit()->setEnabled(true);
 		setConnecting();
 		appendSysMsg(tr("Connected."), true);
 	}
@@ -1646,8 +1223,8 @@ void GCMainDlg::appendSysMsg(const QString &str, bool alert, const QDateTime &ts
 	if(!ts.isNull())
 		time = ts;
 
-	QString timestr = d->te_log->formatTimeStamp(time);
-	d->te_log->appendText(QString("<font color=\"#00A000\">[%1]").arg(timestr) + QString(" *** %1</font>").arg(Qt::escape(str)));
+	QString timestr = ui_.log->formatTimeStamp(time);
+	ui_.log->appendText(QString("<font color=\"#00A000\">[%1]").arg(timestr) + QString(" *** %1</font>").arg(Qt::escape(str)));
 
 	if(alert)
 		doAlert();
@@ -1696,7 +1273,7 @@ void GCMainDlg::appendMessage(const Message &m, bool alert)
 		color = "#0000FF";
 	}*/
 	nickcolor = getNickColor(who);
-	textcolor = d->te_log->palette().active().text().name();
+	textcolor = ui_.log->palette().active().text().name();
 	if(alert) {
 		textcolor = "#FF0000";
 		alerttagso = "<b>";
@@ -1705,7 +1282,7 @@ void GCMainDlg::appendMessage(const Message &m, bool alert)
 	if(m.spooled())
 		nickcolor = "#008000"; //color = "#008000";
 
-	QString timestr = d->te_log->formatTimeStamp(m.timeStamp());
+	QString timestr = ui_.log->formatTimeStamp(m.timeStamp());
 
 	bool emote = false;
 	if(m.body().left(4) == "/me ")
@@ -1725,17 +1302,17 @@ void GCMainDlg::appendMessage(const Message &m, bool alert)
 		txt = TextUtil::legacyFormat(txt);
 
 	if(emote) {
-		//d->te_log->append(QString("<font color=\"%1\">").arg(color) + QString("[%1]").arg(timestr) + QString(" *%1 ").arg(Qt::escape(who)) + txt + "</font>");
-		d->te_log->appendText(QString("<font color=\"%1\">").arg(nickcolor) + QString("[%1]").arg(timestr) + QString(" *%1 ").arg(Qt::escape(who)) + alerttagso + txt + alerttagsc + "</font>");
+		//ui_.log->append(QString("<font color=\"%1\">").arg(color) + QString("[%1]").arg(timestr) + QString(" *%1 ").arg(Qt::escape(who)) + txt + "</font>");
+		ui_.log->appendText(QString("<font color=\"%1\">").arg(nickcolor) + QString("[%1]").arg(timestr) + QString(" *%1 ").arg(Qt::escape(who)) + alerttagso + txt + alerttagsc + "</font>");
 	}
 	else {
 		if(option.chatSays) {
-			//d->te_log->append(QString("<font color=\"%1\">").arg(color) + QString("[%1] ").arg(timestr) + QString("%1 says:").arg(Qt::escape(who)) + "</font><br>" + txt);
-			d->te_log->appendText(QString("<font color=\"%1\">").arg(nickcolor) + QString("[%1] ").arg(timestr) + QString("%1 says:").arg(Qt::escape(who)) + "</font><br>" + QString("<font color=\"%1\">").arg(textcolor) + alerttagso + txt + alerttagsc + "</font>");
+			//ui_.log->append(QString("<font color=\"%1\">").arg(color) + QString("[%1] ").arg(timestr) + QString("%1 says:").arg(Qt::escape(who)) + "</font><br>" + txt);
+			ui_.log->appendText(QString("<font color=\"%1\">").arg(nickcolor) + QString("[%1] ").arg(timestr) + QString("%1 says:").arg(Qt::escape(who)) + "</font><br>" + QString("<font color=\"%1\">").arg(textcolor) + alerttagso + txt + alerttagsc + "</font>");
 		}
 		else {
-			//d->te_log->append(QString("<font color=\"%1\">").arg(color) + QString("[%1] &lt;").arg(timestr) + Qt::escape(who) + QString("&gt;</font> ") + txt);
-			d->te_log->appendText(QString("<font color=\"%1\">").arg(nickcolor) + QString("[%1] &lt;").arg(timestr) + Qt::escape(who) + QString("&gt;</font> ") + QString("<font color=\"%1\">").arg(textcolor) + alerttagso + txt + alerttagsc +"</font>");
+			//ui_.log->append(QString("<font color=\"%1\">").arg(color) + QString("[%1] &lt;").arg(timestr) + Qt::escape(who) + QString("&gt;</font> ") + txt);
+			ui_.log->appendText(QString("<font color=\"%1\">").arg(nickcolor) + QString("[%1] &lt;").arg(timestr) + Qt::escape(who) + QString("&gt;</font> ") + QString("<font color=\"%1\">").arg(textcolor) + alerttagso + txt + alerttagsc +"</font>");
 		}
 	}
 
@@ -1832,24 +1409,27 @@ void GCMainDlg::flashAnimate()
 
 void GCMainDlg::setLooks()
 {
+	ui_.vsplitter->setSplitterEnabled(!option.chatLineEdit);
+	ui_.mle->setLineEditEnabled(option.chatLineEdit);
+
 	// update the fonts
 	QFont f;
 	f.fromString(option.font[fChat]);
-	d->te_log->setFont(f);
-	d->mle->setFont(f);
+	ui_.log->setFont(f);
+	ui_.mle->chatEdit()->setFont(f);
 
 	f.fromString(option.font[fRoster]);
-	d->lv_users->Q3ListView::setFont(f);
+	ui_.lv_users->Q3ListView::setFont(f);
 
 	if (PsiOptions::instance()->getOption("options.ui.chat.central-toolbar").toBool()) {
-		d->toolbar->show();
-		d->tb_actions->hide();
-		d->tb_emoticons->hide();
+		ui_.toolbar->show();
+		ui_.tb_actions->hide();
+		ui_.tb_emoticons->hide();
 	}
 	else {
-		d->toolbar->hide();
-		d->tb_emoticons->setVisible(option.useEmoticons);
-		d->tb_actions->show();
+		ui_.toolbar->hide();
+		ui_.tb_emoticons->setVisible(option.useEmoticons);
+		ui_.tb_actions->show();
 	}
 
 	setWindowOpacity(double(qMax(MINIMUM_OPACITY,PsiOptions::instance()->getOption("options.ui.chat.opacity").toInt()))/100);
@@ -1862,15 +1442,15 @@ void GCMainDlg::setLooks()
 
 void GCMainDlg::optionsUpdate()
 {
-	/*QMimeSourceFactory *m = d->te_log->mimeSourceFactory();
-	d->te_log->setMimeSourceFactory(PsiIconset::instance()->emoticons.generateFactory());
+	/*QMimeSourceFactory *m = ui_.log->mimeSourceFactory();
+	ui_.log->setMimeSourceFactory(PsiIconset::instance()->emoticons.generateFactory());
 	delete m;*/
 
 	setLooks();
 	setShortcuts();
 
 	// update status icons
-	d->lv_users->updateAll();
+	ui_.lv_users->updateAll();
 }
 
 void GCMainDlg::lv_action(const QString &nick, const Status &s, int x)
@@ -1905,41 +1485,41 @@ void GCMainDlg::lv_action(const QString &nick, const Status &s, int x)
 		d->mucManager->kick(nick);
 	}
 	else if(x == 11) {
-		GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		d->mucManager->ban(contact->s.mucItem().jid());
 	}
 	else if(x == 12) {
-		GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		if (contact->s.mucItem().role() != MUCItem::Visitor)
 			d->mucManager->setRole(nick, MUCItem::Visitor);
 	}
 	else if(x == 13) {
-		GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		if (contact->s.mucItem().role() != MUCItem::Participant)
 			d->mucManager->setRole(nick, MUCItem::Participant);
 	}
 	else if(x == 14) {
-		GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		if (contact->s.mucItem().role() != MUCItem::Moderator)
 			d->mucManager->setRole(nick, MUCItem::Moderator);
 	}
 	/*else if(x == 15) {
-		GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		if (contact->s.mucItem().affiliation() != MUCItem::NoAffiliation)
 			d->mucManager->setAffiliation(contact->s.mucItem().jid(), MUCItem::NoAffiliation);
 	}
 	else if(x == 16) {
-		GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		if (contact->s.mucItem().affiliation() != MUCItem::Member)
 			d->mucManager->setAffiliation(contact->s.mucItem().jid(), MUCItem::Member);
 	}
 	else if(x == 17) {
-		GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		if (contact->s.mucItem().affiliation() != MUCItem::Admin)
 			d->mucManager->setAffiliation(contact->s.mucItem().jid(), MUCItem::Admin);
 	}
 	else if(x == 18) {
-		GCUserViewItem *contact = (GCUserViewItem*) d->lv_users->findEntry(nick);
+		GCUserViewItem *contact = (GCUserViewItem*) ui_.lv_users->findEntry(nick);
 		if (contact->s.mucItem().affiliation() != MUCItem::Owner)
 			d->mucManager->setAffiliation(contact->s.mucItem().jid(), MUCItem::Owner);
 	}*/
@@ -1963,6 +1543,14 @@ void GCMainDlg::buildMenu()
 	d->pm_settings->insertSeparator();
 
 	d->act_icon->addTo( d->pm_settings );
+}
+
+void GCMainDlg::chatEditCreated()
+{
+	ui_.log->setDialog(this);
+	ui_.mle->chatEdit()->setDialog(this);
+
+	ui_.mle->chatEdit()->installEventFilter(d);
 }
 
 //----------------------------------------------------------------------------

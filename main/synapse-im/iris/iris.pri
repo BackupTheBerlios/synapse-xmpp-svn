@@ -22,6 +22,7 @@ HEADERS += \
 	$$PWD/xmpp-core/compress.h \
 	$$PWD/xmpp-core/td.h \
 	$$PWD/xmpp-im/xmpp_tasks.h \
+	$$PWD/xmpp-im/xmpp_discoinfotask.h \
 	$$PWD/xmpp-im/xmpp_xmlcommon.h \
 	$$PWD/xmpp-im/xmpp_vcard.h \
 	$$PWD/jabber/s5b.h \
@@ -29,12 +30,17 @@ HEADERS += \
 	$$PWD/jabber/filetransfer.h \
 	$$PWD/include/xmpp.h \
 	$$PWD/include/xmpp_jid.h \
+	$$PWD/include/xmpp_client.h \
+	$$PWD/include/xmpp_stanza.h \
+	$$PWD/include/xmpp_stream.h \
 	$$PWD/include/xmpp_muc.h \
 	$$PWD/include/xmpp_rosterx.h \
 	$$PWD/include/xmpp_xdata.h \
 	$$PWD/include/xmpp_task.h \
 	$$PWD/include/xmpp_status.h \
 	$$PWD/include/xmpp_features.h \
+	$$PWD/include/xmpp_agentitem.h \
+	$$PWD/include/xmpp_discoitem.h \
 	$$PWD/include/im.h
 
 SOURCES += \
@@ -49,9 +55,14 @@ SOURCES += \
 	$$PWD/xmpp-core/compressionhandler.cpp \
 	$$PWD/xmpp-core/stream.cpp \
 	$$PWD/xmpp-core/simplesasl.cpp \
+	$$PWD/xmpp-core/xmpp_stanza.cpp \
 	$$PWD/xmpp-im/types.cpp \
 	$$PWD/xmpp-im/client.cpp \
+	$$PWD/xmpp-im/xmpp_features.cpp \
+	$$PWD/xmpp-im/xmpp_discoitem.cpp \
+	$$PWD/xmpp-im/xmpp_discoinfotask.cpp \
 	$$PWD/xmpp-im/xmpp_xdata.cpp \
+	$$PWD/xmpp-im/xmpp_task.cpp \
 	$$PWD/xmpp-im/xmpp_tasks.cpp \
 	$$PWD/xmpp-im/xmpp_xmlcommon.cpp \
 	$$PWD/xmpp-im/xmpp_vcard.cpp \

@@ -19,6 +19,7 @@
  */
 
 #include "xmpp_xmlcommon.h"
+#include "xmpp_stanza.h"
 
 #include <qstring.h>
 #include <qdom.h>
@@ -400,7 +401,7 @@ void readSizeEntry(const QDomElement &e, const QString &name, QSize *v)
 	QDomElement tag = findSubTag(e, name, &found);
 	if(!found)
 		return;
-	QStringList list = QStringList::split(',', tagContent(tag));
+	QStringList list = tagContent(tag).split(',');
 	if(list.count() != 2)
 		return;
 	QSize s;
@@ -415,7 +416,7 @@ void readRectEntry(const QDomElement &e, const QString &name, QRect *v)
 	QDomElement tag = findSubTag(e, name, &found);
 	if(!found)
 		return;
-	QStringList list = QStringList::split(',', tagContent(tag));
+	QStringList list = tagContent(tag).split(',');
 	if(list.count() != 4)
 		return;
 	QRect r;

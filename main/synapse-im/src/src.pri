@@ -28,10 +28,13 @@ mac {
 mac { include($$PWD/tools/mac_dock/mac_dock.pri) }
 
 # Tune
+include($$PWD/tools/tunecontroller/tunecontroller.pri)
+pep {
+	DEFINES += USE_PEP
 CONFIG += tc_psifile
 mac { CONFIG += tc_itunes }
 windows { CONFIG += tc_winamp }
-include($$PWD/tools/tunecontroller/tunecontroller.pri)
+}
 
 # Crash
 use_crash {
@@ -154,6 +157,7 @@ HEADERS += \
 	$$PWD/tabdlg.h \
 	$$PWD/adduserdlg.h \
 	$$PWD/groupchatdlg.h \
+	$$PWD/gcuserview.h \
 	$$PWD/infodlg.h \
 	$$PWD/translationmanager.h \
 	$$PWD/historydb.h \
@@ -275,6 +279,7 @@ SOURCES += \
 	$$PWD/tabdlg.cpp \
 	$$PWD/adduserdlg.cpp \
 	$$PWD/groupchatdlg.cpp \
+	$$PWD/gcuserview.cpp \
 	$$PWD/infodlg.cpp \
 	$$PWD/translationmanager.cpp \
 	$$PWD/certutil.cpp \
@@ -406,7 +411,8 @@ INTERFACES += \
 	$$PWD/mood.ui \
 	$$PWD/voicecall.ui \
 	$$PWD/chatdlg.ui \
-	$$PWD/chat/chatcontact.ui
+	$$PWD/chat/chatcontact.ui \
+	$$PWD/groupchatdlg.ui
 
 # options dialog
 include($$PWD/options/options.pri)

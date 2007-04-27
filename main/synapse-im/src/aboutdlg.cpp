@@ -42,7 +42,7 @@ AboutDlg::AboutDlg(QWidget* parent)
 
 	// fill in Authors tab...
 	QString authors;
-	authors += details(QString::fromUtf8("Andrzej Wójcik"),
+	authors += details(QString::fromUtf8("Andrzej Wï¿½cik"),
 			   "andrzej@hi-low.eu", "hantu.sc@jid.pl", "http://andrzej.hi-low.eu",
 			   tr("Author and Lead Developer of Synapse-IM"));
 	authors += details(QString::fromUtf8("Justin Karneges"),

@@ -28,10 +28,13 @@
 #include <QDateTime>
 #include <QPair>
 
-#include "im.h"
+#include "xmpp_features.h"
+#include "xmpp_discoitem.h"
+
 #include "capsspec.h"
 
 class PsiAccount;
+class QDomDocument;
 class QDomElement;
 
 class CapsRegistry : public QObject
@@ -45,7 +48,6 @@ public:
 	bool isRegistered(const CapsSpec&) const;
 	XMPP::Features features(const CapsSpec&) const;
 	XMPP::DiscoItem::Identities identities(const CapsSpec&) const;
-
 
 	void setFile(const QString&);
 

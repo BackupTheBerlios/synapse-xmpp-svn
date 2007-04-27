@@ -51,26 +51,15 @@ TabDlg::TabDlg(PsiCon *psiCon)
 		setAttribute(Qt::WA_MacMetalStyle);
 	psi=psiCon;
 
-	tabMenu = new Q3PopupMenu( this );
-	connect( tabMenu, SIGNAL( aboutToShow() ), SLOT( buildTabMenu() ) );
+	tabMenu = new QMenu( this );
 	
 	tabs = new PsiTabWidget (this);
-
-	closeCross = new QPushButton(this);
-	//closeCross->setText("x");
-	closeCross->setIcon(IconsetFactory::icon("psi/closetab").icon());
-	closeCross->hide();
-	/*if (option.usePerTabCloseButton)
-	  tabs->setHoverCloseButton(true);
-	else
-	{
-		tabs->setHoverCloseButton(false);
-		tabs->setCornerWidget( closeCross );
-		closeCross->show();
-	}*/
-	
+	tabs->setCloseIcon(IconsetFactory::icon("psi/closetab").icon());
 	//tabs->setCloseIcon(IconsetFactory::icon("psi/closetab").iconSet());
 	connect (tabs, SIGNAL( mouseDoubleClickTab( QWidget* ) ), SLOT( detachChat( QWidget* ) ) );
+	connect (tabs, SIGNAL(aboutToShowMenu(QMenu *)), SLOT(tab_aboutToShowMenu(QMenu *)));
+	connect (tabs, SIGNAL(tabContextMenu(int,QPoint,QContextMenuEvent*)), SLOT(showTabMenu(int,QPoint,QContextMenuEvent*)));
+
 	//connect (tabs, SIGNAL( testCanDecode(const QDragMoveEvent*, bool&) ), SLOT( tabTestCanDecode(const QDragMoveEvent*, bool&) ) );
 	//connect (tabs, SIGNAL( receivedDropEvent( QDropEvent* ) ), SLOT( tabReceivedDropEvent( QDropEvent* ) ) );
 	//connect (tabs, SIGNAL( receivedDropEvent( QWidget*, QDropEvent* ) ), SLOT( tabReceivedDropEvent( QWidget*, QDropEvent* ) ) );
@@ -83,7 +72,7 @@ TabDlg::TabDlg(PsiCon *psiCon)
 	chats.setAutoDelete( FALSE );
 	X11WM_CLASS("chat");
 	
-	connect( closeCross, SIGNAL( clicked() ), SLOT( closeChat() ) );
+	connect( tabs, SIGNAL( closeButtonClicked() ), SLOT( closeChat() ) );
 	connect( tabs, SIGNAL( currentChanged( QWidget* ) ), SLOT( tabSelected( QWidget* ) ) );	
 
 	setAcceptDrops(TRUE);
@@ -110,6 +99,10 @@ TabDlg::~TabDlg()
 
 }
 
+
+Q_DECLARE_METATYPE ( TabDlg* );
+
+
 void TabDlg::setShortcuts()
 {
 	//act_close->setShortcuts(ShortcutManager::instance()->shortcuts("common.close"));
@@ -123,19 +116,60 @@ void TabDlg::resizeEvent(QResizeEvent *e)
 	option.sizeTabDlg = e->size();
 }
 
-void TabDlg::buildTabMenu()
+void TabDlg::showTabMenu(int tab, QPoint pos, QContextMenuEvent * event)
 {
 	tabMenu->clear();
-	tabMenu->insertItem( tr("Detach Current Tab"), this, SLOT( detachChat() ) );
-	tabMenu->insertItem( tr("Close Current Tab"), this, SLOT( closeChat() ) );
 
-	Q3PopupMenu* sendTo = new Q3PopupMenu(tabMenu);
+	if (tab!=-1) {
+		QAction *d = tabMenu->addAction(tr("Detach Tab"));
+		QAction *c = tabMenu->addAction(tr("Close Tab"));
+
+		QMenu* sendTo = new QMenu(tabMenu);
+		sendTo->setTitle(tr("Sent Tab to"));
+		QMap<QAction*, TabDlg*> sentTos;
+		for (uint i = 0; i < psi->getTabSets()->count(); ++i)
+		{
+			TabDlg* tabSet= psi->getTabSets()->at(i);
+			QAction *act = sendTo->addAction( tabSet->getName());
+			if (tabSet == this) act->setEnabled(false);
+			sentTos[act] = tabSet;
+		}
+		tabMenu->addMenu(sendTo);
+
+		QAction *act = tabMenu->exec(pos);
+		if (!act) return;
+		if (act == c) {
+			closeChat(getTab(tab));
+		} else if (act == d) {
+			detachChat(getTab(tab));
+		} else {
+			TabDlg* target = sentTos[act];
+			if (target) sendChatTo(getTab(tab), target);
+		}
+	}
+}
+
+void TabDlg::tab_aboutToShowMenu(QMenu *menu)
+{
+	menu->addSeparator ();
+	menu->addAction( tr("Detach Current Tab"), this, SLOT( detachChat() ) );
+	menu->addAction( tr("Close Current Tab"), this, SLOT( closeChat() ) );
+
+	QMenu* sendTo = new QMenu(menu);
+	sendTo->setTitle(tr("Sent Current Tab to"));
+	int tabdlgmetatype = qRegisterMetaType<TabDlg*>("TabDlg*");
 	for (uint i = 0; i < psi->getTabSets()->count(); ++i)
 	{
 		TabDlg* tabSet= psi->getTabSets()->at(i);
-		sendTo->insertItem( tabSet->getName(), this, SLOT( sendChatTo( tabSet ) ) );
+		sendTo->addAction( tabSet->getName())->setData(QVariant(tabdlgmetatype, &tabSet));
 	}
-	tabMenu->insertItem( tr("Sent Current Tab to"), sendTo);
+	connect(sendTo, SIGNAL(triggered(QAction*)), SLOT(menu_sendChatTo(QAction*)));
+	menu->addMenu(sendTo);
+}
+
+void TabDlg::menu_sendChatTo(QAction *act)
+{
+	sendChatTo(tabs->currentPage(), act->data().value<TabDlg*>());
 }
 
 void TabDlg::sendChatTo(QWidget* chatw, TabDlg* otherTabs)
@@ -194,12 +228,11 @@ void TabDlg::addChat(ChatDlg* chat)
 {
 	chats.append(chat);
 	QString tablabel = chat->getDisplayNick();
-	tablabel.replace("&","&&");
+	tablabel.replace("&", "&&");
 	tabs->addTab(chat, tablabel);
-	original_color = tabs->tabTextColor(chat);
-	tabs->setTabIconSet(chat, IconsetFactory::icon("psi/start-chat").icon());
+	//tabs->setTabIconSet(chat, IconsetFactory::icon("psi/start-chat").icon());
 
-	tabs->showPage(chat);
+	//tabs->showPage(chat);
 	connect ( chat, SIGNAL( captionChanged( ChatDlg*) ), SLOT( updateTab( ChatDlg* ) ) );
 	connect ( chat, SIGNAL( contactStateChanged( XMPP::ChatState ) ), SLOT( setTabState( XMPP::ChatState ) ) );
 	connect ( chat, SIGNAL( unreadMessageUpdate(ChatDlg*, int) ), SLOT( setTabHasMessages(ChatDlg*, int) ) );
@@ -324,13 +357,20 @@ void TabDlg::closeMe()
 	//we do not delete it here, let the PsiCon do that, they create, they destroy.
 }
 
+
+ChatDlg *TabDlg::getTab(int i)
+{
+	return ((ChatDlg*)tabs->page(i));
+}
+
+
 ChatDlg* TabDlg::getChatPointer(QString fullJid)
 {
 	for (int i=0; i < tabs->count() ; i++)
 	{
-		if (((ChatDlg*)tabs->page(i))->jid().full()==fullJid)
+		if (getTab(i)->jid().full()==fullJid)
 		{
-			return (ChatDlg*)(tabs->page(i));
+			return getTab(i);
 		}
 	}
 	return false;
@@ -367,7 +407,7 @@ void TabDlg::updateTab( ChatDlg* chat)
 			doFlash(true);
 	}
 	else
-		tabs->setTabTextColor( chat, original_color );
+		tabs->setTabTextColor( chat, Qt::black );
 	updateCaption();
 }
 
