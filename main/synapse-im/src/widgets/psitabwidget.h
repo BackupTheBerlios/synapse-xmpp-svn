@@ -45,6 +45,7 @@ public:
 	~PsiTabWidget();
 	
 	void setTabTextColor( QWidget* tab, const QColor& color);
+	QColor tabTextColor(QWidget *);
 	int count();
 	QWidget* currentPage();
 	int currentPageIndex();

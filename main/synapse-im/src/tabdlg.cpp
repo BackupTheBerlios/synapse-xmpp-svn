@@ -230,6 +230,7 @@ void TabDlg::addChat(ChatDlg* chat)
 	QString tablabel = chat->getDisplayNick();
 	tablabel.replace("&", "&&");
 	tabs->addTab(chat, tablabel);
+	original_color = tabs->tabTextColor(chat);
 	//tabs->setTabIconSet(chat, IconsetFactory::icon("psi/start-chat").icon());
 
 	//tabs->showPage(chat);
@@ -407,7 +408,7 @@ void TabDlg::updateTab( ChatDlg* chat)
 			doFlash(true);
 	}
 	else
-		tabs->setTabTextColor( chat, Qt::black );
+		tabs->setTabTextColor( chat, original_color );
 	updateCaption();
 }
 

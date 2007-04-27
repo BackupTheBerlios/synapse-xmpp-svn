@@ -106,6 +106,15 @@ void PsiTabWidget::setTabTextColor( QWidget* tab, const QColor& color)
 	}
 }
 
+QColor PsiTabWidget::tabTextColor( QWidget* tab)
+{
+        for (int i=0; i < count(); i++) {
+                if ( widget(i) == tab ) {
+                        return tabBar_->tabTextColor(i);
+                }
+        }
+}
+
 /**
  * Returns the specified widget.
  * \param index Widget to return.
@@ -164,6 +173,15 @@ void PsiTabWidget::addTab(QWidget* widget, QString name)
 	stacked_->addWidget(widget);
 	tabBar_->addTab(name);
 	showPage(currentPage());
+	if(count() > 1) {
+		closeButton_->show();
+		downButton_->show();
+		tabBar_->show();
+	} else {
+		closeButton_->hide();
+		downButton_->hide();
+		tabBar_->hide();
+	}
 } 
 
 /**
@@ -204,6 +222,15 @@ void PsiTabWidget::removePage(QWidget* widget) {
 			tabBar_->removeTab(i);
 			// tabBar_ emits current changed if needed
 		}
+	}
+	if(count() > 1) {
+		closeButton_->show();
+		downButton_->show();
+		tabBar_->show();
+	} else {
+		closeButton_->hide();
+		downButton_->hide();
+		tabBar_->hide();
 	}
 }
 
