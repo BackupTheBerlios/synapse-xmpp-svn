@@ -43,14 +43,13 @@ public:
 	SpeexCodecFactory(); 
 	virtual ~SpeexCodecFactory();
     
-    virtual std::string name() { return "Speex"; }
+    virtual QString name() { return "Speex"; }
     virtual double bandwidth() { return 8.0; }
-    virtual std::string description() { return ""; }
+    virtual QString description() { return ""; }
 
     virtual int payload() { return 99; };
-    virtual Codec codec();
 
-    virtual std::string rtmap() { return std::string("speex/8000/1"); } ;
+    virtual QString rtmap() { return QString("speex/8000/1"); } ;
 
     virtual VoiceEncoder *encoder() { return new SpeexEncoder(); }
     virtual VoiceDecoder *decoder() { return new SpeexDecoder(); }

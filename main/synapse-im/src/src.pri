@@ -73,29 +73,31 @@ else {
 include($$PWD/widgets/widgets.pri)
 
 # Google FT
-google_ft {
-	DEFINES += GOOGLE_FT
-	DEFINES += jingle_ft
-//	HEADERS += $$PWD/googleftmanager.h
-//	SOURCES += $$PWD/googleftmanager.cpp
-	include(../third-party/libjingle.new/libjingle.pri)
-}
+#google_ft {
+#	DEFINES += GOOGLE_FT
+#	DEFINES += jingle_ft
+#	HEADERS += $$PWD/googleftmanager.h
+#	SOURCES += $$PWD/googleftmanager.cpp
+#	include(../third-party/libjingle.new/libjingle.pri)
+#}
 
 # Jingle
 jingle {
 	DEFINES += HAVE_JINGLE POSIX
-	DEFINES += jingle_voice jingle_ft
+	DEFINES += jingle_voice
 	DEFINES += jingle
-	HEADERS += $$PWD/jingle.h
-	SOURCES += $$PWD/jingle.cpp
+#	HEADERS += $$PWD/jingle.h
+#	SOURCES += $$PWD/jingle.cpp
 
-	JINGLE_CPP = $$PWD/../third-party/libjingle.new/libjingle
-	LIBS += -L$$JINGLE_CPP -ljingle_psi -ljingle_xmpp_psi -L$$PWD/../third-party/jrtplib -ljrtp
+#	JINGLE_CPP = $$PWD/../third-party/libjingle.new/libjingle
+#	LIBS += -L$$JINGLE_CPP -ljingle_psi -ljingle_xmpp_psi -L$$PWD/../third-party/jrtplib -ljrtp
+	LIBS += -L$$PWD/../third-party/jrtplib -ljrtp
 	INCLUDEPATH += $$JINGLE_CPP $$PWD/../third-party/jrtplib
         include(../third-party/voip/voip.pri)
 
 	contains(DEFINES, HAVE_PORTAUDIO) {
-		LIBS += -framework CoreAudio -framework AudioToolbox
+		LIBS += -lportaudio
+#		LIBS += -framework CoreAudio -framework AudioToolbox
 	}
 }
 
@@ -109,6 +111,22 @@ dbus {
 
 # include Iris XMPP library
 include($$PWD/../iris/iris.pri)
+
+	HEADERS += $$PWD/jingle/jinglesessionmanager.h \
+		   $$PWD/jingle/jinglevoicesession.h \
+		   $$PWD/jingle/session.h \
+		   $$PWD/jingle/stun.h \
+		   $$PWD/jingle/udp.h \
+		   $$PWD/jingle/transport.h
+
+	SOURCES += $$PWD/jingle/jinglesessionmanager.cpp \
+		   $$PWD/jingle/jinglevoicesession.cpp \
+		   $$PWD/jingle/stun.cpp \
+		   $$PWD/jingle/udp.cpp \
+		   $$PWD/jingle/transport.cpp
+
+	INCLUDEPATH += $$PWD/jingle
+
 
 # Header files
 HEADERS += \

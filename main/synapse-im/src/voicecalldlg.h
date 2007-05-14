@@ -41,7 +41,7 @@ public:
 		Accepted, Rejected, InProgress, Terminated, Incoming
 	};
 
-	VoiceCallDlg(const Jid&, VoiceCaller*);
+	VoiceCallDlg(const Jid&, QString sid, VoiceCaller*);
 
 public slots:
 	void incoming();
@@ -65,6 +65,7 @@ protected:
 
 private:
 	Jid jid_;
+	QString sid_;
 	CallStatus status_;
 	VoiceCaller* voiceCaller_;
 	Ui::VoiceCall ui_;

@@ -83,7 +83,7 @@
 #include "voicecaller.h"
 #include "voicecalldlg.h"
 #ifdef HAVE_JINGLE
-#include "jingle.h"
+#include "jinglesessionmanager.h"
 #endif
 #include "pepmanager.h"
 #include "serverinfomanager.h"
@@ -672,14 +672,15 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 //#endif
 
 #ifdef HAVE_JINGLE
-	d->jingleSessionManager = new JingleSessionManager(this);
+//	d->jingleSessionManager = new JingleSessionManager(client()->rootTask(),jid());
+	d->jingleSessionManager = new JingleSessionManager(this, client()->rootTask());
 #ifdef jingle_voice
 	d->client->addExtension("voice-v1", Features(QString("http://www.google.com/xmpp/protocol/voice/v1")));
-	connect(d->jingleSessionManager,SIGNAL(incoming(const Jid&)),SLOT(incomingVoiceCall(const Jid&)));
+	connect(d->jingleSessionManager->voiceSession(),SIGNAL(incoming(const Jid&,QString)),SLOT(incomingVoiceCall(const Jid&,QString)));
 #endif
 #ifdef jingle_ft
-	d->client->addExtension("share-v1", Features(QString("http://www.google.com/xmpp/protocol/share/v1")));
-	connect(d->jingleSessionManager,SIGNAL(incomingFileTransfer(JingleFileTransfer*)),SLOT(incomingJingleFileTransfer(JingleFileTransfer*)));
+//	d->client->addExtension("share-v1", Features(QString("http://www.google.com/xmpp/protocol/share/v1")));
+//	connect(d->jingleSessionManager,SIGNAL(incomingFileTransfer(JingleFileTransfer*)),SLOT(incomingJingleFileTransfer(JingleFileTransfer*)));
 #endif
 #endif
 //	if (d->voiceCaller) {
@@ -876,7 +877,7 @@ GArchive *PsiAccount::gArchive() const
 VoiceCaller* PsiAccount::voiceCaller() const
 {
 #ifdef HAVE_JINGLE
-	return d->jingleSessionManager;
+	return d->jingleSessionManager->voiceSession();
 #else
 	return NULL;
 #endif
@@ -1679,9 +1680,9 @@ void PsiAccount::tryVerify(UserListItem *u, UserResource *ur)
 		verifyStatus(u->jid().withResource(ur->name()), ur->status());
 }
 
-void PsiAccount::incomingVoiceCall(const Jid& j)
+void PsiAccount::incomingVoiceCall(const Jid& j, QString sid)
 {
-	VoiceCallDlg* vc = new VoiceCallDlg(j,voiceCaller());
+	VoiceCallDlg* vc = new VoiceCallDlg(j,sid,voiceCaller());
 	vc->show();
 	vc->incoming();
 }
@@ -3008,7 +3009,7 @@ void PsiAccount::actionVoice(const Jid &j)
 		jid = j;
 	}
 
-	VoiceCallDlg* vc = new VoiceCallDlg(jid,voiceCaller());
+	VoiceCallDlg* vc = new VoiceCallDlg(jid, "", voiceCaller());
 	vc->show();
 	vc->call();
 }

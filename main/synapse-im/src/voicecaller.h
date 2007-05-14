@@ -65,22 +65,22 @@ public:
 	/**
 	 * \brief Call the given JID.
 	 */
-	virtual void call(const Jid&) = 0;
+	virtual QString call(const Jid&) = 0;
 
 	/**
 	 * \brief Accept a call from the given JID.
 	 */
-	virtual void accept(const Jid&) = 0;
+	virtual void accept(const Jid&, QString sid) = 0;
 
 	/**
 	 * \brief Reject the call from the given JID.
 	 */
-	virtual void reject(const Jid&) = 0;
+	virtual void reject(const Jid&, QString sid) = 0;
 	
 	/**
 	 * \brief Terminate the call from the given JID.
 	 */
-	virtual void terminate(const Jid&) = 0;
+	virtual void terminate(const Jid&, QString sid) = 0;
 
 signals:
 	/**

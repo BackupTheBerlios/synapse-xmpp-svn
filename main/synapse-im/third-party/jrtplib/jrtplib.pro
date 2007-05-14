@@ -63,8 +63,8 @@ HEADERS += rtcpapppacket.h \
            rtptypes_unix.h \
            rtptypes_win.h \
            rtpudpv4transmitter.h \
-           rtpudpv6transmitter.h \
-           jabbintransmitter.h
+           rtpudpv6transmitter.h
+#           synapsetransmitter.h
 
 unix:HEADERS += rtpconfig_unix.h
 win32:HEADERS += rtpconfig_win.h
@@ -97,5 +97,5 @@ SOURCES += rtcpapppacket.cpp \
            rtpsourcedata.cpp \
            rtpsources.cpp \
            rtpudpv4transmitter.cpp \
-           rtpudpv6transmitter.cpp \
-           jabbintransmitter.cpp 
+           rtpudpv6transmitter.cpp
+#           synapsetransmitter.cpp 

@@ -1,22 +1,16 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 <!DOCTYPE KDevPrjSession>
 <KDevPrjSession>
- <DocsAndViews NumberOfDocuments="5" >
-  <Doc0 NumberOfViews="1" URL="file:///build/psi/new/src/mainwin.cpp" >
-   <View0 Encoding="" line="1110" Type="Source" />
+ <DocsAndViews NumberOfDocuments="3" >
+  <Doc0 NumberOfViews="1" URL="file:///build/synapse-im/src/chatdlg.cpp" >
+   <View0 Encoding="" Type="Source" />
   </Doc0>
-  <Doc1 NumberOfViews="1" URL="file:///build/psi/new/src/mainwin_p.cpp" >
-   <View0 Encoding="" line="550" Type="Source" />
+  <Doc1 NumberOfViews="1" URL="file:///build/synapse-im/src/contactview.cpp" >
+   <View0 Encoding="" Type="Source" />
   </Doc1>
-  <Doc2 NumberOfViews="1" URL="file:///build/psi/new/src/psiactionlist.cpp" >
-   <View0 Encoding="" line="328" Type="Source" />
+  <Doc2 NumberOfViews="1" URL="file:///build/synapse-im/src/chatdlg.h" >
+   <View0 Encoding="ISO 8859-1" line="80" Type="Source" />
   </Doc2>
-  <Doc3 NumberOfViews="1" URL="file:///build/psi/new/src/psiaccount.cpp" >
-   <View0 Encoding="" line="1535" Type="Source" />
-  </Doc3>
-  <Doc4 NumberOfViews="1" URL="file:///build/psi/new/src/psiaccount.h" >
-   <View0 Encoding="" line="0" Type="Source" />
-  </Doc4>
  </DocsAndViews>
  <pluginList>
   <kdevdebugger>
@@ -28,12 +22,11 @@
    <AStyle IndentPreprocessors="0" FillCount="4" PadParenthesesOut="1" IndentNamespaces="1" IndentLabels="1" Fill="Tabs" MaxStatement="40" Brackets="Break" MinConditional="-1" IndentBrackets="0" PadParenthesesUn="1" BlockBreak="0" KeepStatements="1" KeepBlocks="1" BlockIfElse="0" IndentSwitches="1" PadOperators="0" FStyle="UserDefined" IndentCases="0" FillEmptyLines="0" BracketsCloseHeaders="0" BlockBreakAll="0" PadParenthesesIn="1" IndentClasses="1" IndentBlocks="0" FillForce="0" />
   </kdevastyle>
   <kdevbookmarks>
-   <bookmarks>
-    <bookmark url="/build/psi/new/third-party/libjingle.new/libjingle/libjingle.pro" >
-     <mark line="155" />
-    </bookmark>
-   </bookmarks>
+   <bookmarks/>
   </kdevbookmarks>
+  <kdevsubversion>
+   <subversion base="" />
+  </kdevsubversion>
   <kdevvalgrind>
    <executable path="" params="" />
    <valgrind path="/usr/bin/valgrind" params=" --tool=memcheck --leak-check=yes" />

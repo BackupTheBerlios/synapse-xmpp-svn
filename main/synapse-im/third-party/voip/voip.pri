@@ -39,7 +39,7 @@ HEADERS += \
 #    $$VOIP_CPP/udp.h \
 #    $$VOIP_CPP/stun.h \
     $$VOIP_CPP/ringbuffer.h \
-    $$VOIP_CPP/mediastream.h \
+    $$VOIP_CPP/mediastream.h
 #    $$VOIP_CPP/jabbinmediaengine.h \
 
 SOURCES += \
@@ -52,7 +52,7 @@ SOURCES += \
 #    $$VOIP_CPP/udp.cpp \
 #    $$VOIP_CPP/stun.cpp \
     $$VOIP_CPP/ringbuffer.cpp \
-    $$VOIP_CPP/mediastream.cpp \
+    $$VOIP_CPP/mediastream.cpp
 #    $$VOIP_CPP/jabbinmediaengine.cpp \
 
 #portaudio

@@ -3,16 +3,16 @@
 #ifndef MEDIASTREAM_H
 #define MEDIASTREAM_H
 
-//#include <qobject.h>
-//#include <q3cstring.h>
-//#include <q3ptrqueue.h>
+#include <qobject.h>
+#include <q3cstring.h>
+#include <q3ptrqueue.h>
 
-namespace cricket {
+/*namespace cricket {
     class MediaChannel;
     class PacketQueue;
-};
+};*/
 
-
+typedef unsigned int uint32_t;
 
 /*!
  \class MediaStream mediastream.h
@@ -21,8 +21,8 @@ namespace cricket {
 
 //class cricket::MediaChannel::NetworkInterface;
 
-class MediaStream {
-//Q_OBJECT
+class MediaStream : public QObject {
+    Q_OBJECT
 public:
 	MediaStream();
 	virtual ~MediaStream();
@@ -30,8 +30,8 @@ public:
     bool isRunning();
     
 
-//public slots:    
-    void start( cricket::PacketQueue *incomingPackets, cricket::MediaChannel *mediaChannel, int codecPayload);
+public slots:    
+    void start( uint32_t ip, int port, int codecPayload);
     void stop();
     
     void timerClick();
@@ -39,7 +39,7 @@ public:
     //send packets to network or not
     void setSend(bool send);
 
-//signals:
+signals:
     void finished();
 
     //show middle and maximum level in range 0..100

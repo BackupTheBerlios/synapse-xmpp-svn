@@ -74,7 +74,7 @@ class GArchive;
 //class GoogleFileTransfer;
 //#endif
 #ifdef jingle_ft
-class JingleFileTransfer;
+//class JingleFileTransfer;
 #endif
 
 // sick sick remove this someday please!
@@ -213,7 +213,7 @@ public slots:
 	void doAmarok();
 	void doFile();
 
-	void incomingVoiceCall(const Jid&);
+	void incomingVoiceCall(const Jid&, QString sid);
 	
 	void secondsIdle(int);
 	void openNextEvent();

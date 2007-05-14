@@ -1,11 +1,8 @@
 #ifndef VOICECODEC_H
 #define VOICECODEC_H
 
-//#include <qstring.h>
-//#include <q3valuelist.h>
-#include <string>
-#include <vector>
-#include "talk/session/phone/codec.h"
+#include <qstring.h>
+#include <q3valuelist.h>
 
 class VoiceEncoder {
 public:
@@ -37,16 +34,15 @@ public:
     //VoiceCodecFactory();
     
     // codec's description 
-    virtual std::string name() = 0;
-    virtual std::string description() { return ""; }
+    virtual QString name() = 0;
+    virtual QString description() { return ""; }
     virtual double bandwidth() = 0;
 
     // RTP payload type, rfc1890
     virtual int payload() = 0;
-    virtual Codec codec() = 0;
 
     // a:rtmap SDP argument, like "SPEEX/8000" 
-    virtual std::string rtmap() = 0;
+    virtual QString rtmap() = 0;
 
     virtual VoiceEncoder *encoder() = 0;
     virtual VoiceDecoder *decoder() = 0;
@@ -63,15 +59,15 @@ public:
     void installCodecFactory( VoiceCodecFactory* );
 
     VoiceCodecFactory* codecFactory( int payload );
-    VoiceCodecFactory* codecFactory( std::string rtmap );
+    VoiceCodecFactory* codecFactory( QString rtmap );
 
-    std::vector<int> payloads();
+    Q3ValueList<int> payloads();
 
-    std::vector<Codec, std::allocator<Codec> > codecs();
 private:    
     class Private;
     Private *d;
 };
 
 #endif // VOICECODEC_H
+
 

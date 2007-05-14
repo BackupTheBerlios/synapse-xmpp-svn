@@ -24,8 +24,8 @@
 #include "voicecalldlg.h"
 #include "voicecaller.h"
 
-VoiceCallDlg::VoiceCallDlg(const Jid& jid, VoiceCaller* voiceCaller)
-	: QDialog(0), jid_(jid), voiceCaller_(voiceCaller)
+VoiceCallDlg::VoiceCallDlg(const Jid& jid, QString sid, VoiceCaller* voiceCaller)
+	: QDialog(0), jid_(jid), sid_(sid), voiceCaller_(voiceCaller)
 {
 	setAttribute(Qt::WA_DeleteOnClose);
 	ui_.setupUi(this);
@@ -53,19 +53,20 @@ VoiceCallDlg::VoiceCallDlg(const Jid& jid, VoiceCaller* voiceCaller)
 void VoiceCallDlg::call()
 {
 	setStatus(Calling);
-	voiceCaller_->call(jid_);
+	sid_ = voiceCaller_->call(jid_);
+	printf("%s\n",sid_.ascii());
 }
 
 void VoiceCallDlg::accept_call()
 {
 	setStatus(Accepting);
-	voiceCaller_->accept(jid_);
+	voiceCaller_->accept(jid_,sid_);
 }
 
 void VoiceCallDlg::reject_call()
 {
 	setStatus(Rejecting);
-	voiceCaller_->reject(jid_);
+	voiceCaller_->reject(jid_,sid_);
 	finalize();
 	close();
 }
@@ -73,7 +74,7 @@ void VoiceCallDlg::reject_call()
 void VoiceCallDlg::terminate_call()
 {
 	setStatus(Terminating);
-	voiceCaller_->terminate(jid_);
+	voiceCaller_->terminate(jid_,sid_);
 	finalize();
 	close();
 }

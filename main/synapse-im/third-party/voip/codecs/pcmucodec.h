@@ -31,14 +31,13 @@ public:
 	PCMUCodecFactory();
 	virtual ~PCMUCodecFactory();
     
-    virtual std::string name() { return "PCMU"; }
+    virtual QString name() { return "PCMU"; }
     virtual double bandwidth() { return 64.0; }
-    virtual std::string description() { return ""; }
+    virtual QString description() { return ""; }
 
     virtual int payload() { return 0; };
-    virtual Codec codec();
 
-    virtual std::string rtmap() { return std::string("PCMU/8000/1"); } ;
+    virtual QString rtmap() { return QString("PCMU/8000/1"); } ;
 
     virtual VoiceEncoder *encoder() { return new PCMUEncoder(); }
     virtual VoiceDecoder *decoder() { return new PCMUDecoder(); }

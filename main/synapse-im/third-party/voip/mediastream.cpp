@@ -7,27 +7,23 @@
 #include "rtpsession.h"
 #include "rtppacket.h"
 #include "rtpudpv4transmitter.h"
-#include "jabbintransmitter.h"
 #include "rtpsessionparams.h"
 #include "rtpipv4address.h"
 
 // portaudio
 #include "portaudio.h"
 
-
-
 #include "voicecodec.h"
-// #include "sdp.h"
 #include "ringbuffer.h"
 
 //#include <qtimer.h>
 //#include <qdatetime.h>
 //#include <qthread.h>
-#ifdef POSIX
-#include <pthread.h>
+//#ifdef POSIX
+#include <qthread.h>
 #define uint32 unsigned int
-#include <sys/time.h>
-#endif
+//#include <sys/time.h>
+//#endif
 
 #ifndef WIN32
 	#include <netinet/in.h>
@@ -38,165 +34,23 @@
 #endif // WIN32
 
 #include <stdio.h>
-#define MSDEV_SET_THREAD_NAME  0x406D1388
-enum ThreadPriority {
-  PRIORITY_NORMAL,
-  PRIORITY_IDLE,
-};
-
-class MediaThread;
-
-class MediaThread {
+class MediaThread : public QThread {
 public:
-    MediaThread( MediaStream *mediaStream )
+    MediaThread( MediaStream *mediaStream ):
+        QThread() 
     {
         this->mediaStream = mediaStream;
     }
 
-    ~MediaThread() 
-    {
-      Stop();
-    }
-
-#ifdef POSIX
-    void Start() {
-      pthread_attr_t attr;
-      pthread_attr_init(&attr);
-      if (priority_ == PRIORITY_IDLE) {
-        struct sched_param param;
-        pthread_attr_getschedparam(&attr, &param);
-        param.sched_priority = 15;           // +15 = 
-        pthread_attr_setschedparam(&attr, &param);
-      }
-      pthread_create(&thread_, &attr, PreRun, this);
-      started_ = true;
-    }
-
-    void Join() {
-      if (started_) {
-        void *pv;
-        pthread_join(thread_, &pv);
-      }
-    }
-#endif
-    void Stop() {
-      Join();
-    }
-
-#ifdef POSIX
-#include <sys/time.h>
-uint32 Time() {
-  struct timeval tv;
-  gettimeofday(&tv, 0);
-  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
-}
-#endif
-
-#ifdef WIN32
-#include <windows.h>
-uint32 Time() {
-  return GetTickCount();
-}
-#endif
-
-
-#ifdef WIN32
-
-    typedef struct tagTHREADNAME_INFO
-    {
-      DWORD dwType;
-      LPCSTR szName;
-      DWORD dwThreadID;
-      DWORD dwFlags;
-    } THREADNAME_INFO;
-
-    void SetThreadName( DWORD dwThreadID, LPCSTR szThreadName)
-    {
-      THREADNAME_INFO info;
-      {
-        info.dwType = 0x1000;
-        info.szName = szThreadName;
-        info.dwThreadID = dwThreadID;
-        info.dwFlags = 0;
-      }
-      __try
-      {
-        RaiseException(MSDEV_SET_THREAD_NAME, 0, sizeof(info)/sizeof(DWORD), (DWORD*)&info );
-      }
-      __except(EXCEPTION_CONTINUE_EXECUTION)
-      {
-      }
-    }
-
-    void Start() {
-      DWORD flags = 0;
-      if (priority_ != PRIORITY_NORMAL) {
-        flags = CREATE_SUSPENDED;
-      }
-      thread_ = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PreRun, this, flags, NULL);
-      if (thread_) {
-        if (priority_ != PRIORITY_NORMAL) {
-           if (priority_ == PRIORITY_IDLE) {
-             ::SetThreadPriority(thread_, THREAD_PRIORITY_IDLE);
-           }
-           ::ResumeThread(thread_);
-        }
-      }
-      started_ = true;
-    }
-
-    void Thread::Join() {
-      if (started_) {
-        WaitForSingleObject(thread_, INFINITE);
-        CloseHandle(thread_);
-        started_ = false;
-      }
-    }
-#endif
-    virtual void msleep(int msSleep) {
-      uint32 msEnd;
-      msEnd = Time() + msSleep;
-      while(true) {
-        if(msEnd >= Time())
-          return;
-      }
-    }
-    virtual void Run() {
-	printf("Run()..\n");
-        while ( started_ ) {
+    virtual void run() {
+        while ( mediaStream->isRunning() ) {
             mediaStream->timerClick();
             msleep(1);
         }
     }
-#ifdef WIN32
-    HANDLE GetHandle() {
-      return thread_;
-    }
-#endif
-
-    static void *PreRun(void *pv) {
-      MediaThread *thread = (MediaThread *)pv;
-      thread->Run();
-      return NULL;
-    }
 
     MediaStream *mediaStream;
-private:
-    ThreadPriority priority_;
-    bool started_;
-    bool has_sends_;
-#ifdef POSIX
-    pthread_t thread_;
-#endif
-
-#ifdef WIN32
-    HANDLE thread_;
-#endif
-
 };
-
-
-//#define TEST_AUDIO
 
 class MediaStream::Private
 {
@@ -217,7 +71,7 @@ public:
     int codecPayload;
 
 
-	JabbinTransmissionParams transparams;
+    RTPUDPv4TransmissionParams transparams;
 
     bool sendPacketsFlag;
 
@@ -287,10 +141,10 @@ static int audioCallback( void *inputBuffer, void *outputBuffer, // {{{
     d->dspBuffer->unlock();
         
     return 0;
-} // }}}
+}
 
- 
-void MediaStream::start( cricket::PacketQueue *incomingPackets, cricket::MediaChannel *mediaChannel, int codecPayload )
+
+void MediaStream::start(uint32_t ip, int port, int codecPayload )
 {
     if ( isRunning() )
         stop();
@@ -301,7 +155,7 @@ void MediaStream::start( cricket::PacketQueue *incomingPackets, cricket::MediaCh
     d->outBufferTime = 0;
 
     int localPort = 3000;
-
+printf("getFactory(%d)\n", codecPayload);
     VoiceCodecFactory *factory = CodecsManager::instance()->codecFactory(codecPayload);
     if ( !factory ) {
         printf("VoiceCodecFactory not found!\n");
@@ -312,16 +166,18 @@ void MediaStream::start( cricket::PacketQueue *incomingPackets, cricket::MediaCh
     d->decoder =  factory->decoder();
     d->encoder =  factory->encoder();
 
-
+printf("transparams\n");
     // Now, we'll create a RTP session and set the destination
-    d->transparams.mediaChannel = mediaChannel;
-    d->transparams.incomingPackets = incomingPackets;
+//     d->transparams.mediaChannel = mediaChannel;
+//     d->transparams.incomingPackets = incomingPackets;
+    d->transparams.SetPortbase(localPort);
 	
     RTPSessionParams sessparams;
 
     sessparams.SetOwnTimestampUnit(1.0/8000.0); // 8KHz
 	sessparams.SetAcceptOwnPackets(true);
-    
+
+printf("session.Create()\n");
     int status = d->session.Create( sessparams, &d->transparams );
 
     if ( status<0 ) {
@@ -330,7 +186,8 @@ void MediaStream::start( cricket::PacketQueue *incomingPackets, cricket::MediaCh
         return;
     }
 
-    RTPIPv4Address addr;
+printf("session.AddDestination()\n");
+    RTPIPv4Address addr(ip,port);
 	status = d->session.AddDestination(addr);
     
     if ( status<0 ) {
@@ -381,7 +238,7 @@ void MediaStream::start( cricket::PacketQueue *incomingPackets, cricket::MediaCh
 
     //d->timer.start(1,false);
     d->isRunning = true;
-    d->processThread->Start();
+    d->processThread->start();
     
 //    qDebug("mediastream started");
     printf("mediastream started\n");
@@ -391,12 +248,14 @@ void MediaStream::start( cricket::PacketQueue *incomingPackets, cricket::MediaCh
 
 void MediaStream::stop()
 {
+    if(!d->isRunning)
+	return;
     printf("stopping...\n");
     d->isRunning = false;
 
-    d->processThread->Stop();
+    d->processThread->wait();
     printf("..1..\n");
-    d->processThread = NULL;
+    //d->processThread = NULL;
     //d->mutex.lock(); //wait for thread to stop
     
     //d->timer.stop();

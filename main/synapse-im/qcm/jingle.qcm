@@ -8,10 +8,6 @@ arg: with-speex-inc=[path],Path to Speex include files (for Jingle)
 arg: with-speex-lib=[path],Path to Speex library files (for Jingle)
 arg: with-ilbc-inc=[path],Path to iLBC include files (for Jingle)
 arg: with-ilbc-lib=[path],Path to iLBC library files (for Jingle)
-arg: with-ortp-inc=[path],Path to ORTP include files (for Jingle)
-arg: with-ortp-lib=[path],Path to ORTP library files (for Jingle)
-arg: with-alsa-inc=[path],Path to Alsa include files (for Jingle)
-arg: with-alsa-lib=[path],Path to Alsa library files (for Jingle)
 arg: with-portaudio-inc=[path],Path to PortAudio include files (for Jingle)
 arg: with-portaudio-lib=[path],Path to PortAudio library files (for Jingle)
 arg: with-glib-inc=[path],Path to GLib include files (for Jingle)
@@ -153,104 +149,6 @@ public:
 		}
 
 
-		// ORTP
-		s = conf->getenv("QC_WITH_ORTP_INC");
-		if(!s.isEmpty()) {
-			if(conf->checkHeader(s, "ortp/ortp.h")) {
-				conf->addIncludePath(s);
-			} 
-			else {
-				qWarning("ORTP includes not found!");
-				return false;
-			}
-		}
-		else {
-			QStringList sl;
-			sl += "/usr/include";
-			sl += "/usr/local/include";
-			if(conf->findHeader("ortp/ortp.h", sl, &s)) {
-				conf->addIncludePath(s);
-			}
-			else {
-				qWarning("ORTP includes not found!");
-				return false;
-			}
-		}
-
-		s = conf->getenv("QC_WITH_ORTP_LIB");
-		if(!s.isEmpty()) {
-			if(conf->checkLibrary(s, "ortp")) {
-				conf->addLib(QString("-L") + s);
-			}
-			else {
-				qWarning("ORTP libraries not found!");
-				return false;
-			}
-		}
-		else {
-			if(conf->findLibrary("ortp", &s)) {
-				if (!s.isEmpty())
-					conf->addLib(QString("-L") + s);
-			}
-			else {
-				qWarning("ORTP libraries not found!");
-				return false;
-			}
-		}
-		
-		conf->addLib("-lortp");
-		conf->addDefine("HAVE_ORTP");
-
-
-#if defined(Q_WS_X11)
-		s = conf->getenv("QC_WITH_ALSA_INC");
-		if(!s.isEmpty()) {
-			if(conf->checkHeader(s, "alsa/asoundlib.h")) {
-				conf->addIncludePath(s);
-			} 
-			else {
-				qWarning("Alsa includes not found!");
-				return false;
-			}
-		}
-		else {
-			QStringList sl;
-			sl += "/usr/include";
-			sl += "/usr/local/include";
-			if(conf->findHeader("alsa/asoundlib.h", sl, &s)) {
-				conf->addIncludePath(s);
-			}
-			else {
-				qWarning("Alsa includes not found!");
-				return false;
-			}
-		}
-
-		s = conf->getenv("QC_WITH_ALSA_LIB");
-		if(!s.isEmpty()) {
-			if(conf->checkLibrary(s, "asound")) {
-				conf->addLib(QString("-L") + s);
-			}
-			else {
-				qWarning("Alsa libraries not found!");
-				return false;
-			}
-		}
-		else {
-			if(conf->findLibrary("asound", &s)) {
-				if (!s.isEmpty())
-					conf->addLib(QString("-L") + s);
-			}
-			else {
-				qWarning("Alsa libraries not found!");
-				return false;
-			}
-		}
-		
-		conf->addLib("-lasound");
-		conf->addDefine("HAVE_ALSA_ASOUNDLIB_H");
-		conf->addDefine("__ALSA_ENABLED__");
-#elif defined(Q_WS_MAC)
 		// Check for PortAudio
 		s = conf->getenv("QC_WITH_PORTAUDIO_INC");
 		if(!s.isEmpty()) {
@@ -287,7 +185,7 @@ public:
 		
 		conf->addLib("-lportaudio");
 		conf->addDefine("HAVE_PORTAUDIO");
-#endif
+
 		QFile file("third-party/libjingle/config.h");
 		if (file.open(QIODevice::WriteOnly))
 			file.close();

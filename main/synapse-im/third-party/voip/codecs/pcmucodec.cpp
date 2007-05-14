@@ -21,10 +21,6 @@ PCMUDecoder::~PCMUDecoder(){}
 
 PCMUCodecFactory::PCMUCodecFactory(){}
 PCMUCodecFactory::~PCMUCodecFactory(){}
-Codec PCMUCodecFactory::codec() {
-    return Codec(0, "PCMU", 8000, 0, 1, 2);
-}
-
 
 int PCMUEncoder::encode( const short *data, int size, char **res, int *samplesProcessed  )
 {

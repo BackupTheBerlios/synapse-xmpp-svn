@@ -18,10 +18,6 @@ extern "C" {
 SpeexCodecFactory::SpeexCodecFactory() {}
 SpeexCodecFactory::~SpeexCodecFactory() {}
 
-Codec SpeexCodecFactory::codec() {
-    return Codec(99,"speex", 16000, 0, 1, 8);
-}
-
 class SpeexEncoder::Private {
 public:
     SpeexBits bits;

@@ -15,6 +15,7 @@
     <absoluteprojectpath>false</absoluteprojectpath>
     <description/>
     <defaultencoding/>
+    <versioncontrol>kdevsubversion</versioncontrol>
   </general>
   <kdevfileview>
     <groups>
@@ -28,6 +29,7 @@
     <tree>
       <hidepatterns>*.o,*.lo,CVS</hidepatterns>
       <hidenonprojectfiles>false</hidenonprojectfiles>
+      <showvcsfields>false</showvcsfields>
     </tree>
   </kdevfileview>
   <kdevdoctreeview>
@@ -94,9 +96,13 @@
       <root>/usr/qt/3</root>
       <qmake>/usr/bin/qmake</qmake>
       <designer>/usr/bin/designer</designer>
-      <designerpluginpaths/>
+      <designerpluginpaths>
+        <path>/usr/lib/qt4/plugins</path>
+      </designerpluginpaths>
     </qt>
-    <references/>
+    <references>
+      <pcs>Qt4</pcs>
+    </references>
     <codecompletion>
       <automaticCodeCompletion>false</automaticCodeCompletion>
       <automaticArgumentsHint>true</automaticArgumentsHint>
@@ -135,6 +141,7 @@
     </splitheadersource>
   </kdevcppsupport>
   <kdevfilecreate>
+    <filetypes/>
     <useglobaltypes>
       <type ext="ui" />
       <type ext="cpp" />
@@ -184,4 +191,11 @@
     <customTagfilePath>/build/psi/new/tags</customTagfilePath>
     <activeTagsFiles/>
   </ctagspart>
+  <kdevdocumentation>
+    <projectdoc>
+      <docsystem/>
+      <docurl/>
+      <usermanualurl/>
+    </projectdoc>
+  </kdevdocumentation>
 </kdevelop>
