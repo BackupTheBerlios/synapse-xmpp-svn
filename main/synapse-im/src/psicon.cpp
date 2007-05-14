@@ -39,6 +39,7 @@
 #include "accountadddlg.h"
 #include "psiiconset.h"
 #include "contactview.h"
+#include "psievent.h"
 #include "passphrasedlg.h"
 #include "common.h"
 #include "mainwin.h"
@@ -218,29 +219,6 @@ public:
 		iconSelect->setIconset(iss);
 	}
 
-	/**
-	 * Prompts user to create new account, if none are currently present in system.
-	 */
-	void promptUserToCreateAccount()
-	{
-		QMessageBox msgBox(QMessageBox::Question,tr("Account setup"),tr("You need to set up an account to start. Would you like to register a new account, or use an existing account?"));
-		QPushButton *registerButton = msgBox.addButton(tr("Register new account"), QMessageBox::AcceptRole);
-		QPushButton *existingButton = msgBox.addButton(tr("Use existing account"),QMessageBox::AcceptRole);
-		msgBox.addButton(QMessageBox::Cancel);
-		msgBox.exec();
-		if (msgBox.clickedButton() ==  existingButton) {
-			AccountModifyDlg w(psi);
-			w.exec();
-		}
-		else if (msgBox.clickedButton() ==  registerButton) {
-			AccountRegDlg w(psi->proxy());
-			int n = w.exec();
-			if (n == QDialog::Accepted) {
-				psi->contactList()->createAccount(w.jid().node(),w.jid(),w.pass(),w.useHost(),w.host(),w.port(),w.legacySSLProbe(),w.ssl(),w.proxy(),false);
-			}
-		}
-	}
-
 	PsiCon* psi;
 	PsiContactList* contactList;
 	UserProfile pro;
@@ -260,8 +238,6 @@ public:
 	QRect mwgeom;
 	FileTransDlg *ftwin;
 	PsiActionList *actionList;
-	QCA::EventHandler *qcaEventHandler;
-	QCA::KeyStoreManager qcaKeyStoreManager;
 	//GlobalAccelManager *globalAccelManager;
 	TuneController* tuneController;
 	QMenuBar* defaultMenuBar;
@@ -286,7 +262,6 @@ PsiCon::PsiCon()
 	useSound = true;
 	d->mainwin = 0;
 	d->ftwin = 0;
-	d->qcaEventHandler = 0;
 
 	d->eventId = 0;
 //	d->edb = new EDBFlatFile;
@@ -311,20 +286,11 @@ PsiCon::~PsiCon()
 
 bool PsiCon::init()
 {
-	// QCA (needs to be before any gpg usage!)
-	d->qcaEventHandler = new QCA::EventHandler(this);
-	PassphraseDlg::setEventHandler(d->qcaEventHandler);
-	connect(d->qcaEventHandler,SIGNAL(eventReady(int,const QCA::Event&)),SLOT(qcaEvent(int,const QCA::Event&)));
-	d->qcaEventHandler->start();
-	d->qcaKeyStoreManager.waitForBusyFinished(); // FIXME get rid of this
-	connect(&d->qcaKeyStoreManager, SIGNAL(keyStoreAvailable(const QString&)), SLOT(keyStoreAvailable(const QString&)));
-	foreach(QString k, d->qcaKeyStoreManager.keyStores()) {
-		QCA::KeyStore* ks = new QCA::KeyStore(k, &d->qcaKeyStoreManager);
-		connect(ks, SIGNAL(updated()), SLOT(pgp_keysUpdated()));
-		PGPUtil::keystores += ks;
-	}
+	// PGP initialization (needs to be before any gpg usage!)
+	PGPUtil::instance();
 
 	d->contactList = new PsiContactList(this);
+
 	connect(d->contactList, SIGNAL(accountAdded(PsiAccount*)), SIGNAL(accountAdded(PsiAccount*)));
 	connect(d->contactList, SIGNAL(accountRemoved(PsiAccount*)), SIGNAL(accountRemoved(PsiAccount*)));
 	connect(d->contactList, SIGNAL(accountCountChanged()), SIGNAL(accountCountChanged()));
@@ -469,6 +435,42 @@ bool PsiCon::init()
 
 	// Entity capabilities
 	CapsRegistry::instance()->setFile(ApplicationInfo::homeDir() + "/caps.xml");
+	
+	// FIXME
+#ifdef __GNUC__
+#warning "Temporary hard-coding caps registration of own version"
+#endif
+	// client()->identity()
+	DiscoItem::Identity identity = { "client",  ApplicationInfo::name(), "pc" };
+	DiscoItem::Identities identities;
+	identities += identity;
+	QStringList features;
+	features << "http://jabber.org/protocol/bytestreams"
+		<< "http://jabber.org/protocol/si" 
+		<< "http://jabber.org/protocol/si/profile/file-transfer" 
+		<< "http://jabber.org/protocol/disco#info" 
+		<< "http://jabber.org/protocol/commands" 
+		<< "http://jabber.org/protocol/rosterx" 
+		<< "http://jabber.org/protocol/muc" 
+		<< "jabber:x:data";
+	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),ApplicationInfo::capsVersion()),identities,Features(features));
+	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),"cs"),identities,Features("http://jabber.org/protocol/chatstates"));
+	features.clear();
+	features << "http://jabber.org/protocol/mood"
+		<< "http://jabber.org/protocol/tune" 
+		<< "http://jabber.org/protocol/physloc" 
+		<< "http://jabber.org/protocol/geoloc" 
+		<< "http://jabber.org/protocol/avatar#data" 
+		<< "http://jabber.org/protocol/avatar#metadata";
+	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),"ep"),identities,features);
+	features.clear();
+	features << "http://jabber.org/protocol/mood+notify"
+		<< "http://jabber.org/protocol/tune+notify" 
+		<< "http://jabber.org/protocol/physloc+notify" 
+		<< "http://jabber.org/protocol/geoloc+notify" 
+		<< "http://jabber.org/protocol/avatar#metadata+notify";
+	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),"ep-notify"),identities,features);
+	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),"html"),identities,Features("http://jabber.org/protocol/xhtml-im"));
 
 
 	// load accounts
@@ -492,12 +494,6 @@ void PsiCon::deinit()
 	// this deletes all dialogs except for mainwin
 	deleteAllDialogs();
 
-	// QCA Keystores
-	foreach(QCA::KeyStore* ks,PGPUtil::keystores)  {
-		delete ks;
-	}
-	PGPUtil::keystores.clear();
-
 	d->idle.stop();
 
 	// shut down all accounts
@@ -508,7 +504,6 @@ void PsiCon::deinit()
 	delete d->s5bServer;
 
 	delete d->ftwin;
-	delete d->qcaEventHandler;
 
 	if(d->mainwin) {
 		// shut down mainwin
@@ -597,32 +592,6 @@ void PsiCon::changeProfile()
 	quit(QuitProfile);
 }
 
-void PsiCon::qcaEvent(int id, const QCA::Event& event)
-{
-	if (event.type() == QCA::Event::Password) {
-		if(PGPUtil::passphrases.contains(event.keyStoreEntryId())) {
-			d->qcaEventHandler->submitPassword(id,QSecureArray(PGPUtil::passphrases[event.keyStoreEntryId()].utf8()));
-		}
-		else {
-			QString name;
-			QCA::KeyStore ks(event.keyStoreId(), &d->qcaKeyStoreManager);
-			foreach(QCA::KeyStoreEntry e, ks.entryList()) {
-				if (e.id() == event.keyStoreEntryId()) {
-					name = e.name();
-				}
-			}
-			PassphraseDlg::promptPassphrase(name,event.keyStoreEntryId(),id);
-		}
-	}
-}
-void PsiCon::keyStoreAvailable(const QString& k)
-{
-	QCA::KeyStore* ks = new QCA::KeyStore(k, &d->qcaKeyStoreManager);
-	connect(ks, SIGNAL(updated()), SLOT(pgp_keysUpdated()));
-	PGPUtil::keystores += ks;
-}
-
-
 void PsiCon::doManageAccounts()
 {
 	if (!PsiOptions::instance()->getOption("options.ui.account.single").toBool()) {
@@ -640,7 +609,7 @@ void PsiCon::doManageAccounts()
 			account->modify();
 		}
 		else {
-			d->promptUserToCreateAccount();
+			promptUserToCreateAccount();
 		}
 	}
 }
@@ -1018,7 +987,7 @@ void PsiCon::doFileTransDlg()
 void PsiCon::checkAccountsEmpty()
 {
 	if (d->pro.acc.count() == 0) {
-		d->promptUserToCreateAccount();
+		promptUserToCreateAccount();
 	}
 }
 
@@ -1263,12 +1232,6 @@ void PsiCon::recentNodeAdd(const QString &str)
 		d->recentNodeList.remove(d->recentNodeList.fromLast());
 }
 
-void PsiCon::pgp_keysUpdated()
-{
-	emit pgpKeysUpdated();
-	//QMessageBox::information(0, CAP(tr("OpenPGP")), tr("Psi has detected that you have modified your keyring.  That is all."));
-}
-
 void PsiCon::proxy_settingsChanged()
 {
 	// properly index accounts
@@ -1488,5 +1451,29 @@ PsiActionList *PsiCon::actionList() const
 {
 	return d->actionList;
 }
+
+/**
+ * Prompts user to create new account, if none are currently present in system.
+ */
+void PsiCon::promptUserToCreateAccount()
+{
+	QMessageBox msgBox(QMessageBox::Question,tr("Account setup"),tr("You need to set up an account to start. Would you like to register a new account, or use an existing account?"));
+	QPushButton *registerButton = msgBox.addButton(tr("Register new account"), QMessageBox::AcceptRole);
+	QPushButton *existingButton = msgBox.addButton(tr("Use existing account"),QMessageBox::AcceptRole);
+	msgBox.addButton(QMessageBox::Cancel);
+	msgBox.exec();
+	if (msgBox.clickedButton() ==  existingButton) {
+		AccountModifyDlg w(this);
+		w.exec();
+	}
+	else if (msgBox.clickedButton() ==  registerButton) {
+		AccountRegDlg w(proxy());
+		int n = w.exec();
+		if (n == QDialog::Accepted) {
+			contactList()->createAccount(w.jid().node(),w.jid(),w.pass(),w.useHost(),w.host(),w.port(),w.legacySSLProbe(),w.ssl(),w.proxy(),false);
+		}
+	}
+}
+
 
 #include "psicon.moc"

@@ -30,6 +30,8 @@
 #include <QDropEvent>
 #include <QTextDocument>
 
+#include "xmpp_clientstream.h"
+
 #include "xmpp.h"
 #include "im.h"
 #include "xmpp_jid.h"
@@ -43,6 +45,10 @@ class PsiIcon;
 class QTimer;
 class QPixmap;
 class GMailNotify;
+
+namespace XMPP {
+	class Status;
+}
 
 using namespace XMPP;
 

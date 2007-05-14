@@ -21,15 +21,15 @@
 #ifndef STATUSDLG_H
 #define STATUSDLG_H
 
-#include <qdialog.h>
+#include <QDialog>
 #include <QList>
-#include <QKeyEvent>
 #include "xmpp_jid.h"
 #include "contactview.h"
 
 class PsiCon;
 class PsiAccount;
 class UserListItem;
+class QKeyEvent;
 namespace XMPP {
 	class Status;
 }

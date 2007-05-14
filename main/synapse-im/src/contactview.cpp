@@ -40,7 +40,6 @@
 #include <QPixmap>
 #include <QDesktopWidget>
 #include <stdlib.h>
-#include "im.h"
 #include "common.h"
 #include "userlist.h"
 #include "psiaccount.h"
@@ -61,6 +60,7 @@
 #include "capsmanager.h"
 #include "resourcemenu.h"
 #include "shortcutmanager.h"
+#include "xmpp_message.h"
 #include "gmail_notify.h"
 #include "garchive.h"
 
@@ -1508,7 +1508,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 			mm->insertItem(tr("&Picture"), avpm);
 		}
 
-		if(PGPUtil::pgpAvailable() && PsiOptions::instance()->getOption("options.ui.menu.contact.custom-pgp-key").toBool()) {
+		if(PGPUtil::instance().pgpAvailable() && PsiOptions::instance()->getOption("options.ui.menu.contact.custom-pgp-key").toBool()) {
 			if(u->publicKeyID().isEmpty())
 				mm->insertItem(IconsetFactory::icon("psi/gpg-yes").icon(), tr("Assign Open&PGP key"), 21);
 			else

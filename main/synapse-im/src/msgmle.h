@@ -21,17 +21,16 @@
 #ifndef MSGMLE_H
 #define MSGMLE_H
 
-#include <QKeyEvent>
-#include <QResizeEvent>
 #include <QTextEdit>
-#include <QEvent>
-#include <QMenu>
 
 #include "psitextview.h"
 
+class ChatEdit;
+class QEvent;
+class QKeyEvent;
+class QResizeEvent;
 class QTimer;
 class SpellHighlighter;
-class ChatEdit;
 
 class ChatView : public PsiTextView
 {
@@ -54,7 +53,6 @@ protected:
 	// override the tab/esc behavior
 	bool focusNextPrevChild(bool next);
 	void keyPressEvent(QKeyEvent *);
-	void resizeEvent(QResizeEvent *);
 
 protected slots:
 	void autoCopy();
@@ -76,6 +74,9 @@ public:
 	// reimplemented
 	QSize sizeHint() const;
 
+	static bool checkSpellingGloballyEnabled();
+	void setCheckSpelling(bool);
+
 protected slots:
  	void applySuggestion();
  	void addToDictionary();
@@ -86,7 +87,6 @@ protected:
 	bool focusNextPrevChild(bool next);
 	void keyPressEvent(QKeyEvent *);
 	void contextMenuEvent(QContextMenuEvent *e);
-	void setCheckSpelling(bool);
 
 private:
 	QWidget	*dialog_;

@@ -17,6 +17,7 @@
 #include "voicecaller.h"
 #include "psiaccount.h"
 #include "codec.h"
+#include "xmpp_client.h"
 #include "xmpp_jid.h"
 #include "xmpp_task.h"
 #include "xmpp_xmlcommon.h"

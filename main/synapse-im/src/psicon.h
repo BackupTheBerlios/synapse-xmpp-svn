@@ -25,12 +25,12 @@
 #include <QList>
 
 #include "profiles.h"
-#include "psievent.h"
 
 using namespace XMPP;
 
 class PsiCon;
 class PsiAccount;
+class PsiEvent;
 class ContactView;
 class EventDlg;
 class UserListItem;
@@ -51,9 +51,6 @@ class PsiContactList;
 class Q3DockWindow;
 namespace OpenPGP {
 	class Engine;
-}
-namespace QCA {
-	class Event;
 }
 namespace XMPP {
 	class Jid;
@@ -131,7 +128,6 @@ signals:
 	void accountCountChanged();
 	void accountActivityChanged();
 	void emitOptionsUpdate();
-	void pgpKeysUpdated();
 
 public slots:
 	void setGlobalStatus(const Status &, bool withPriority = false);
@@ -157,12 +153,9 @@ public slots:
 	void queueChanged();
 	void recvNextEvent();
 	void setStatusFromDialog(const XMPP::Status &, bool withPriority, int pos = -1);
-	void pgp_keysUpdated();
-	void keyStoreAvailable(const QString&);
 	void proxy_settingsChanged();
 	void updateMainwinStatus();
 	void tabDying(TabDlg*);
-	void qcaEvent(int, const QCA::Event&);
 
 	void mainWinGeomChanged(QRect saveableGeometry);
 
@@ -182,6 +175,7 @@ private:
 	friend class PsiAccount; // FIXME
 	void setToggles(bool tog_offline, bool tog_away, bool tog_agents, bool tog_hidden, bool tog_self);
 	void getToggles(bool *tog_offline, bool *tog_away, bool *tog_agents, bool *tog_hidden, bool *tog_self);
+	void promptUserToCreateAccount();
 
 	friend class EventQueue;
 	int getId();

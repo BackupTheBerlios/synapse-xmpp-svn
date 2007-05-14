@@ -33,6 +33,7 @@
 
 #include "jidutil.h"
 #include "psicon.h"
+#include "psioptions.h"
 #include "psiaccount.h"
 #include "userlist.h"
 #include "common.h"
@@ -253,11 +254,11 @@ void StatusSetDlg::doButton()
  		option.sp[text] = StatusPreset(text,d->te->text());
  		if (!d->le_priority->text().isEmpty()) 
  			option.sp[text].setPriority(d->le_priority->text().toInt());
- 		option.sp[text].setStatus(combomap[d->cb_type->currentItem()]);
+ 		option.sp[text].setStatus((XMPP::Status::Type) d->cb_type->itemData(d->cb_type->currentIndex()).toInt());
 	} 
 
 	// Set status
-	int type = combomap[d->cb_type->currentItem()];
+	int type = d->cb_type->itemData(d->cb_type->currentIndex()).toInt();
 	QString str = d->te->text();
 
  	if (d->le_priority->text().isEmpty())
@@ -301,8 +302,8 @@ void StatusSetDlg::chooseStatusPreset(int x)
 		d->le_priority->clear();
 
 	int n;
-	for(n = 0; n < 7; ++n) {
-		if(preset.status() == combomap[n]) {
+	for(n = 0; n < d->cb_type->count(); ++n) {
+		if(preset.status() == d->cb_type->itemData(n).toInt()) {
 			d->cb_type->setCurrentItem(n);
 			break;
 		}

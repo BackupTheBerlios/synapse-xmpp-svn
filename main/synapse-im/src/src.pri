@@ -46,24 +46,20 @@ use_crash {
 qca-static {
 	# QCA
 	DEFINES += QCA_STATIC
-	QCA_CPP = $$PWD/../third-party/qca
-	INCLUDEPATH += $$QCA_CPP/include/QtCrypto
-	LIBS += -L$$QCA_CPP -lqca_psi
-	windows:LIBS += -lcrypt32
-	mac:LIBS += -framework Security
+	include($$PWD/../third-party/qca/qca.pri)
 
 	# QCA-OpenSSL
 	contains(DEFINES, HAVE_OPENSSL) {
-		include($$PWD/../third-party/qca-openssl.pri)
+		include($$PWD/../third-party/qca/qca-openssl.pri)
 	}
 	
 	# QCA-SASL
 	contains(DEFINES, HAVE_CYRUSSASL) {
-		include($$PWD/../third-party/qca-sasl.pri)
+		include($$PWD/../third-party/qca/qca-sasl.pri)
 	}
 
 	# QCA-GnuPG
-	include($$PWD/../third-party/qca-gnupg.pri)
+	include($$PWD/../third-party/qca/qca-gnupg.pri)
 }
 else {
 	CONFIG += crypto	
@@ -261,8 +257,6 @@ SOURCES += \
 	$$PWD/desktoputil.cpp \
 	$$PWD/textutil.cpp \
 	$$PWD/pixmaputil.cpp \
-	$$PWD/psiaccount.cpp \
-	$$PWD/psicon.cpp \
 	$$PWD/accountscombobox.cpp \
 	$$PWD/psievent.cpp \
 	$$PWD/xmlconsole.cpp \
@@ -366,6 +360,8 @@ SOURCES += \
 	$$PWD/resourcemenu.cpp \
 	$$PWD/shortcutmanager.cpp \
 	$$PWD/psicontactlist.cpp \
+	$$PWD/psicon.cpp \
+	$$PWD/psiaccount.cpp \
 	$$PWD/accountlabel.cpp
 
 whiteboarding {

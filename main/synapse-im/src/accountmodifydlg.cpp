@@ -77,9 +77,7 @@ void AccountModifyDlg::init()
 	le_port->setEnabled(false);
 	lb_port->setEnabled(false);
 
-#ifdef __GNUC__
-#warning "Temporarily removing security level settings"
-#endif
+	// FIXME: Temporarily removing security level settings
 	ck_req_mutual->hide();
 	cb_security_level->hide();
 	lb_security_level->hide();
@@ -168,7 +166,7 @@ void AccountModifyDlg::init()
 
 	key = acc.pgpSecretKey;
 	updateUserID();
-	if(PGPUtil::pgpAvailable()) {
+	if(PGPUtil::instance().pgpAvailable()) {
 		gb_pgp->setEnabled(true);
 	}
 

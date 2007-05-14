@@ -36,9 +36,9 @@
 #include <time.h>
 #include "profiles.h"
 #include "profiledlg.h"
-#include "xmpp.h"
 
 #include "eventdlg.h"
+#include "psicon.h"
 #include "psiiconset.h"
 #include "translationmanager.h"
 #include "applicationinfo.h"
@@ -242,6 +242,7 @@ int main(int argc, char *argv[])
 	QApplication::setQuitOnLastWindowClosed(false);
 
 	// Initialize QCA
+	QCA::setProperty("pgp-always-trust", true);
 	QCA::KeyStoreManager keystoremgr;
 	keystoremgr.start();
 	keystoremgr.waitForBusyFinished(); // FIXME get rid of this

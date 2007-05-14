@@ -42,7 +42,6 @@
 #include <windows.h>
 #endif
 
-#include "im.h"
 #include "common.h"
 #include "showtextdlg.h"
 #include "psicon.h"

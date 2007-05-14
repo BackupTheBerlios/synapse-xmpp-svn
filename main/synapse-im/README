@@ -1,6 +1,6 @@
-Psi 0.11-beta5
+Psi 0.11-RC1
 ---------
-Date: February 12th, 2007
+Date: May 11th, 2007
 
 Project Lead/Maintainer (2004-current):
   Kevin Smith
@@ -20,30 +20,25 @@ Original Author (2001-2004):
 
 Known Issues
 ------------
-This is a beta (preview) version of Psi and is not intended to be release 
-quality or used in production environments.  Particularly, the following 
-issues are known (those issues which are believed to have originated in 
-external libraries are marked with a *):
-  - GnuPG is temporarily not supported.
-  - Mouse actions on tabbed chat windows have been temporarily disabled.
-  - Roster tooltips are a little ugly currently, more whitespace will be 
-      added again later.
-  - When receiving multiline messages in a chat, sometimes some lines will
-      not be visible until another message is received or sent. 
+This is a release candidate version of Psi. This release cycle is used as a 
+test of a version which the developers believe is ready for a final release. 
+As such we do not know of any critical issues is this version, but it is 
+still advisable to maintain backups and to not deploy on critical production 
+systems.
 
 Notes
 -----
-  - This beta release includes a patched version of QCA2. Although it is 
-      possible to link against another self-patched QCA2, it is strongly 
-      recommended to use the provided tree, which is now default when
-      using ./configure on unices, or by default on Windows. Please ignore
-      all notes regarding QCA2 plugins below.
+  - QCA --
+    * The latest version of QCA2 is required to build Psi.
+    * The qca-openssl and qca-gnupg plugins are desirable for full 
+      functionality of Psi.
 
   - Upgrading to 0.11 --
-    * The last used profile settings will not be transferred from 0.10 and
-      previous Qt3-based builds to the 0.11-beta1 and newer Qt4 based builds.
+    * Unless you use the 'default' profile, the last used profile settings 
+	    will not be transferred from 0.10 and previous Qt3-based builds to the 
+	    0.11-beta1 and newer Qt4 based builds.
       If Psi loads with a blank profile, cancel the account creation and use 
-     "Choose profile" to reset your default profile.	
+      "Choose profile" to reset your default profile.	
     * When you decide to switch to Psi 0.11 permanently, you can safely clear
       the 'affinix.com' keys from your registry.
     * The PEM format is now used for storing SSL certificates.
@@ -66,10 +61,6 @@ Notes
     * Ensure 'gpg' actually works, by testing it from the command-line.
     * You must have a public and secret keyring.  Psi cannot operate
       without them, and they must be there when you start it.
-    * If you experience fatal GnuPG incompatibilities, you can pass
-      the --no-gpg option to Psi and gpg will not be used.
-    * If you have gpg-agent set up, but you don't want Psi to use it, then
-      you can pass --no-gpg-agent to force the use of Psi's built-in prompt.
 
 
 Changes
@@ -79,44 +70,45 @@ Changes
     XEP-0077 (In-band registration))
   - Finished support for XEP-0004 (Data Forms) by supporting forms in
     messages. (thanks to Roelof Naude)
-  - Added support for JEP-0070 (Verifying HTTP Requests via XMPP).
+  - Added support for XEP-0070 (Verifying HTTP Requests via XMPP).
     Thanks to Maciej Niedzielski.
   - Customizable shortcuts (thanks to Ephraim)
+  - System-wide shortcuts
   - Added spell checking (thanks to Ephraim).
     Currently only aspell is supported.
   - Added option to automatically set the resource (using the hostname)
   - Added new default Stellar3 iconset
-  - Added support for JEP-138 (Stream Compression)
-  - Added support for using JEP-33 (Extended Stanza Addressing) to multicast
+  - Added support for XEP-138 (Stream Compression)
+  - Added support for using XEP-33 (Extended Stanza Addressing) to multicast
     messages to multiple users. Use option.enable-multicasting to enable it.
   - Added 'Show status message' toggle. There is a hidden option to put 
     status messages under the nickname (at the cost of 2 extra pixels
-	when no status message is shown)
-  - Support for Bookmark Storage (JEP-0048), where bookmarked conferences are
+	  when no status message is shown)
+  - Support for Bookmark Storage (XEP-0048), where bookmarked conferences are
     auto-joined. No UI is provided for creating bookmarks (yet).
-  - Better error messages, including error condition mappings (JEP-0086)
+  - Better error messages, including error condition mappings (XEP-0086)
   - Support dynamically changing priority
   - Improved PGP error messages
   - Hiding the deprecated protocol selector for service discovery by default.
     Use option.ui.show-deprecated.service-discovery.protocol-selector to
-	re-enable it.
+	  re-enable it.
   - New options system (see options.xml)
-  - Receiving support for vCard-Based Avatars (JEP-0153)
-  - Support for Multi-User-Chat (JEP-0045)
-  - Preliminary support for User Nickname (JEP-0172)
-  - Preliminary support for Roster Item Exchange (JEP-0144)
-  - Psi now uses the Qt4(>=4.2) and QCA2 libraries, replacing the Qt3 and QCA1 
+  - Receiving support for vCard-Based Avatars (XEP-0153)
+  - Support for Multi-User-Chat (XEP-0045)
+  - Preliminary support for User Nickname (XEP-0172)
+  - Preliminary support for Roster Item Exchange (XEP-0144)
+  - Psi now uses the Qt4(>=4.3) and QCA2 libraries, replacing the Qt3 and QCA1 
     requirements.
   - "Privacy List" support in the account dialog.
-  - Support for JEP-0050 (Ad-hoc commands)
-  - Preliminary support for JEP-0163 (Personal Eventing Protocol)
-  - Preliminary support for JEP-0146 (Remote Controlling Clients)
+  - Support for XEP-0050 (Ad-hoc commands)
+  - Preliminary support for XEP-0163 (Personal Eventing Protocol)
+  - Preliminary support for XEP-0146 (Remote Controlling Clients)
   - Large parts of the codebase have been restructured.
   - Fixed a chat room bug where subject/topic changes were not shown.
   - Mac OS X builds are now universal binaries, supporting the new Intel 
     based Macs.
-  - Support for JEP-85 (Chat State Notifications).
-  - Support for JEP-0115 (Entity Capabilities).
+  - Support for XEP-85 (Chat State Notifications).
+  - Support for XEP-0115 (Entity Capabilities).
   - There is now a config.xml option to make some windows use the brushed
     metal theme on Mac OS X.
   - Window opacity support is now present for all three supported platforms.
@@ -179,9 +171,9 @@ Changes
   - Fixed "broken pipe" crash when receiving GnuPG errors
 
   New in 0.9.1
-  - Service Discovery browser (JEP-0030)
+  - Service Discovery browser (XEP-0030)
   - Popup notifications
-  - Redesigned Iconset & Emoticons system, based on JEP-0038
+  - Redesigned Iconset & Emoticons system, based on XEP-0038
   - Now possible to use service/transport icons for individual contacts
   - Ability to use custom roster icons for contacts via RegExps
   - Emoticon popup menu in chat window, for quick access
@@ -190,7 +182,7 @@ Changes
   - GnuPG 1.2.3 compatibility
   - New XMPP/Jabber engine (partially complete, XMPP 1.0 support deferred)
   - SOCKS5 proxy support
-  - HTTP polling proxy support (JEP-0025)
+  - HTTP polling proxy support (XEP-0025)
   - Roster groups open/closed state saved
   - 'Free for Chat' status
   - Character counter
@@ -232,12 +224,6 @@ Description
   everything, Unicode is supported throughout, and contacts are cached
   offline.  Security is also a major consideration, and Psi provides it for
   both client-to-server (SSL) and client-to-client (GnuPG).
-
-  Plans for v1.0:
-   - Multi-User Chat (JEP-0045)
-   - Plugin system
-   - Other misc stuff
-   - Bugfixes
 
 
 How you can help

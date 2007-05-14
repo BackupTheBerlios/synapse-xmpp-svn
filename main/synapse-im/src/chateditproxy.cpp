@@ -23,6 +23,8 @@
 #include <QVBoxLayout>
 
 #include "msgmle.h"
+#include "psioptions.h"
+#include "common.h"
 
 ChatEditProxy::ChatEditProxy(QWidget* parent)
 	: QWidget(parent)
@@ -33,7 +35,12 @@ ChatEditProxy::ChatEditProxy(QWidget* parent)
 	layout_ = new QVBoxLayout(this);
 	layout_->setMargin(0);
 	layout_->setSpacing(0);
-	updateLayout();
+
+	connect(PsiOptions::instance(), SIGNAL(optionChanged(const QString&)), SLOT(optionsChanged()));
+	optionsChanged();
+
+	if (!textEdit_)
+		updateLayout();
 }
 
 /**
@@ -62,6 +69,9 @@ ChatEdit* ChatEditProxy::createTextEdit()
 /**
  * Moves the QTextDocument and QTextCursor data from \a oldTextEdit
  * to \a newTextEdit.
+ *
+ * NB: Make sure that all QSyntaxHighlighters are detached prior to calling
+ * this function.
  */
 void ChatEditProxy::moveData(QTextEdit* newTextEdit, QTextEdit* oldTextEdit) const
 {
@@ -83,11 +93,29 @@ void ChatEditProxy::updateLayout()
 {
 	ChatEdit* newEdit = createTextEdit();
 
-	if (textEdit_)
+	if (textEdit_) {
+		// all syntaxhighlighters should be removed while we move
+		// the documents around, and should be reattached afterwards
+		textEdit_->setCheckSpelling(false);
+		newEdit->setCheckSpelling(false);
+
 		moveData(newEdit, textEdit_);
+
+		newEdit->setCheckSpelling(ChatEdit::checkSpellingGloballyEnabled());
+	}
 
 	delete textEdit_;
 	textEdit_ = newEdit;
 	layout_->addWidget(textEdit_);
 	emit textEditCreated(textEdit_);
+}
+
+/**
+ * Update ChatEdit widget according to current options.
+ * FIXME: When option.chatLineEdit finally makes it to PsiOptions, make this slot
+ *        private.
+ */
+void ChatEditProxy::optionsChanged()
+{
+	setLineEditEnabled(option.chatLineEdit);
 }

@@ -56,6 +56,8 @@
 #include "psiiconset.h"
 #include "iconwidget.h"
 #include "textutil.h"
+#include "xmpp_message.h"
+#include "xmpp_htmlelement.h"
 #include "fancylabel.h"
 #include "msgmle.h"
 #include "iconselect.h"
@@ -1018,8 +1020,8 @@ void ChatDlg::setLooks()
 	ui_.log->setFont(f);
 	ui_.mle->chatEdit()->setFont(f);
 
-	ui_.splitter->setSplitterEnabled(!option.chatLineEdit);
-	ui_.mle->setLineEditEnabled(option.chatLineEdit);
+	ui_.splitter->optionsChanged();
+	ui_.mle->optionsChanged();
 
 	ui_.tb_pgp->hide();
 	if (d->smallChat) {
@@ -1284,7 +1286,7 @@ void ChatDlg::encryptedMessageSent(int x, bool b, int e)
 	if(b)
 		doneSend();
 	else
-		QMessageBox::critical(this, tr("Error"), tr("There was an error trying to send the message encrypted.\nReason: %1.").arg(PGPUtil::messageErrorString((QCA::SecureMessage::Error) e)));
+		QMessageBox::critical(this, tr("Error"), tr("There was an error trying to send the message encrypted.\nReason: %1.").arg(PGPUtil::instance().messageErrorString((QCA::SecureMessage::Error) e)));
 	ui_.mle->chatEdit()->setEnabled(true);
 	ui_.mle->chatEdit()->setFocus();
 }

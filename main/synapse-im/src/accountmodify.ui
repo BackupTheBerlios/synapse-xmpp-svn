@@ -401,7 +401,7 @@
          <widget class="QWidget" name="pg_privacyStatus" >
           <layout class="QVBoxLayout" >
            <property name="margin" >
-            <number>9</number>
+            <number>0</number>
            </property>
            <property name="spacing" >
             <number>6</number>
@@ -447,7 +447,7 @@
          <widget class="QWidget" name="pg_privacy" >
           <layout class="QVBoxLayout" >
            <property name="margin" >
-            <number>9</number>
+            <number>0</number>
            </property>
            <property name="spacing" >
             <number>6</number>
@@ -669,9 +669,12 @@
          </item>
          <item>
           <widget class="QComboBox" name="cb_ssl" >
+           <property name="sizeAdjustPolicy" >
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
            <property name="sizePolicy" >
             <sizepolicy>
-             <hsizetype>3</hsizetype>
+             <hsizetype>1</hsizetype>
              <vsizetype>0</vsizetype>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
@@ -689,7 +692,7 @@
            </property>
            <property name="sizeHint" >
             <size>
-             <width>251</width>
+             <width>0</width>
              <height>16</height>
             </size>
            </property>
@@ -728,9 +731,12 @@
          </item>
          <item>
           <widget class="QComboBox" name="cb_plain" >
+           <property name="sizeAdjustPolicy" >
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
            <property name="sizePolicy" >
             <sizepolicy>
-             <hsizetype>3</hsizetype>
+             <hsizetype>1</hsizetype>
              <vsizetype>0</vsizetype>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
@@ -748,7 +754,7 @@
            </property>
            <property name="sizeHint" >
             <size>
-             <width>251</width>
+             <width>0</width>
              <height>16</height>
             </size>
            </property>
@@ -779,6 +785,21 @@
           </widget>
          </item>
          <item>
+          <widget class="QComboBox" name="cb_security_level" >
+           <property name="sizeAdjustPolicy" >
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
+           <property name="sizePolicy" >
+            <sizepolicy>
+             <hsizetype>1</hsizetype>
+             <vsizetype>0</vsizetype>
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer>
            <property name="orientation" >
             <enum>Qt::Horizontal</enum>
@@ -788,14 +809,11 @@
            </property>
            <property name="sizeHint" >
             <size>
-             <width>251</width>
+             <width>0</width>
              <height>16</height>
             </size>
            </property>
           </spacer>
-         </item>
-         <item>
-          <widget class="QComboBox" name="cb_security_level" />
          </item>
         </layout>
        </item>
@@ -1096,20 +1114,33 @@
   <tabstop>ck_auto</tabstop>
   <tabstop>ck_reconn</tabstop>
   <tabstop>ck_log</tabstop>
-  <tabstop>pb_close</tabstop>
-  <tabstop>pb_save</tabstop>
   <tabstop>pb_vcard</tabstop>
   <tabstop>pb_key</tabstop>
   <tabstop>pb_keyclear</tabstop>
-  <tabstop>ck_ignoreSSLWarnings</tabstop>
-  <tabstop>cb_plain</tabstop>
+  <tabstop>lv_blocked</tabstop>
+  <tabstop>pb_addBlock</tabstop>
+  <tabstop>pb_removeBlock</tabstop>
+  <tabstop>pb_privacy</tabstop>
+  <tabstop>ck_compress</tabstop>
   <tabstop>ck_keepAlive</tabstop>
   <tabstop>ck_host</tabstop>
   <tabstop>le_host</tabstop>
   <tabstop>le_port</tabstop>
+  <tabstop>cb_ssl</tabstop>
+  <tabstop>ck_ignoreSSLWarnings</tabstop>
+  <tabstop>ck_legacy_ssl_probe</tabstop>
+  <tabstop>cb_plain</tabstop>
+  <tabstop>ck_req_mutual</tabstop>
+  <tabstop>cb_security_level</tabstop>
+  <tabstop>ck_automatic_resource</tabstop>
   <tabstop>le_resource</tabstop>
   <tabstop>le_priority</tabstop>
   <tabstop>le_dtProxy</tabstop>
+  <tabstop>ck_custom_auth</tabstop>
+  <tabstop>le_authid</tabstop>
+  <tabstop>le_realm</tabstop>
+  <tabstop>pb_close</tabstop>
+  <tabstop>pb_save</tabstop>
  </tabstops>
  <resources/>
  <connections/>

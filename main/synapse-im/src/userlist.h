@@ -26,6 +26,8 @@
 #include <QList>
 #include <QPixmap>
 #include <Q3PtrList>
+#include "xmpp_resource.h"
+#include "xmpp_liverosteritem.h"
 #include "im.h"
 #include "mood.h"
 #include "geolocation.h"
@@ -33,6 +35,9 @@
 #include "gmail_notify.h"
 
 class AvatarFactory;
+namespace XMPP {
+	class Jid;
+}
 
 class UserResource : public XMPP::Resource
 {

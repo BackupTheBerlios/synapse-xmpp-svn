@@ -57,6 +57,7 @@
 #include "accountscombobox.h"
 #include "common.h"
 #include "pgputil.h"
+#include "xmpp_htmlelement.h"
 #include "userlist.h"
 #include "iconwidget.h"
 #include "fancylabel.h"
@@ -2129,7 +2130,7 @@ void EventDlg::encryptedMessageSent(int x, bool b, int e)
 		}
 	}
 	else
-		QMessageBox::critical(this, tr("Error"), tr("There was an error trying to send the message encrypted.\nReason: %1.").arg(PGPUtil::messageErrorString((QCA::SecureMessage::Error) e)));
+		QMessageBox::critical(this, tr("Error"), tr("There was an error trying to send the message encrypted.\nReason: %1.").arg(PGPUtil::instance().messageErrorString((QCA::SecureMessage::Error) e)));
 
 	d->le_to->setEnabled(true);
 	d->mle->setEnabled(true);

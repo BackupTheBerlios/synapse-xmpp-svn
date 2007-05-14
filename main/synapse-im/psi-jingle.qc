@@ -14,7 +14,6 @@
 	<required/>
   </dep>
   <dep type='openssl' />
-  <dep type='cyrussasl' />
   <dep type='zlib'>
     <required/>
   </dep>

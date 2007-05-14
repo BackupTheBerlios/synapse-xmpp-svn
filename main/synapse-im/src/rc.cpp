@@ -23,9 +23,11 @@
 #include "psiaccount.h"
 #include "psiactionlist.h"
 #include "psicon.h"
+#include "psioptions.h"
 #include "rc.h"
 #include "xmpp_xdata.h"
 #include "ahcservermanager.h"
+#include "ahcommand.h"
 
 using namespace XMPP;
 
@@ -82,10 +84,12 @@ AHCommand RCSetStatusServer::execute(const AHCommand& c, const Jid&)
 		dnd_option.label = QObject::tr("Do Not Disturb");
 		dnd_option.value = "dnd";
 		status_options += dnd_option;
-		XData::Field::Option invisible_option;
-		invisible_option.label = QObject::tr("Invisible");
-		invisible_option.value = "invisible";
-		status_options += invisible_option;
+		if (PsiOptions::instance()->getOption("options.ui.menu.status.invisible").toBool()) {
+			XData::Field::Option invisible_option;
+			invisible_option.label = QObject::tr("Invisible");
+			invisible_option.value = "invisible";
+			status_options += invisible_option;
+		}
 		XData::Field::Option offline_option;
 		offline_option.label = QObject::tr("Offline");
 		offline_option.value = "offline";
@@ -124,7 +128,7 @@ AHCommand RCSetStatusServer::execute(const AHCommand& c, const Jid&)
 				s.setType(fl[i].value().first());
 			}
 			else if (fl[i].var() == "status-message" && !fl[i].value().isEmpty()) {
-				s.setStatus(fl[i].value().first());
+				s.setStatus(fl[i].value().join("\n"));
 			}
 			else if (fl[i].var() == "status-priority" && !fl[i].value().isEmpty()) {
 				s.setPriority(fl[i].value().first().toInt());

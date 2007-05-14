@@ -60,6 +60,7 @@
 #include "mucconfigdlg.h"
 #include "textutil.h"
 #include "statusdlg.h"
+#include "xmpp_message.h"
 #include "psiiconset.h"
 #include "stretchwidget.h"
 #include "mucmanager.h"
@@ -1144,8 +1145,6 @@ void GCMainDlg::message(const Message &_m)
 		ui_.le_topic->setText(m.subject());
 		ui_.le_topic->setCursorPosition(0);
 		ui_.le_topic->setToolTip(QString("<qt><p>%1</p></qt>").arg(m.subject()));
-		if (d->connecting)
-			return;
 		if(m.body().isEmpty()) {
 			if (!from.isEmpty())
 				m.setBody(QString("/me ") + tr("has set the topic to: %1").arg(m.subject()));
@@ -1409,8 +1408,8 @@ void GCMainDlg::flashAnimate()
 
 void GCMainDlg::setLooks()
 {
-	ui_.vsplitter->setSplitterEnabled(!option.chatLineEdit);
-	ui_.mle->setLineEditEnabled(option.chatLineEdit);
+	ui_.vsplitter->optionsChanged();
+	ui_.mle->optionsChanged();
 
 	// update the fonts
 	QFont f;

@@ -11,12 +11,11 @@
 //
 #include "jinglesessionmanager.h"
 #include "jinglevoicesession.h"
-#include "xmpp.h"
+#include "xmpp_client.h"
 #include "xmpp_xmlcommon.h"
 #include "psiaccount.h"
 #include <qstring.h>
 #include <qdom.h>
-
 
 JingleSessionManager::JingleSessionManager(PsiAccount *pa, Task *t)
 : Task(t), pa_(pa), client_(pa->client()), jid_(pa->jid()), sid_seed(0xaaaa)

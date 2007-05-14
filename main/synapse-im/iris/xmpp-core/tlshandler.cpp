@@ -60,6 +60,7 @@ QCATLSHandler::QCATLSHandler(QCA::TLS *parent)
 	connect(d->tls, SIGNAL(readyReadOutgoing()), SLOT(tls_readyReadOutgoing()));
 	connect(d->tls, SIGNAL(closed()), SLOT(tls_closed()));
 	connect(d->tls, SIGNAL(error()), SLOT(tls_error()));
+	connect(d->tls, SIGNAL(firstStepDone()), SLOT(tls_firstStepDone()));
 	d->state = 0;
 	d->err = -1;
 	d->internalHostMatch = false;
@@ -107,6 +108,11 @@ int QCATLSHandler::tlsError() const
 	return d->err;
 }
 
+void QCATLSHandler::tls_firstStepDone()
+{
+	d->tls->continueAfterStep();
+}
+
 void QCATLSHandler::reset()
 {
 	d->tls->reset();
@@ -134,6 +140,7 @@ void QCATLSHandler::writeIncoming(const QByteArray &a)
 void QCATLSHandler::continueAfterHandshake()
 {
 	if(d->state == 2) {
+		d->tls->continueAfterStep();
 		success();
 		d->state = 3;
 	}

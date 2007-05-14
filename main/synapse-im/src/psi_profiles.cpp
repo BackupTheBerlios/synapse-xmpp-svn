@@ -106,7 +106,7 @@ void UserAccount::reset()
 	priority = 5;
 	opt_keepAlive = TRUE;
 	allow_plain = XMPP::ClientStream::AllowPlainOverTLS;
-	opt_compress = TRUE;
+	opt_compress = FALSE;
 	opt_log = TRUE;
 	opt_amp = FALSE;
 	opt_newMail = FALSE;
@@ -371,7 +371,7 @@ void UserAccount::fromXml(const QDomElement &a)
 	QString pgpSecretKeyID;
 	readEntry(a, "pgpSecretKeyID", &pgpSecretKeyID);
 	if (!pgpSecretKeyID.isEmpty()) {
-		QCA::KeyStoreEntry e = PGPUtil::getSecretKeyStoreEntry(pgpSecretKeyID);
+		QCA::KeyStoreEntry e = PGPUtil::instance().getSecretKeyStoreEntry(pgpSecretKeyID);
 		if (!e.isNull())
 			pgpSecretKey = e.pgpSecretKey();
 	}
@@ -475,7 +475,7 @@ void UserProfile::reset()
 	// prefs
 	prefs.useleft = FALSE;
 	prefs.singleclick = FALSE;
- 	prefs.hideMenubar = TRUE;
+ 	prefs.hideMenubar = FALSE;
 	prefs.defaultAction = 1;
 	prefs.delChats = dcHour;
 	prefs.browser = 0;
@@ -484,7 +484,7 @@ void UserProfile::reset()
 	prefs.ignoreHeadline = FALSE;
 	prefs.ignoreNonRoster = FALSE;
 	prefs.excludeGroupChatsFromIgnore = TRUE;
-	prefs.useDock = win ? TRUE: FALSE;
+	prefs.useDock = true;
 	prefs.dockDCstyle = win ? TRUE: FALSE;
 	prefs.dockHideMW = FALSE;
 	prefs.dockToolMW = FALSE;
@@ -515,7 +515,7 @@ void UserProfile::reset()
 	prefs.asMessage = QObject::tr("Auto Status (idle)");
 	prefs.scrollTo = TRUE;
 	prefs.useEmoticons = false;
-	prefs.alertOpenChats = false;
+	prefs.alertOpenChats = true;
 	prefs.raiseChatWindow = false;
 	prefs.showSubjects = true;
 	prefs.showCounter = false;
@@ -663,7 +663,7 @@ void UserProfile::reset()
 		tb[0].dock = Qt::DockBottom;
 
 		tb[1].name = QObject::tr("Show contacts");
-		tb[1].on = defaultEnableToolbars;
+		tb[1].on = false;
 		tb[1].locked = true;
 		tb[1].keys << "show_offline" << "show_hidden" << "show_agents" << "show_self" << "show_statusmsg" << "show_no_offline_status_msg"; 
 

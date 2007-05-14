@@ -27,14 +27,19 @@
 #define PSIACCOUNT_H
 
 #include <QList>
+#include <QTimer>
 
-#include "xmpp.h"
-#include "urlbookmark.h"
-#include "conferencebookmark.h"
+#include "xmpp_rosterx.h"
+#include "xmpp_status.h"
 
 namespace XMPP
 {
-	class Status;
+	class Jid;
+	class XData;
+	class AdvancedConnector;
+	class Stream;
+	class QCATLSHandler;
+	class PubSubItem;
 	class RosterItem;
 	class Client;
 	//class StreamError;
@@ -51,10 +56,13 @@ class PsiEvent;
 class PsiHttpAuthRequest;
 class Tune;
 class BookmarkManager;
+class URLBookmark;
+class ConferenceBookmark;
 class VoiceCaller;
 class UserAccount;
 class ContactProfile;
 class QWidget;
+class QString;
 class EventQueue;
 class UserResource;
 class UserListItem;
@@ -78,12 +86,7 @@ class GArchive;
 #endif
 
 // sick sick remove this someday please!
-#include "im.h"
-struct GCContact
-{
-	Jid jid;
-	Status status;
-};
+struct GCContact;
 
 class PsiAccount : public QObject
 {
@@ -228,7 +231,7 @@ public slots:
 	void dj_composeMessage(const Jid &jid, const QString &body, const QString &subject, const QString &thread);
 	void dj_addAuth(const Jid &);
 	void dj_addAuth(const Jid &, const QString&);
-	void dj_add(const Jid &, const QString &, const QStringList &, bool authReq);
+	void dj_add(const XMPP::Jid &, const QString &, const QStringList &, bool authReq);
 	void dj_authReq(const Jid &);
 	void dj_auth(const Jid &);
 	void dj_deny(const Jid &);
@@ -343,6 +346,7 @@ private slots:
 	void pgpKeysUpdated();
 
 	void trySignPresence();
+	void pgp_signFinished();
 	void pgp_verifyFinished();
 	void pgp_encryptFinished();
 	void pgp_decryptFinished();

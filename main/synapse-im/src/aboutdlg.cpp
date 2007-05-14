@@ -32,7 +32,7 @@ AboutDlg::AboutDlg(QWidget* parent)
 
 	setModal(false);
 
-	ui_.lb_name->setText ( ui_.lb_name->text().arg(ApplicationInfo::name()).arg(ApplicationInfo::version()) );
+	ui_.lb_name->setText ( QString("<h3><b>%1 v%2</b></h3>").arg(ApplicationInfo::name()).arg(ApplicationInfo::version()) );
 
 	ui_.te_license->setText ( loadText(":/COPYING") );
 
@@ -51,16 +51,23 @@ AboutDlg::AboutDlg(QWidget* parent)
 	authors += details(QString::fromUtf8("Kevin Smith"),
 			   "kismith@psi-im.org", "", "",
 			   tr("Psi Project Lead/Maintainer"));
-	authors += details(QString::fromUtf8("Michail Pishchagin"),
-			   "mblsha@psi-im.org", "", "",
-			   tr("Psi Lead Developer"));
 	authors += details(QString::fromUtf8("Remko Tronçon"),
 			   "remko@psi-im.org", "", "",
+			   tr("Psi Lead Developer"));
+	authors += details(QString::fromUtf8("Michail Pishchagin"),
+			   "mblsha@psi-im.org", "", "",
+			   tr("Psi Lead Widget Developer"));
+	authors += details(QString::fromUtf8("Maciej Niedzielski"),
+			   "machekku@psi-im.org", "", "",
+			   tr("Psi Developer"));
+	authors += details(QString::fromUtf8("Martin Hostettler"),
+ 			   "martin@psi-im.org", "", "",
 			   tr("Psi Developer"));
 	authors += details(QString::fromUtf8("Akito Nozaki"),
 			   "anpluto@usa.net", "", "",
 			   tr("Psi Miscellaneous Developer"));
 	ui_.te_authors->setText( authors );
+
 
 	// fill in Thanks To tab...
 	QString thanks;

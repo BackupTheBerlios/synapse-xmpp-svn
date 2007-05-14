@@ -19,6 +19,7 @@
  */
 
 #include <QDomElement>
+#include <QPointer>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <Q3Grid>
@@ -28,7 +29,6 @@
 #include "psiaccount.h"
 #include "common.h"
 #include "xdata_widget.h"
-#include "xmpp.h"
 #include "xmpp_tasks.h"
 #include "xmpp_xdata.h"
 #include "xmpp_xmlcommon.h"

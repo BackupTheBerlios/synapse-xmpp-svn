@@ -18,6 +18,7 @@
 #include <q3ptrlist.h>
 #include <QObject>
 #include "xmpp_jid.h"
+#include "xmpp_client.h"
 #include "xmpp_task.h"
 #include "xmpp_xmlcommon.h"
 #include "psiaccount.h"
