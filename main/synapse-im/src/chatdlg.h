@@ -53,7 +53,7 @@ public:
 	~RichStatus();
 
 	void setStatusString(QString *txt, int width);
-	void setPEP(QString *pep,int width);
+	bool setPEP(QString *pep,int width);
 	void paintEvent(QPaintEvent *pe);
 private:
 	QTextDocument *v_rs;

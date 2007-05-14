@@ -114,20 +114,23 @@ void RichStatus::setStatusString(QString *txt, int width)
 	v_rs->setUndoRedoEnabled(false);
 
 	PsiRichText::install(v_rs);
-	PsiRichText::setText(v_rs, pep_ + "<br/><b>Opis:</b><br/>" + txt_);
+	PsiRichText::setText(v_rs, pep_ + "<br/><b>" + tr("Status:") + "</b><br/>" + txt_);
 
 	PsiRichText::ensureTextLayouted(v_rs, width);
 }
 
-void RichStatus::setPEP(QString *pep, int width)
+bool RichStatus::setPEP(QString *pep, int width)
 {
+	if( pep_.compare(*pep) == 0 )
+		return false;
+
 	pep_ = *pep;
 
 	if(txt_.isEmpty() && pep_.isEmpty())
 	{
 		delete v_rs;
 		v_rs = 0;
-		return;
+		return true;
 	}
 
 	if(v_rs)
@@ -138,9 +141,10 @@ void RichStatus::setPEP(QString *pep, int width)
 	v_rs->setUndoRedoEnabled(false);
 
 	PsiRichText::install(v_rs);
-	PsiRichText::setText(v_rs, pep_ + "<br/><b>Opis:</b><br/>" + txt_);
+	PsiRichText::setText(v_rs, pep_ + "<br/><b>" + tr("Status:") + "</b><br/>" + txt_);
 
 	PsiRichText::ensureTextLayouted(v_rs, width);
+	return true;
 }
 
 void RichStatus::paintEvent(QPaintEvent *pe)
@@ -196,10 +200,7 @@ public:
 				PEP_ += "<br/>";
 			PEP_ = PEP_ + "<icon name=\"psi/publishTune\"> <b>"  + tr("Listen to") +" : </b><br/>" + *tune;
 		}
-		if(!PEP_.isEmpty()) 
-		{
-			rs_statusString->setPEP(&PEP_, ((lb_nickname->sizeHint().width() + 22) > 100) ? (lb_nickname->sizeHint().width() + 22) : 100);
-		}
+		bool dirty = rs_statusString->setPEP(&PEP_, ((lb_nickname->sizeHint().width() + 22) > 100) ? (lb_nickname->sizeHint().width() + 22) : 100);
 		if (hasPEP_)
 			timer_->start();
 		else {
@@ -207,7 +208,8 @@ public:
 			delete timer_;
 			timer_ = NULL;
 		}
-		repaint();
+		if ( dirty )
+			repaint();
 	}
 
 	void updateStatus(const PsiIcon *icon, QString nickname, QString *statusString, QString *key, bool hasPEP)
