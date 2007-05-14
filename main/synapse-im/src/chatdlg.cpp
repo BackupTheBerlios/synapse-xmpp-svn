@@ -96,9 +96,10 @@ RichStatus::~RichStatus()
 	delete v_rs;
 }
 
-void RichStatus::setStatusString(QString txt, int width)
+void RichStatus::setStatusString(QString *txt, int width)
 {
-	if(txt.isEmpty())
+	txt_ = *txt;
+	if(txt_.isEmpty() && pep_.isEmpty())
 	{
 		delete v_rs;
 		v_rs = 0;
@@ -113,7 +114,31 @@ void RichStatus::setStatusString(QString txt, int width)
 	v_rs->setUndoRedoEnabled(false);
 
 	PsiRichText::install(v_rs);
-	PsiRichText::setText(v_rs, txt);
+	PsiRichText::setText(v_rs, pep_ + "<br/><b>Opis:</b><br/>" + txt_);
+
+	PsiRichText::ensureTextLayouted(v_rs, width);
+}
+
+void RichStatus::setPEP(QString *pep, int width)
+{
+	pep_ = *pep;
+
+	if(txt_.isEmpty() && pep_.isEmpty())
+	{
+		delete v_rs;
+		v_rs = 0;
+		return;
+	}
+
+	if(v_rs)
+		delete v_rs;
+
+
+	v_rs = new QTextDocument();
+	v_rs->setUndoRedoEnabled(false);
+
+	PsiRichText::install(v_rs);
+	PsiRichText::setText(v_rs, pep_ + "<br/><b>Opis:</b><br/>" + txt_);
 
 	PsiRichText::ensureTextLayouted(v_rs, width);
 }
@@ -145,7 +170,6 @@ public:
 		setupUi(this);
 		lb_keyIcon->setPsiIcon(IconsetFactory::iconPtr("psi/cryptoYes"));
 		lb_keyIcon->hide();
-		lb_PEP->hide();
 		timer_ = NULL;
 	}
 
@@ -165,22 +189,16 @@ public:
 		printf("updatePEP()\n");
 		QString PEP_;
 		if (mood && !mood->isEmpty())
-			PEP_ = QString("<qt>") + tr("Mood") + " : " + *mood;
+			PEP_ = QString("<b>") + tr("Mood") + " :</b> " + *mood;
 		if (tune && !tune->isEmpty())
 		{
 			if (!PEP_.isEmpty())
 				PEP_ += "<br/>";
-			else
-				PEP_ += "<qt>";
-			PEP_ = PEP_ + tr("Listen to") +" : <br/>" + *tune;
+			PEP_ = PEP_ + "<icon name=\"psi/publishTune\"> <b>"  + tr("Listen to") +" : </b><br/>" + *tune;
 		}
 		if(!PEP_.isEmpty()) 
 		{
-			PEP_ += QString("</qt>");
-			lb_PEP->setText(PEP_);
-			lb_PEP->show();
-		} else {
-			lb_PEP->hide();
+			rs_statusString->setPEP(&PEP_, ((lb_nickname->sizeHint().width() + 22) > 100) ? (lb_nickname->sizeHint().width() + 22) : 100);
 		}
 		if (hasPEP_)
 			timer_->start();
@@ -219,7 +237,7 @@ public:
 			lb_keyIcon->show();
 			lb_key->setText(QString("<qt><font color=\"#2A993B\">") + *key + "</font></qt>");
 		}
-		rs_statusString->setStatusString(*statusString, size.width()-8);
+		rs_statusString->setStatusString(statusString, size.width()-8);
 		repaint();
 	}
 	

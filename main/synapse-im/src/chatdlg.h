@@ -52,10 +52,13 @@ public:
 	RichStatus(QWidget *parent);
 	~RichStatus();
 
-	void setStatusString(QString txt, int width);
+	void setStatusString(QString *txt, int width);
+	void setPEP(QString *pep,int width);
 	void paintEvent(QPaintEvent *pe);
 private:
 	QTextDocument *v_rs;
+	QString txt_;
+	QString pep_;
 };
 
 class ChatDlg : public AdvancedWidget<QWidget>

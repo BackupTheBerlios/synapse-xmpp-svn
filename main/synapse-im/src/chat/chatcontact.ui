@@ -5,7 +5,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>200</width>
+    <width>117</width>
     <height>168</height>
    </rect>
   </property>
@@ -87,33 +87,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="lb_PEP" >
-     <property name="enabled" >
-      <bool>true</bool>
-     </property>
-     <property name="sizePolicy" >
-      <sizepolicy>
-       <hsizetype>5</hsizetype>
-       <vsizetype>5</vsizetype>
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text" >
-      <string>TextLabel</string>
-     </property>
-     <property name="textFormat" >
-      <enum>Qt::RichText</enum>
-     </property>
-     <property name="alignment" >
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="wordWrap" >
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
     <layout class="QHBoxLayout" >
      <property name="margin" >
       <number>0</number>
@@ -170,13 +143,13 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>IconLabel</class>
-   <extends>QLabel</extends>
+   <class>RichStatus</class>
+   <extends>QWidget</extends>
    <header>iconlabel.h</header>
   </customwidget>
   <customwidget>
-   <class>RichStatus</class>
-   <extends>QWidget</extends>
+   <class>IconLabel</class>
+   <extends>QLabel</extends>
    <header>iconlabel.h</header>
   </customwidget>
  </customwidgets>
