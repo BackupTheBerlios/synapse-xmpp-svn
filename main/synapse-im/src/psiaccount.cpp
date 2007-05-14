@@ -2365,12 +2365,14 @@ void PsiAccount::doAmarok() {
 		f.close();
 		if(title.compare("Nothing much")==0) {
 			//Off
-			if (d->options->getOption("options.amarok.status").toBool() && (sound_status.compare("")!=0)){
+			if (sound_status.compare("")!=0)
+			{
 				tuneStopped();
 				Status s = status();
 				s.setStatus(sound_status_old);
-				setStatus(s, false, true);
 				sound_status = "";
+				if (d->options->getOption("options.amarok.status").toBool())
+					setStatus(s, false, true);
 			}
 			return;
 		}
