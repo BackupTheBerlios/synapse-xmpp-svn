@@ -200,7 +200,7 @@ public:
 		{
 			if (!PEP_.isEmpty())
 				PEP_ += "<br/>";
-			PEP_ = PEP_ + "<icon name=\"psi/publishTune\"> <b>"  + tr("Listen to") +" : </b><br/>" + *tune;
+			PEP_ = PEP_ + "<icon name=\"psi/publishTune\"> <b>"  + tr("Listening to") +" : </b><br/>" + *tune;
 		}
 		bool dirty = rs_statusString->setPEP(&PEP_, ((lb_nickname->sizeHint().width() + 22) > 100) ? (lb_nickname->sizeHint().width() + 22) : 100);
 		if (hasPEP_)
