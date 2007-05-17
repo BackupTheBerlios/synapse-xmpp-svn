@@ -29,7 +29,7 @@
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
 #else
-	#include "talk/base/win32.h"
+//	#include "talk/base/win32.h"
 	#include <winsock2.h>
 #endif // WIN32
 

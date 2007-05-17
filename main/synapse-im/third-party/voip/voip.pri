@@ -24,8 +24,9 @@ unix:LIBS += -lssl
 
 win32 {
   INCLUDEPATH += C:\Speex\libspeex\include
-  LIBS += C:\Speex\libspeex\libspeex.lib
-  LIBS += ..\jrtplib\jrtp.lib
+  LIBS += -LC:\Speex\libspeex -lspeex
+  LIBS += -lWinMM -lWS2_32 -lWSock32 -lUser32 -lShell32 -lGdi32 -lAdvAPI32
+#  LIBS += ..\third-party\jrtplib\release\libjrtp.a
 #  LIBS += ..\iLBC\iLBC.lib
 }
 

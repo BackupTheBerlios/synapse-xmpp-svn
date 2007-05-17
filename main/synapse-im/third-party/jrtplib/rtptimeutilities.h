@@ -169,6 +169,7 @@ inline RTPTime RTPTime::CurrentTime()
 		QueryPerformanceFrequency(&performancefrequency);
 		GetSystemTime(&systemtime);
 		SystemTimeToFileTime(&systemtime,&filetime);
+#ifndef WIN32
 		microseconds = ( ((unsigned __int64)(filetime.dwHighDateTime) << 32) + (unsigned __int64)(filetime.dwLowDateTime) ) / 10ui64;
 		microseconds-= 11644473600000000ui64; // EPOCH
 		initmicroseconds = ( ( performancecount.QuadPart * 1000000ui64 ) / performancefrequency.QuadPart );
@@ -179,6 +180,18 @@ inline RTPTime RTPTime::CurrentTime()
 	microdiff = emulate_microseconds - initmicroseconds;
 
 	return RTPTime((uint32_t)((microseconds + microdiff) / 1000000ui64),((uint32_t)((microseconds + microdiff) % 1000000ui64)));
+#else
+		microseconds = ( ((unsigned __int64)(filetime.dwHighDateTime) << 32) + (unsigned __int64)(filetime.dwLowDateTime) ) / 10ULL;
+		microseconds-= 11644473600000000ULL; // EPOCH
+		initmicroseconds = ( ( performancecount.QuadPart * 1000000ULL ) / performancefrequency.QuadPart );
+	}
+    
+	emulate_microseconds = ( ( performancecount.QuadPart * 1000000ULL ) / performancefrequency.QuadPart );
+
+	microdiff = emulate_microseconds - initmicroseconds;
+
+	return RTPTime((uint32_t)((microseconds + microdiff) / 1000000ULL),((uint32_t)((microseconds + microdiff) % 1000000ULL)));
+#endif
 }
 
 inline void RTPTime::Wait(const RTPTime &delay)

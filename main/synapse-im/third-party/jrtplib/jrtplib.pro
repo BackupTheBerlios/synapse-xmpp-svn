@@ -1,11 +1,11 @@
 TEMPLATE = lib
-CONFIG += staticlib debug
+CONFIG += staticlib release
 TARGET = jrtp
-INCLUDEPATH += . ../voip/ ../libjingle.new/libjingle/
+INCLUDEPATH += . ../voip/
 
 win32:DEFINES += WIN32
-win32:QMAKE_CFLAGS	+= -GR -GX -DWIN32
-win32:QMAKE_CXXFLAGS	+= -GR -GX -DWIN32
+win32:QMAKE_CFLAGS	+= -DWIN32
+win32:QMAKE_CXXFLAGS	+= -DWIN32
 
 unix:{
         MOC_DIR        = .moc
@@ -96,6 +96,7 @@ SOURCES += rtcpapppacket.cpp \
            rtpsessionsources.cpp \
            rtpsourcedata.cpp \
            rtpsources.cpp \
+	     rtptimeutilities.cpp \
            rtpudpv4transmitter.cpp \
            rtpudpv6transmitter.cpp
 #           synapsetransmitter.cpp 

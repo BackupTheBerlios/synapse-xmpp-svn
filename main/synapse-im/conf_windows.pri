@@ -3,6 +3,7 @@ CONFIG += release
 CONFIG += qca-static
 DEFINES += HAVE_SNARL
 CONFIG += whiteboarding
+CONFIG += jingle google_voice
 QT += sql
 
 # OpenSSL

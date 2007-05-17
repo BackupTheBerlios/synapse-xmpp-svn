@@ -147,20 +147,19 @@ typedef struct PaWMMEStreamData
     int                framesPerHostBuffer;
     int                userBuffersPerHostBuffer;
     CRITICAL_SECTION   streamLock;                  /* Mutext to prevent threads from colliding. */
-    INT                streamLockInited;
-#if PA_USE_TIMER_CALLBACK
-    BOOL               ifInsideCallback;            /* Test for reentrancy. */
-    MMRESULT           timerID;
-#else
-    Qt::HANDLE             abortEvent;
+    int                streamLockInited;
+//#if PA_USE_TIMER_CALLBACK
+//    BOOL               ifInsideCallback;            /* Test for reentrancy. */
+//    MMRESULT           timerID;
+//#else
+    HANDLE             abortEvent;
     int                abortEventInited;
-    Qt::HANDLE             bufferEvent;
+    HANDLE             bufferEvent;
     int                bufferEventInited;
-    Qt::HANDLE             engineThread;
+    HANDLE             engineThread;
     DWORD              engineThreadID;
-#endif
-}
-PaWMMEStreamData;
+//#endif
+} PaWMMEStreamData;
 /************************************************* Shared Data ********/
 /* FIXME - put Mutex around this shared data. */
 static int sNumInputDevices = 0;

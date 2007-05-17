@@ -6,10 +6,7 @@
 #include <stdlib.h> 
 #include <string.h>
 
-//#include <qmutex.h>
-#ifdef POSIX
-#include <pthread.h>
-#endif
+#include <qmutex.h>
 
 class RingBuffer::Private {
 public:
@@ -19,17 +16,12 @@ public:
     int curIndex; // current buffer index
     int size;     // current data size
 
-#ifdef POSIX
-    pthread_mutex_t mutex;
-#endif
+    QMutex mutex;
 };
 
 RingBuffer::RingBuffer( int size )
 {
     d = new Private;
-#ifdef POSIX
-    pthread_mutex_init( &d->mutex, NULL);
-#endif
     d->data = (char*)malloc(size);
     d->ringSize = size;
 
@@ -96,16 +88,12 @@ void RingBuffer::clear()
 
 void RingBuffer::lock()
 {
-#ifdef POSIX
-    pthread_mutex_lock(&d->mutex);
-#endif
+    d->mutex.lock();
 }
 
 void RingBuffer::unlock()
 {
-#ifdef POSIX
-    pthread_mutex_unlock(&d->mutex);
-#endif
+    d->mutex.unlock();
 }
 
 

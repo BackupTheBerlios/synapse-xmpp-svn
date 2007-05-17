@@ -87,26 +87,8 @@ jingle {
 
 #	JINGLE_CPP = $$PWD/../third-party/libjingle.new/libjingle
 #	LIBS += -L$$JINGLE_CPP -ljingle_psi -ljingle_xmpp_psi -L$$PWD/../third-party/jrtplib -ljrtp
-	LIBS += -L$$PWD/../third-party/jrtplib -ljrtp
-	INCLUDEPATH += $$JINGLE_CPP $$PWD/../third-party/jrtplib
-        include(../third-party/voip/voip.pri)
-
-	contains(DEFINES, HAVE_PORTAUDIO) {
-		LIBS += -lportaudio
-#		LIBS += -framework CoreAudio -framework AudioToolbox
-	}
-}
-
-dbus {
-	HEADERS += \
-		$$PWD/dbus.h
-
-	SOURCES += \
-		$$PWD/dbus.cpp
-}
-
-# include Iris XMPP library
-include($$PWD/../iris/iris.pri)
+	unix:LIBS += -L$$PWD/../third-party/jrtplib -ljrtp
+	windows:LIBS += $$PWD/../third-party/jrtplib/release/libjrtp.a
 
 	HEADERS += $$PWD/jingle/jinglesessionmanager.h \
 		   $$PWD/jingle/jinglevoicesession.h \
@@ -123,6 +105,27 @@ include($$PWD/../iris/iris.pri)
 
 	INCLUDEPATH += $$PWD/jingle
 
+
+
+	INCLUDEPATH += $$JINGLE_CPP $$PWD/../third-party/jrtplib
+        include(../third-party/voip/voip.pri)
+
+#	contains(DEFINES, HAVE_PORTAUDIO) {
+#		LIBS += -lportaudio
+#		LIBS += -framework CoreAudio -framework AudioToolbox
+#	}
+}
+
+dbus {
+	HEADERS += \
+		$$PWD/dbus.h
+
+	SOURCES += \
+		$$PWD/dbus.cpp
+}
+
+# include Iris XMPP library
+include($$PWD/../iris/iris.pri)
 
 # Header files
 HEADERS += \
