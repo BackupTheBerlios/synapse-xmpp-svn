@@ -67,6 +67,21 @@
 #include <QAbstractTextDocumentLayout>
 #include "psirichtext.h"
 
+static inline int rankStatus(int status) 
+{
+	switch (status) {
+		case STATUS_CHAT : return 0;
+		case STATUS_ONLINE : return 1;
+		case STATUS_AWAY : return 2;
+		case STATUS_XA : return 3;
+		case STATUS_DND : return 4;
+		case STATUS_INVISIBLE: return 5;
+		default:
+			return 6;
+	}
+	return 0;
+}
+
 static bool caseInsensitiveLessThan(const QString &s1, const QString &s2)
 {
 	return s1.toLower() < s2.toLower();
@@ -3787,35 +3802,27 @@ int ContactViewItem::rankGroup(int groupType) const
 	return n;
 }
 
-int ContactViewItem::rankStatus(int status) const
-{
-	static int rankstatuses[7] = {
-		STATUS_CHAT,
-		STATUS_ONLINE,
-		STATUS_AWAY,
-		STATUS_XA,
-		STATUS_DND,
-		STATUS_INVISIBLE,
-		STATUS_OFFLINE,
-	};
-
-	int n;
-	for(n = 0; n < (int)sizeof(rankstatuses); ++n) {
-		if(rankstatuses[n] == status)
-			break;
-	}
-	if(n == sizeof(rankstatuses))
-		return sizeof(rankstatuses)-1;
-
-	return n;
-}
-
 int ContactViewItem::compare(Q3ListViewItem *lvi, int, bool) const
 {
 	ContactViewItem *i = (ContactViewItem *)lvi;
 	int ret = 0;
 
-	if(type_ == Group || type_ == Profile) {
+	if(type_ == Contact || type_ == Meta) {
+		// contacts always go before groups
+		if(i->type() == Group)
+			ret = -1;
+		else {
+			if ( option.rosterContactSortStyle == Options::ContactSortStyle_Status ) {
+				ret = rankStatus(d->status) - rankStatus(i->status());
+				if(ret == 0)
+					ret = text(0).lower().localeAwareCompare(i->text(0).lower());
+			}
+			else { // ContactSortStyle_Alpha
+				ret = text(0).lower().localeAwareCompare(i->text(0).lower());
+			}
+		}
+	}
+	else if(type_ == Group || type_ == Profile) {
 		// contacts always go before groups
 		if(i->type() == Contact)
 			ret = 1;
@@ -3841,21 +3848,6 @@ int ContactViewItem::compare(Q3ListViewItem *lvi, int, bool) const
 			}
 			else // AccountSortStyle_Alpha
 				ret = text(0).lower().localeAwareCompare(i->text(0).lower());
-		}
-	}
-	else if(type_ == Contact || type_ == Meta) {
-		// contacts always go before groups
-		if(i->type() == Group)
-			ret = -1;
-		else {
-			if ( option.rosterContactSortStyle == Options::ContactSortStyle_Status ) {
-				ret = rankStatus(d->status) - rankStatus(i->status());
-				if(ret == 0)
-					ret = text(0).lower().localeAwareCompare(i->text(0).lower());
-			}
-			else { // ContactSortStyle_Alpha
-				ret = text(0).lower().localeAwareCompare(i->text(0).lower());
-			}
 		}
 	}
 
@@ -4260,10 +4252,10 @@ void ContactViewItem::optionsUpdate()
 
 void ContactViewItem::setContact(UserListItem *u)
 {
-	//int oldStatus = d->status;
+	int oldStatus = d->status;
 	QString oldName = text(0);
 	setJid(u->jid());
-	//bool wasAgent = d->isAgent;
+	bool wasAgent = d->isAgent;
 
 	QString newName = JIDUtil::nickOrJid(u->name(),u->jid().full());
 
@@ -4271,10 +4263,10 @@ void ContactViewItem::setContact(UserListItem *u)
 	cacheValues();
 
 	bool needUpdate = false;
-	//if(d->status != oldStatus || d->isAgent != wasAgent || !u->presenceError().isEmpty()) {
+	if(d->status != oldStatus || d->isAgent != wasAgent || !u->presenceError().isEmpty()) {
 		resetStatus();
 		needUpdate = true;
-	//}
+	}
 	if(newName != oldName) {
 		resetName();
 		needUpdate = true;
