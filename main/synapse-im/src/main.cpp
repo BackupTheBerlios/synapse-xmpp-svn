@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
 	// Initialize QCA
 	QCA::setProperty("pgp-always-trust", true);
 	QCA::KeyStoreManager keystoremgr;
-	keystoremgr.start();
+	QCA::KeyStoreManager::start();
 	keystoremgr.waitForBusyFinished(); // FIXME get rid of this
 
 #ifdef Q_WS_MAC

@@ -25,6 +25,7 @@ public:
 	
 public slots:
 	void onGo();
+	void parseResult();
 	
 signals:
 	void otrChanged(const XMPP::Jid& jid);
@@ -32,6 +33,7 @@ signals:
 private:
 	Jid receiver_;
 	OtrList *otrList;
+	QDomElement result;
 };
 
 JT_GArchive::JT_GArchive(Task *t, const Jid& j): Task(t), receiver_(j)
@@ -60,28 +62,8 @@ bool JT_GArchive::take(const QDomElement &e)
 	
 		if(e.attribute("type") == "result")
 		{
-			bool found;
-			QDomElement otr = findSubTag(e, "arc:otr", &found);
-			if(found)
-			{
-				for(QDomNode n = otr.firstChild(); !n.isNull(); n = n.nextSibling())
-				{
-					QDomElement a = n.toElement();
-					if(a.isNull())
-						continue;
-					if(a.tagName() == "arc::record")
-						otrList->setOn(a.attribute("jid"), (a.attribute("otr")=="false") ? false : true);
-				}
-			}
-			QDomElement save = findSubTag(e, "save", &found);
-			if(found && (save.attribute("xmlns") == "http://jabber.org/protocol/archive"))
-			{
-				QDomElement def = findSubTag(save, "default", &found);
-				if(found)
-				{
-					saveChanged((def.attribute("save") == "true"));
-				}
-			}
+			result = e;
+			QTimer::singleShot(5, this, SLOT(parseResult()));
 			setSuccess();
 			return true;
 		}
@@ -144,6 +126,32 @@ bool JT_GArchive::take(const QDomElement &e)
 		}
 	}
 	return false;
+}
+
+void JT_GArchive::parseResult()
+{
+	bool found;
+	QDomElement otr = findSubTag(result, "arc:otr", &found);
+	if(found)
+	{
+		for(QDomNode n = otr.firstChild(); !n.isNull(); n = n.nextSibling())
+		{
+			QDomElement a = n.toElement();
+			if(a.isNull())
+				continue;
+			if(a.tagName() == "arc::record")
+				otrList->setOn(a.attribute("jid"), (a.attribute("otr")=="false") ? false : true);
+		}
+	}
+	QDomElement save = findSubTag(result, "save", &found);
+	if(found && (save.attribute("xmlns") == "http://jabber.org/protocol/archive"))
+	{
+		QDomElement def = findSubTag(save, "default", &found);
+		if(found)
+		{
+			saveChanged((def.attribute("save") == "true"));
+		}
+	}
 }
 
 bool JT_GArchive::isOtrOn(const Jid& jid)

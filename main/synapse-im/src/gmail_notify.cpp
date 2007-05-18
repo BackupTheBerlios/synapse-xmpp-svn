@@ -30,12 +30,16 @@ public:
 
 public slots:	
 	void onGo();
+	void parseRespond();
+
 private:
 	Jid receiver_;
 	Message message_;
 	int count_;
 	QTimer *timer_;
 	
+	QDomElement respond;
+
 	bool newMail_;
 	bool error_;
 	bool inProgress_;
@@ -73,38 +77,8 @@ bool JT_GMailNotify::take(const QDomElement& e)
 	
 	if((e.attribute("type") == "result") || (e.attribute("type") == "set"))
 	{
-		error_ = false;
-		QDomElement mailbox = findSubTag(e, "mailbox", &found);
-		if(found && inProgress_)
-		{
-			QString info;
-			info = "";
-			count_ = 0;
-			for(QDomNode n = mailbox.firstChild(); !n.isNull(); n = n.nextSibling())
-			{
-				info = info + parse(n.toElement()) + "--------------\n";
-				count_++;
-			}
-			if(!info.isEmpty())
-			{
-//				Message m;
-				XMPP::Jid tmp_jid(receiver_.domain());
-				message_.setFrom(tmp_jid);
-				message_.setSubject(tr("New mail"));
-				message_.setBody(info);
-//				message_ = m;
-				newMail_ = true;
-			} else {
-				count_ = 0;
-				newMail_ = false;
-			}
-			inProgress_ = false;
-			emit finished();
-		} else {
-			QDomElement new_mail = findSubTag(e, "new-mail", &found);
-			if(found && !inProgress_)
-				onGo();
-		}
+		respond = e;
+		QTimer::singleShot(5, this, SLOT(parseRespond()));
 		setSuccess();
 		return true;
 	} else {
@@ -115,6 +89,43 @@ bool JT_GMailNotify::take(const QDomElement& e)
 			timer_->start(10000);
 		}
 		return false;
+	}
+}
+
+void JT_GMailNotify::parseRespond()
+{
+	bool found;
+	error_ = false;
+	QDomElement mailbox = findSubTag(respond, "mailbox", &found);
+	if(found && inProgress_)
+	{
+		QString info;
+		info = "";
+		count_ = 0;
+		for(QDomNode n = mailbox.firstChild(); !n.isNull(); n = n.nextSibling())
+		{
+			info = info + parse(n.toElement()) + "--------------\n";
+			count_++;
+		}
+		if(!info.isEmpty())
+		{
+//			Message m;
+			XMPP::Jid tmp_jid(receiver_.domain());
+			message_.setFrom(tmp_jid);
+			message_.setSubject(tr("New mail"));
+			message_.setBody(info);
+//			message_ = m;
+			newMail_ = true;
+		} else {
+			count_ = 0;
+			newMail_ = false;
+		}
+		inProgress_ = false;
+		emit finished();
+	} else {
+		QDomElement new_mail = findSubTag(respond, "new-mail", &found);
+		if(found && !inProgress_)
+			onGo();
 	}
 }
 
