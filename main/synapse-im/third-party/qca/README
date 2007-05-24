@@ -1,0 +1,50 @@
+Qt Cryptographic Architecture (QCA)
+-----------------------------------
+
+Author: Justin Karneges <justin@affinix.com>
+
+
+About QCA
+---------
+This library provides an easy API for a range of cryptographic
+features, including SSL/TLS, X.509 certificates, SASL, symmetric
+ciphers, public key ciphers, hashes and much more.
+
+Functionality is supplied via plugins.  This is useful for avoiding
+dependence on a particular crypto library and makes upgrading easier,
+as there is no need to recompile your application when adding or
+upgrading a crypto plugin.  Also, by pushing crypto functionality into
+plugins, your application is free of legal issues, such as export
+regulation.
+
+
+Building from a Source package
+------------------------------
+
+See the 'INSTALL' file.
+
+
+Building from CVS/SVN
+---------------------
+
+First, install the 'qconf' program, at least version 1.3.  You can download
+the source here:
+  http://delta.affinix.com/qconf/
+
+Then, go into the QCA source tree and type 'qconf'.  You should now have a
+configure script to execute.
+
+When you execute that script, you should see something like the following:
+
+     Configuring Qt Cryptographic Architecture (QCA) ...
+     Verifying Qt 4 build environment ... ok
+     Checking for certstore ... using bundled
+
+     Good, your configure finished.  Now run /usr/bin/gmake.
+
+If so, you can just run (g)make to build QCA. If not, have a look at
+conf.log to see what might have gone wrong.
+
+
+You will also need to build appropriate plugins to get support for
+many of the QCA features.

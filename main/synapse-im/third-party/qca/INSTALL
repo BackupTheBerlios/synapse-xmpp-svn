@@ -1,0 +1,19 @@
+Installing QCA
+--------------
+
+For Unix/Linux/Mac:
+
+  ./configure
+  make
+  make install
+
+For Windows:
+
+  configwin rd
+  qmake
+  nmake (or make)
+  installwin
+
+
+Please report problems to:
+  delta@lists.affinix.com
