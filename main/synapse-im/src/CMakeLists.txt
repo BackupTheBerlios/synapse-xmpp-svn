@@ -59,6 +59,25 @@ set(dbus_H
 )
 endif(QT_QTDBUS_FOUND)
 
+#Whiteboarding
+if(QT_QTSVG_FOUND)
+ADD_DEFINITIONS(-DWHITEBOARDING)
+set(wb_SRCS
+        wbmanager.cpp
+	wbdlg.cpp
+        wbwidget.cpp
+	wbscene.cpp
+        wbitems.cpp
+)
+set(wb_H
+        wbmanager.h
+	wbdlg.h
+        wbwidget.h
+	wbscene.h
+        wbitems.h
+)
+endif(QT_QTSVG_FOUND)
+
 # JINGLE
 if(SPEEX_FOUND)
 include(jingle/CMakeLists.txt)
@@ -70,6 +89,7 @@ endif(SPEEX_FOUND)
 
 set(synapse-im_SRCS
 	${dbus_SRCS}
+	${wb_SRCS}
 	main.cpp
 	varlist.cpp
 	jidutil.cpp
@@ -194,6 +214,7 @@ set(synapse-im_SRCS
 
 set(synapse-im_H
 	${dbus_H}
+	${wb_H}
 	aboutdlg.h
 	accountadddlg.h
 	accountlabel.h

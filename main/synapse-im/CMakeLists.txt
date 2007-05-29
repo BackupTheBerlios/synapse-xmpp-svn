@@ -1,6 +1,11 @@
-project(synapse-im)
+#project(synapse-im)
 
 #set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_COLOR_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
+set(CMAKE_CXX_FLAGS "-Os -pipe -w")
+
+set(CMAKE_INSTALL_PREFIX "/usr")
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
@@ -13,6 +18,8 @@ set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib CACHE STRING "Directory where li
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 cmake_minimum_required(VERSION 2.4.0)
+
+project(synapse-im)
 
 find_package(Qt4 REQUIRED)
 
@@ -30,13 +37,10 @@ if(OPENSSL_FOUND)
 endif(OPENSSL_FOUND)
 
 find_package(Sasl2 REQUIRED)
-if(SASL2_FOUND)
-#    ADD_DEFINITION(-DHAVE)
-    MESSAGE(STATUS "Found SASL2")
-endif(SASL2_FOUND)
 
 if(QT_QTDBUS_FOUND)
     MESSAGE(STATUS "Found DBus support in Qt4 -> enabling DBus support")
+    ADD_DEFINITIONS(-DWHITEBOARDING)
 else(QT_QTDBUS_FOUND)
     MESSAGE(STATUS "No DBus support in Qt4 -> disabling DBus support")
 endif(QT_QTDBUS_FOUND)

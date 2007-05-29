@@ -111,10 +111,10 @@ signals:
 	void actionHistory(const Jid &);
 	void actionOpenChat(const Jid &);
 	void actionOpenChatSpecific(const Jid &);
-#ifdef WHITEBOARDING
+//#ifdef WHITEBOARDING -- Need to be fixed
 	void actionOpenWhiteboard(const Jid &);
 	void actionOpenWhiteboardSpecific(const Jid &);
-#endif
+//#endif
 	void actionAgentSetStatus(const Jid &, Status &);
 	void actionInfo(const Jid &);
 	void actionAuth(const Jid &);
