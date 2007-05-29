@@ -46,6 +46,7 @@
 #include "profiles.h"
 #include "xmpp_tasks.h"
 #include "xmpp_xmlcommon.h"
+#include "pongserver.h"
 #include "s5b.h"
 #include "filetransfer.h"
 #include "pgpkeydlg.h"
@@ -577,6 +578,9 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	d->serverInfoManager = new ServerInfoManager(d->client);
 	connect(d->serverInfoManager,SIGNAL(featuresChanged()),SLOT(serverFeaturesChanged()));
 	
+	// XMPP Ping
+	new PongServer(d->client->rootTask());
+
 	// Initialize PubSub stuff
 	d->pepManager = new PEPManager(d->client, d->serverInfoManager);
 	connect(d->pepManager,SIGNAL(itemPublished(const Jid&, const QString&, const PubSubItem&)),SLOT(itemPublished(const Jid&, const QString&, const PubSubItem&)));

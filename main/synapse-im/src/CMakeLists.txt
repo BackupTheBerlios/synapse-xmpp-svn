@@ -178,6 +178,7 @@ set(synapse-im_SRCS
 	ahcformdlg.cpp
 	ahcexecutetask.cpp
  	ahcservermanager.cpp
+	pongserver.cpp
 	serverlistquerier.cpp
 	psioptions.cpp
 	voicecalldlg.cpp
@@ -251,6 +252,7 @@ set(synapse-im_H
 	psievent.h
 	psioptions.h
 	psipopup.h
+	pongserver.h
 	psitoolbar.h
 	psitrayicon.h
 	registrationdlg.h
