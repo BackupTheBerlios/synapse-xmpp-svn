@@ -1,0 +1,135 @@
+<ui version="4.0" >
+ <class>OptAntiEvil</class>
+ <widget class="QWidget" name="OptAntiEvil" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>295</width>
+    <height>255</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>OptAntiEvil</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <property name="margin" >
+    <number>9</number>
+   </property>
+   <property name="spacing" >
+    <number>6</number>
+   </property>
+   <item>
+    <widget class="QCheckBox" name="ck_enable" >
+     <property name="text" >
+      <string>Protect me from evil</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3" >
+     <property name="title" >
+      <string>Stats</string>
+     </property>
+     <layout class="QGridLayout" >
+      <property name="margin" >
+       <number>9</number>
+      </property>
+      <property name="spacing" >
+       <number>6</number>
+      </property>
+      <item row="1" column="1" >
+       <widget class="QLabel" name="lb_statsBlocked" >
+        <property name="text" >
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLabel" name="lb_statsScanned" >
+        <property name="text" >
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_14" >
+        <property name="text" >
+         <string>Evil stanzas blocked:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label_13" >
+        <property name="text" >
+         <string>Stanzas scanned:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2" >
+     <property name="title" >
+      <string>Last evil stanza</string>
+     </property>
+     <layout class="QGridLayout" >
+      <property name="margin" >
+       <number>9</number>
+      </property>
+      <property name="spacing" >
+       <number>6</number>
+      </property>
+      <item row="1" column="1" >
+       <widget class="QLabel" name="lb_lastTime" >
+        <property name="text" >
+         <string>-</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLabel" name="lb_lastFrom" >
+        <property name="text" >
+         <string>-</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="label_8" >
+        <property name="text" >
+         <string>Time:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" >
+       <widget class="QLabel" name="label_7" >
+        <property name="text" >
+         <string>From:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>ck_enable</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

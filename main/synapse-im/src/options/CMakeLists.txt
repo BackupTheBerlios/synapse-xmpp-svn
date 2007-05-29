@@ -35,7 +35,7 @@ set(options_SRCS
 	options/opt_toolbars.cpp
 	options/opt_advanced.cpp
 	options/opt_shortcuts.cpp
-
+	options/opt_antievil.cpp
 )
 
 set(options_H
@@ -52,6 +52,7 @@ set(options_H
 	options/opt_toolbars.h
 	options/opt_advanced.h
 	options/opt_shortcuts.h
+	options/opt_antievil.h
 )
 
 set(options_UIS
@@ -71,6 +72,7 @@ set(options_UIS
 	options/opt_iconset_roster.ui
 	options/opt_general_groupchat.ui
 	options/opt_shortcuts.ui
+	options/opt_antievil.ui
 )
 
 MY_AUTOMOC(options_SRCS)

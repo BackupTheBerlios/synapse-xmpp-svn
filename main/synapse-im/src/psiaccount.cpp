@@ -122,6 +122,8 @@
 #include "pluginmanager.h"
 #endif
 
+#include "antievil.h"
+
 #include <QtCrypto>
 
 #if defined(Q_WS_MAC) && defined(HAVE_GROWL)
@@ -531,6 +533,9 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	// Caps manager
 	d->capsManager = new CapsManager(d->client);
 	d->capsManager->setEnabled(option.useCaps);
+
+	//AntiEvil
+	new AntiEvil(d->client->rootTask());
 
 	// Roster item exchange task
 	d->rosterItemExchangeTask = new RosterItemExchangeTask(d->client->rootTask());

@@ -35,6 +35,8 @@
 #include "opt_plugins.h"
 #endif
 
+#include "opt_antievil.h"
+
 //----------------------------------------------------------------------------
 // FancyItem
 //----------------------------------------------------------------------------
@@ -328,6 +330,7 @@ void OptionsDlg::Private::createTabs()
 #endif
 	tabs.append( new OptionsTabShortcuts(this) );
 	tabs.append( new OptionsTabAdvanced(this) );
+	tabs.append( new OptionsTabAntiEvil(this) );
 
 	// tabs - general
 	/*tabs.append( new OptionsTabGeneralRoster(this) );

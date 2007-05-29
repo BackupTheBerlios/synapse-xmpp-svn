@@ -189,6 +189,7 @@ set(synapse-im_SRCS
 	psicontactlist.cpp
 	psicon.cpp
 	psiaccount.cpp
+	antievil.cpp
 )
 
 set(synapse-im_H
@@ -205,6 +206,7 @@ set(synapse-im_H
 	ahcommanddlg.h
 	alertable.h
 	alerticon.h
+	antievil.h
 	avatars.h
 	bookmarkmanager.h
 	capsmanager.h

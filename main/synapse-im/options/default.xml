@@ -50,6 +50,9 @@
 		<pgp comment="PGP encryption options">
 			<enable comment="Enable PGP globally" type="bool">true</enable>
 		</pgp>
+		<anti-evil comment="Anti-evil protection">
+			<enable comment="Enable AntiEvil scanner" type="bool">true</enable>
+		</anti-evil>
 		<ui comment="User interface options">
 			<account comment="Account options">
 				<data-proxy comment="Allow changing the data transfer proxy" type="bool">true</data-proxy>
