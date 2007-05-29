@@ -18,7 +18,7 @@
  */
 
 #include <QTimer>
-#include <qplatformdefs.h>
+//#include <qplatformdefs.h>
 
 #include "safedelete.h"
 #include "xmpp_task.h"
@@ -220,7 +220,7 @@ void Task::clientDisconnected()
 
 void Task::debug(const char *fmt, ...)
 {
-	char *buf;
+/*	char *buf;
 	QString str;
 	int size = 1024;
 	int r;
@@ -240,7 +240,7 @@ void Task::debug(const char *fmt, ...)
 		size *= 2;
 	} while(r == -1);
 
-	debug(str);
+	debug(str);*/
 }
 
 void Task::debug(const QString &str)

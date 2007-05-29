@@ -10,7 +10,7 @@ set(PKGCONFIG_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}/pkgconfig
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" )
 
-find_package(Qt4 REQUIRED)
+#find_package(Qt4 REQUIRED)
 
 if (APPLE)
    find_package(Carbon REQUIRED)
@@ -40,11 +40,11 @@ SET(qca_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 SET(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib${LIB_SUFFIX}" )
 
 set(qca_PLUGINSDIR "${QT_PLUGINS_DIR}/crypto/")
-MESSAGE(STATUS "Plugins will be installed to " ${qca_PLUGINSDIR})
+#MESSAGE(STATUS "Plugins will be installed to " ${qca_PLUGINSDIR})
 
 include(QcaMacro)
 
-MESSAGE(STATUS "Checking for certstore..")
+#MESSAGE(STATUS "Checking for certstore..")
 # fixme add OR mac
 IF( WIN32 )
 # USE BUILTIN
@@ -62,6 +62,7 @@ ELSE ( WIN32 )
       "/usr/share/ssl/certs/ca-bundle.crt"
       "/etc/pki/tls/cert.pem"
       "/usr/share/curl/curl-ca-bundle.crt"
+      "/etc/ssl/certs/ca-certificates.crt"
     )
     FOREACH (_current_try ${toTry})
       IF(EXISTS ${_current_try})
@@ -71,16 +72,16 @@ ELSE ( WIN32 )
   ENDIF( ENV{QC_CERTSTORE_PATH} )
 ENDIF(WIN32)
 
-IF (qca_CERTSTORE)
-  MESSAGE(STATUS "Found system certstore")
-ELSE (qca_CERTSTORE)
+#IF (qca_CERTSTORE)
+#  MESSAGE(STATUS "Found system certstore")
+IF (!qca_CERTSTORE)
   MESSAGE(STATUS "Using built in certstore.")
   SET( qca_CERTSTORE "${CMAKE_CURRENT_SOURCE_DIR}/certs/rootcerts.pem")
   # note that INSTALL_FILES targets are relative to the current installation prefix...
   INSTALL_FILES( "/certs" FILES "${CMAKE_CURRENT_SOURCE_DIR}/certs/rootcerts.pem" )
-ENDIF (qca_CERTSTORE)
-MESSAGE(STATUS "certstore path: " ${qca_CERTSTORE})
+ENDIF (!qca_CERTSTORE)
 ADD_DEFINITIONS( -DQCA_SYSTEMSTORE_PATH="\\\"${qca_CERTSTORE}\\\"" )
+  MESSAGE(STATUS "certstore path: " ${qca_CERTSTORE})
 
 
 SET( private_HEADERS ${qca_INCLUDEDIR}/QtCrypto/qca_plugin.h ${qca_INCLUDEDIR}/QtCrypto/qca_systemstore.h )

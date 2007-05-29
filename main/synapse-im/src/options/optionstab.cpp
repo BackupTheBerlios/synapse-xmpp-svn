@@ -1,6 +1,7 @@
 #include "optionstab.h"
 #include "iconset.h"
 
+#include <QObject>
 #include <qtabwidget.h>
 #include <qlayout.h>
 #include <qmap.h>

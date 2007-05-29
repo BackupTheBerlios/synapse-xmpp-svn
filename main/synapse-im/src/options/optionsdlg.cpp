@@ -6,6 +6,7 @@
 #include "iconset.h"
 #include "iconwidget.h"
 
+#include <QObject>
 #include <qlayout.h>
 #include <qlabel.h>
 #include <q3listview.h>

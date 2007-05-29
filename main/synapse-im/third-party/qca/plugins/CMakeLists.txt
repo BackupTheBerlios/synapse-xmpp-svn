@@ -1,0 +1,48 @@
+
+#FIND_PACKAGE(OpenSSL)
+#find_package(Sasl2)
+#FIND_PACKAGE(Nss)
+#FIND_PACKAGE(Pkcs11Helper)
+#FIND_PACKAGE(LibGcrypt)
+#FIND_PACKAGE(Botan)
+
+ADD_SUBDIRECTORY(qca-logger)
+
+IF (OPENSSL_FOUND)
+  ADD_SUBDIRECTORY(qca-openssl)
+#  MESSAGE(STATUS "OpenSSL plugin enabled")
+ENDIF(OPENSSL_FOUND)
+
+IF (OPENSSL_FOUND AND PKCS11H_FOUND)
+  ADD_SUBDIRECTORY(qca-pkcs11)
+  MESSAGE(STATUS "PKCS#11 plugin enabled")
+ENDIF (OPENSSL_FOUND AND PKCS11H_FOUND)
+
+FIND_PROGRAM(QCA_GPG_EXECUTABLE NAMES gpg)
+
+IF ( QCA_GPG_EXECUTABLE )
+#  MESSAGE(STATUS "GnuPG plugin enabled")
+  ADD_SUBDIRECTORY(qca-gnupg)
+ENDIF ( QCA_GPG_EXECUTABLE )
+
+if(SASL2_FOUND)
+#  MESSAGE(STATUS "SASL2 plugin enabled")
+  add_subdirectory(qca-cyrus-sasl)
+endif(SASL2_FOUND)
+
+if(BOTAN_FOUND)
+  MESSAGE(STATUS "Botan plugin enabled")
+  ADD_SUBDIRECTORY(qca-botan)
+endif(BOTAN_FOUND)	
+
+if(LIBGCRYPT_FOUND)
+	MESSAGE(STATUS "libgcrypt plugin enabled")
+	ADD_SUBDIRECTORY(qca-gcrypt)
+endif(LIBGCRYPT_FOUND)
+
+if(NSS_FOUND)
+	MESSAGE(STATUS "NSS plugin enabled")
+	ADD_SUBDIRECTORY(qca-nss)
+endif(NSS_FOUND)	
+
+

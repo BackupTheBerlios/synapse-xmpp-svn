@@ -1,0 +1,15 @@
+include_directories(
+../iris
+../iris/include
+../iris/xmpp-core
+../iris/xmpp-im
+../iris/jabber
+../iris/libidn
+)
+
+#if (irisnet)
+#    include(../iris/irisnet/CMakeLists.txt)
+#endif (irisnet)
+
+#include(../cutestuff/CMakeLists.txt)
+

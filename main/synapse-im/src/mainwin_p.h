@@ -19,7 +19,7 @@
  */
 
 #ifndef MAINWIN_P_H
-
+#define MAINWIN_P_H
 #include <QPushButton>
 #include <QToolButton>
 #include <QMenu>

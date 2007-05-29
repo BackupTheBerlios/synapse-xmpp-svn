@@ -263,4 +263,4 @@ void HistoryDlg::doExport()
 	}
 }
 
-#include "moc_historydlg.cpp"
+//#include "moc_historydlg.cpp"
