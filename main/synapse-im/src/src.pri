@@ -204,6 +204,8 @@ HEADERS += \
 	$$PWD/xdata_widget.h \
 	$$PWD/statuspreset.h \
 	$$PWD/lastactivitytask.h \
+	$$PWD/entitytimetask.h \
+	$$PWD/timeserver.h \
 	$$PWD/mucmanager.h \
 	$$PWD/mucjoindlg.h \
 	$$PWD/mucconfigdlg.h \
@@ -321,6 +323,8 @@ SOURCES += \
 	$$PWD/psiactionlist.cpp \
 	$$PWD/xdata_widget.cpp \
 	$$PWD/lastactivitytask.cpp \
+	$$PWD/entitytimetask.cpp \
+	$$PWD/timeserver.cpp \
 	$$PWD/statuspreset.cpp \
 	$$PWD/mucmanager.cpp \
 	$$PWD/mucjoindlg.cpp \

@@ -37,7 +37,7 @@ SystemInfo::SystemInfo() : QObject(QCoreApplication::instance())
 		if(s.at(0) == '+')
 			s.remove(0,1);
 		s.truncate(s.length()-2);
-		timezone_offset_ = s.toInt();
+		timezone_offset_ = s.toInt() * 60;	// FIX-ME: should really read the offset in minutes
 	}
 	strcpy(fmt, "%Z");
 	strftime(str, 256, fmt, localtime(&x));
@@ -144,14 +144,12 @@ SystemInfo::SystemInfo() : QObject(QCoreApplication::instance())
 
 #if defined(Q_WS_WIN)
 	TIME_ZONE_INFORMATION i;
-	//GetTimeZoneInformation(&i);
-	//timezone_offset_ = (-i.Bias) / 60;
 	memset(&i, 0, sizeof(i));
 	bool inDST = (GetTimeZoneInformation(&i) == TIME_ZONE_ID_DAYLIGHT);
 	int bias = i.Bias;
 	if(inDST)
 		bias += i.DaylightBias;
-	timezone_offset_ = (-bias) / 60;
+	timezone_offset_ = -bias;
 	timezone_str_ = "";
 	for(int n = 0; n < 32; ++n) {
 		int w = inDST ? i.DaylightName[n] : i.StandardName[n];
@@ -192,3 +190,13 @@ SystemInfo* SystemInfo::instance()
 }
 
 SystemInfo* SystemInfo::instance_ = NULL;
+
+/**
+ * \fn int SystemInfo::timezoneOffset()
+ * \brief Local timezone offset in minutes.
+ */
+
+/**
+ * \fn const QString& SystemInfo::timezoneString() const
+ * \brief Local timezone name.
+ */

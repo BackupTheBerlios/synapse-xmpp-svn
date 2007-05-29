@@ -115,6 +115,7 @@
 #include "certutil.h"
 #include "proxy.h"
 #include "psicontactlist.h"
+#include "timeserver.h"
 #include "gmail_notify.h"
 
 #ifdef PSI_PLUGINS
@@ -616,6 +617,9 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	file_timer = new QTimer(this, "file_timer");
 	connect(file_timer, SIGNAL(timeout()), this, SLOT(doFile()));
 	file_timer->start(3000);
+
+	// Time server
+	new TimeServer(d->client->rootTask());
 
 	// Initialize Adhoc Commands server
 	d->ahcManager = new AHCServerManager(this);

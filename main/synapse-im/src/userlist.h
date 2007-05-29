@@ -32,6 +32,7 @@
 #include "mood.h"
 #include "geolocation.h"
 #include "physicallocation.h"
+#include "maybe.h"
 #include "gmail_notify.h"
 
 class AvatarFactory;
@@ -54,6 +55,10 @@ public:
 	const QString& clientOS() const;
 	void setClient(const QString& name, const QString& version, const QString& os);
 
+	Maybe<int> timezoneOffset() const;
+	const QString& timezoneOffsetString() const;
+	void setTimezone(Maybe<int> tzo);
+
 	const QString & publicKeyID() const;
 	int pgpVerifyStatus() const;
 	QDateTime sigTimestamp() const;
@@ -70,6 +75,8 @@ public:
 
 private:
 	QString v_ver, v_clientName, v_clientVersion, v_clientOS, v_keyID;
+	Maybe<int> v_tzo;
+	QString v_tzoString;
 	QString v_tune;
 	GeoLocation v_geoLocation;
 	PhysicalLocation v_physicalLocation;

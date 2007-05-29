@@ -700,7 +700,7 @@ bool JT_PushPresence::take(const QDomElement &e)
 			if(i.hasAttribute("stamp")) {
 				QDateTime dt;
 				if(stamp2TS(i.attribute("stamp"), &dt))
-					dt = dt.addSecs(client()->timeZoneOffset() * 3600);
+					dt = dt.addSecs(client()->timeZoneOffset() * 60);
 				p.setTimeStamp(dt);
 			}
 		}

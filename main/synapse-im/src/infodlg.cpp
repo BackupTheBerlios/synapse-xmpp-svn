@@ -39,6 +39,7 @@
 #include "iconset.h"
 #include "common.h"
 #include "lastactivitytask.h"
+#include "entitytimetask.h"
 #include "vcardfactory.h"
 #include "iconwidget.h"
 #include "contactview.h"
@@ -119,7 +120,7 @@ InfoDlg::InfoDlg(int type, const Jid &j, const VCard &vcard, PsiAccount *pa, QWi
 	updateStatus();
 	foreach(UserListItem* u, d->pa->findRelevant(j)) {
 		foreach(UserResource r, u->userResourceList()) {
-			requestClientVersion(d->jid.withResource(r.name()));
+			requestResourceInfo(d->jid.withResource(r.name()));
 		}
 		if (u->userResourceList().isEmpty() && u->lastAvailable().isNull()) {
 			requestLastActivity();
@@ -580,13 +581,24 @@ void InfoDlg::setStatusVisibility(bool visible)
 	}
 }
 
-void InfoDlg::requestClientVersion(const Jid& j)
+/**
+ * \brief Requests per-resource information.
+ *
+ * Gets information about client version and time.
+ */
+void InfoDlg::requestResourceInfo(const Jid& j)
 {
 	d->infoRequested += j.full();
+
 	JT_ClientVersion *jcv = new JT_ClientVersion(d->pa->client()->rootTask());
 	connect(jcv, SIGNAL(finished()), SLOT(clientVersionFinished()));
 	jcv->get(j);
 	jcv->go(true);
+
+	EntityTimeTask *jet = new EntityTimeTask(d->pa->client()->rootTask());
+	connect(jet, SIGNAL(finished()), SLOT(entityTimeFinished()));
+	jet->get(j);
+	jet->go(true);
 }
 
 void InfoDlg::clientVersionFinished()
@@ -600,6 +612,23 @@ void InfoDlg::clientVersionFinished()
 				continue;
 
 			(*rit).setClient(j->name(),j->version(),j->os());
+			d->pa->contactProfile()->updateEntry(*u);
+			updateStatus();
+		}
+	}
+}
+
+void InfoDlg::entityTimeFinished()
+{
+	EntityTimeTask *j = (EntityTimeTask *)sender();
+	if(j->success()) {
+		foreach(UserListItem* u, d->pa->findRelevant(j->jid())) {
+			UserResourceList::Iterator rit = u->userResourceList().find(j->jid().resource());
+			bool found = (rit == u->userResourceList().end()) ? false: true;
+			if(!found)
+				continue;
+
+			(*rit).setTimezone(j->timezoneOffset());
 			d->pa->contactProfile()->updateEntry(*u);
 			updateStatus();
 		}
@@ -631,7 +660,7 @@ void InfoDlg::contactAvailable(const Jid &j, const Resource &r)
 {
 	if (d->jid.compare(j,false)) {
 		if (!d->infoRequested.contains(j.withResource(r.name()).full()))
-			requestClientVersion(j.withResource(r.name()));
+			requestResourceInfo(j.withResource(r.name()));
 	}
 }
 

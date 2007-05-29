@@ -142,6 +142,8 @@ set(synapse-im_SRCS
 	psiactionlist.cpp
 	xdata_widget.cpp
 	lastactivitytask.cpp
+	entitytimetask.cpp
+	timeserver.cpp
 	statuspreset.cpp
 	mucmanager.cpp
 	mucjoindlg.cpp
@@ -214,6 +216,7 @@ set(synapse-im_H
 	contactview.h
 	discodlg.h
 	eventdlg.h
+	entitytimetask.h
 	filetransdlg.h
 	garchive.h
 	gcuserview.h
@@ -266,6 +269,7 @@ set(synapse-im_H
 	statusdlg.h
 	tasklist.h
 	tabdlg.h
+	timeserver.h
 	tipdlg.h
 	translationmanager.h
 	vcardfactory.h

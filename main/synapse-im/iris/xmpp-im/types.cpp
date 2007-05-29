@@ -1781,7 +1781,7 @@ bool Message::fromStanza(const Stanza &s, int timeZoneOffset)
 	QDomElement t = root.elementsByTagNameNS("jabber:x:delay", "x").item(0).toElement();
 	if(!t.isNull()) {
 		d->timeStamp = stamp2TS(t.attribute("stamp"));
-		d->timeStamp = d->timeStamp.addSecs(timeZoneOffset * 3600);
+		d->timeStamp = d->timeStamp.addSecs(timeZoneOffset * 60);
 		d->spooled = true;
 	}
 	else {
