@@ -829,6 +829,7 @@ void ChatDlg::updatePEP()
 			tune = u->tune();
 	}
 	d->contactBox->updatePEP(&mood, &tune);
+	doFlash(false);
 }
 
 void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
@@ -956,6 +957,7 @@ void ChatDlg::updateContact(const Jid &jid, bool fromPresence)
 				setContactChatState(StatePaused);
 		}
 	}
+	doFlash(false);
 }
 
 void ChatDlg::doVoice()
