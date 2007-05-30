@@ -45,7 +45,7 @@ bool PongServer::take(const QDomElement &e)
 
 	bool found = false;
 	QDomElement ping = findSubTag(e, "ping", &found);
-	if (found && ping.attribute("xmlns") == "urn:xmpp:ping") {
+	if (found && ((ping.attribute("xmlns") == "urn:xmpp:ping") || (ping.attribute("xmlns") == "http://www.xmpp.org/extensions/xep-0199.html#ns")) {
 		QDomElement iq = createIQ(doc(), "result", e.attribute("from"), e.attribute("id"));
 		send(iq);
 		return true;

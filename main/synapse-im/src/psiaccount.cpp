@@ -503,6 +503,8 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	features << "http://jabber.org/protocol/commands";
 	features << "http://jabber.org/protocol/rosterx";
 	features << "http://jabber.org/protocol/muc";
+	features << "http://www.xmpp.org/extensions/xep-0199.html#ns";
+	features << "urn:xmpp:ping";
 	features << "jabber:x:data";
 	d->client->setFeatures(Features(features));
 
