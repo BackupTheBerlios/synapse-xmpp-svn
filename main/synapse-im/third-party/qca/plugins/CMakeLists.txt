@@ -7,6 +7,7 @@
 #FIND_PACKAGE(Botan)
 
 ADD_SUBDIRECTORY(qca-logger)
+ADD_SUBDIRECTORY(qca-softstore)
 
 IF (OPENSSL_FOUND)
   ADD_SUBDIRECTORY(qca-openssl)
@@ -27,7 +28,7 @@ ENDIF ( QCA_GPG_EXECUTABLE )
 
 if(SASL2_FOUND)
 #  MESSAGE(STATUS "SASL2 plugin enabled")
-  add_subdirectory(qca-cyrus-sasl)
+  add_subdirectory(qca-sasl)
 endif(SASL2_FOUND)
 
 if(BOTAN_FOUND)

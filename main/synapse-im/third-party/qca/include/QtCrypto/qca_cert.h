@@ -1165,7 +1165,6 @@ namespace QCA
 		*/
 		QDateTime time() const;
 
-
 		/**
 		   Test if this CRL entry is empty
 		*/
@@ -2061,6 +2060,8 @@ namespace QCA
 		void finished();
 
 	private:
+		Q_DISABLE_COPY(KeyLoader)
+
 		class Private;
 		friend class Private;
 		Private *d;

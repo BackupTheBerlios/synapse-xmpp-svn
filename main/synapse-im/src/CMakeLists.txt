@@ -38,9 +38,9 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/synapse-im.dir
 )
 
-include(tools/CMakeLists.txt)
-
 add_definitions(-DUSE_PEP)
+
+include(tools/CMakeLists.txt)
 
 include(options/CMakeLists.txt)
 

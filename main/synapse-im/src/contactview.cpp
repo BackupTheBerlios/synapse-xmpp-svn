@@ -1025,8 +1025,12 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 #ifdef USE_PEP
 		pm.insertItem(tr("Mood"), 11);
 		pm.setItemEnabled(11, d->pa->serverInfoManager()->hasPEP());
-		pm.insertItem(tr("Avatar"), 12);
-		pm.setItemEnabled(12, d->pa->serverInfoManager()->hasPEP());
+
+		Q3PopupMenu *avatarm = new Q3PopupMenu (&pm);
+		avatarm->insertItem(tr("Set Avatar"), 12);
+		avatarm->insertItem(tr("Unset Avatar"), 13);
+		pm.insertItem(tr("Avatar"), avatarm, 14);
+		pm.setItemEnabled(14, d->pa->serverInfoManager()->hasPEP());
 #endif
 
 		pm.insertSeparator();
@@ -1034,6 +1038,11 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		pm.insertItem(IconsetFactory::icon("psi/disco").icon(), tr("Service &Discovery"), 9);
 		if (PsiOptions::instance()->getOption("options.ui.message.enabled").toBool())
 			pm.insertItem(IconsetFactory::icon("psi/sendMessage").icon(), tr("New &blank message"), 6);
+		if(d->pa->serverInfoManager()->hasGoogleArchive())
+			if(d->pa->gArchive()->isEnabled())
+				pm.insertItem(IconsetFactory::icon("psi/history").icon(), tr("Disable logging"), 15);
+			else
+				pm.insertItem(IconsetFactory::icon("psi/history").icon(), tr("Enable logging"), 15);
 		pm.insertSeparator();
 		pm.insertItem(IconsetFactory::icon("psi/xml").icon(), tr("&XML Console"), 10);
 		pm.insertSeparator();
@@ -1090,10 +1099,13 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		else if(x == 11 && pm.isItemEnabled(11)) {
 			emit actionSetMood();
 		}
-		else if(x == 12 && pm.isItemEnabled(12)) {
+		else if(x == 12 && pm.isItemEnabled(14)) {
 			emit actionSetAvatar();
 		}
-		else if (x == 13) {
+ 		else if(x == 13  && pm.isItemEnabled(14)) {
+ 			emit actionUnsetAvatar();
+ 		}
+		else if (x == 15) {
 			if(online)
 				d->pa->gArchive()->changeSave();
 		}
