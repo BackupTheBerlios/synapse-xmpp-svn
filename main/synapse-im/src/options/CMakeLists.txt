@@ -24,18 +24,21 @@ INCLUDE_DIRECTORIES(
 set(options_SRCS
 	options/optionstab.cpp
 	options/optionsdlg.cpp 
+	options/opt_toolbars.cpp
+)
+
+set(options_noMOC_SRCS
+	options/opt_advanced.cpp
+	options/opt_appearance.cpp
 	options/opt_application.cpp
+	options/opt_antievil.cpp
 	options/opt_chat.cpp
 	options/opt_events.cpp
-	options/opt_status.cpp
-	options/opt_appearance.cpp
-	options/opt_iconset.cpp
 	options/opt_groupchat.cpp
-	options/opt_sound.cpp
-	options/opt_toolbars.cpp
-	options/opt_advanced.cpp
+	options/opt_iconset.cpp
 	options/opt_shortcuts.cpp
-	options/opt_antievil.cpp
+	options/opt_sound.cpp
+	options/opt_status.cpp
 )
 
 set(options_H
@@ -79,4 +82,14 @@ MY_AUTOMOC(options_SRCS)
 QT4_WRAP_CPP(options_moc_SRCS ${options_H})
 QT4_WRAP_UI(options_UIS_H ${options_UIS})
 
-set(options_SRCS ${options_SRCS} ${options_moc_SRCS})
+set(options_SRCS ${options_SRCS} ${options_moc_SRCS} ${options_UIS_H})
+
+#add_library(options SHARED ${options_SRCS} ${options_UIS_H})
+
+
+#TARGET_LINK_LIBRARIES(options
+#	${QT_LIBRARIES}
+#	${QT_QT3SUPPORT_LIBRARY}
+#	sim_stuff
+#)
+

@@ -1,13 +1,13 @@
 include_directories(tools/spellchecker)
 
-set(spellchecker_SRCS
+set(spellchecker_noMOC_SRCS
 	tools/spellchecker/spellchecker.cpp
 	tools/spellchecker/spellhighlighter.cpp
 )
 
 set(spellchecker_H
-	tools/spellchecker/spellchecker.h
-	tools/spellchecker/spellhighlighter.h
+#	tools/spellchecker/spellchecker.h
+#	tools/spellchecker/spellhighlighter.h
 )
 
 

@@ -13,52 +13,101 @@ include(tools/tunecontroller/CMakeLists.txt)
 
 set(tools_SRCS 
 	${trayicon_SRCS} 
+	${advwidget_SRCS}
+	${globalshortcut_SRCS}
+	${grepshortcutkeydlg_SRCS}
 	${zip_SRCS}
 	${iconset_SRCS}
 	${idle_SRCS}
 	${systemwatch_SRCS}
 	${optionstree_SRCS}
-	${globalshortcut_SRCS}
 	${spellchecker_SRCS}
-	${advwidget_SRCS}
 	${contactlist_SRCS}
-	${grepshortcutkeydlg_SRCS}
 	${tunecontroller_SRCS}
 )
+set(tools_noMOC_SRCS 
+	${trayicon_noMOC_SRCS} 
+	${advwidget_noMOC_SRCS}
+	${globalshortcut_noMOC_SRCS}
+	${grepshortcutkeydlg_noMOC_SRCS}
+	${zip_noMOC_SRCS}
+	${iconset_noMOC_SRCS}
+	${idle_noMOC_SRCS}
+	${systemwatch_noMOC_SRCS}
+	${optionstree_noMOC_SRCS}
+	${spellchecker_noMOC_SRCS}
+	${contactlist_noMOC_SRCS}
+	${tunecontroller_noMOC_SRCS})
+#set(tools1_noMOC_SRCS
+#	${zip_noMOC_SRCS}
+#	${iconset_noMOC_SRCS}
+#	${idle_noMOC_SRCS}
+#	${systemwatch_noMOC_SRCS}
+#	${optionstree_noMOC_SRCS}
+#	${spellchecker_noMOC_SRCS}
+#	${contactlist_noMOC_SRCS}
+#	${tunecontroller_noMOC_SRCS}
+#)
+#set(tools1_SRCS
+#	${zip_SRCS}
+#	${iconset_SRCS}
+#	${idle_SRCS}
+#	${systemwatch_SRCS}
+#	${optionstree_SRCS}
+#	${spellchecker_SRCS}
+#	${contactlist_SRCS}
+#	${tunecontroller_SRCS}
+#)
 
 set(tools_UIS
 	${trayicon_UIS} 
+	${advwidget_UIS}
+	${globalshortcut_UIS}
+	${grepshortcutkeydlg_UIS}
+)
+set(tools1_UIS
 	${zip_UIS}
 	${iconset_UIS}
 	${idle_UIS}
 	${systemwatch_UIS}
 	${optionstree_UIS}
-	${globalshortcut_UIS}
 	${spellchecker_UIS}
-	${advwidget_UIS}
 	${contactlist_UIS}
-	${grepshortcutkeydlg_UIS}
 	${tunecontroller_UIS}
 )
 
 set(tools_H
 	${trayicon_H} 
+	${advwidget_H}
+	${globalshortcut_H}
+	${grepshortcutkeydlg_H}
 	${zip_H}
 	${iconset_H}
 	${idle_H}
 	${systemwatch_H}
 	${optionstree_H}
-	${globalshortcut_H}
 	${spellchecker_H}
-	${advwidget_H}
 	${contactlist_H}
-	${grepshortcutkeydlg_H}
 	${tunecontroller_H}
 )
+#set(tools1_H
+#)
 
 MY_AUTOMOC(tools_SRCS)
+#MY_AUTOMOC(tools1_SRCS)
 QT4_WRAP_CPP(tools_moc_SRCS ${tools_H})
+#QT4_WRAP_CPP(tools1_moc_SRCS ${tools1_H})
 QT4_WRAP_UI(tools_UIS_H ${tools_UIS})
+#QT4_WRAP_UI(tools1_UIS_H ${tools1_UIS})
 
-set(tools_SRCS ${tools_SRCS} ${tools_moc_SRCS})
+set(tools_SRCS ${tools_SRCS} ${tools_moc_SRCS} ${tools_noMOC_SRCS})
+#set(tools1_SRCS ${tools1_SRCS} ${tools1_moc_SRCS} ${tools1_noMOC_SRCS})
 
+#add_library(tools SHARED ${tools1_SRCS} ${tools1_moc_SRCS})
+
+#TARGET_LINK_LIBRARIES(tools
+#	${QT_LIBRARIES}
+#	${QT_QT3SUPPORT_LIBRARY}
+#	${QT_QTXML_LIBRARY}
+#	qca
+#)

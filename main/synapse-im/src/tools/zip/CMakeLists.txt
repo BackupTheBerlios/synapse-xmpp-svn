@@ -7,9 +7,9 @@ include_directories(
 )
 #endif (WIN32)
 
-set(zip_SRCS tools/zip/zip.cpp tools/zip/minizip/unzip.c)
+set(zip_noMOC_SRCS tools/zip/zip.cpp tools/zip/minizip/unzip.c)
 
-set(zip_H tools/zip/zip.h)
+#set(zip_H tools/zip/zip.h)
 
 if (WIN32)
 target_link_libraries(tools/zip/minizip/win32/libz.a)

@@ -36,7 +36,7 @@ if(OPENSSL_FOUND)
     MESSAGE(STATUS "Found OpenSSL")
 endif(OPENSSL_FOUND)
 
-find_package(Sasl2 REQUIRED)
+find_package(Sasl2)
 
 if(QT_QTDBUS_FOUND)
     MESSAGE(STATUS "Found DBus support in Qt4 -> enabling DBus support")

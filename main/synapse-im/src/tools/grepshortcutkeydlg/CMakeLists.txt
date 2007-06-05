@@ -1,6 +1,6 @@
 include_directories(tools/grepshortcutkeydlg)
 
-set(grepshortcutkeydlg_SRCS
+set(grepshortcutkeydlg_noMOC_SRCS
     tools/grepshortcutkeydlg/grepshortcutkeydlg.cpp
 )
 

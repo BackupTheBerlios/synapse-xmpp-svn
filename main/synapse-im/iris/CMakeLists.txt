@@ -36,6 +36,7 @@ ${QT_QTNETWORK_INCLUDE_DIR}
 ${QT_QTSQL_INCLUDE_DIR}
 ${QT_QTXML_INCLUDE_DIR}
 ${QT_QT3SUPPORT_INCLUDE_DIR}
+../src/tools/zip/minizip/win32
 ${CMAKE_CURRENT_BINARY_DIR}
 #../third-party/qca/qca/include/QtCrypto
 #${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/iris.dir/irisnet
@@ -137,16 +138,32 @@ qt4_wrap_cpp(cutestuff_MOC_SRCS ${cutestuff_H})
 MY_AUTOMOC(iris_SRCS)
 
 #add_library(iris ${iris_SRCS} ${iris_mocFix_SRCS})
-add_library(iris SHARED ${iris_SRCS} ${iris_MOC_SRCS} ${cutestuff_MOC_SRCS})
+#add_library(iris SHARED ${iris_SRCS} ${iris_MOC_SRCS} ${cutestuff_MOC_SRCS})
 
 #set(iris_S ${iris_SRCS})
 
 #set(iris_HS ${iris_H} ${cutestuff_H})
 
+if(WIN32)
+add_library(iris ${iris_SRCS} ${iris_MOC_SRCS} ${cutestuff_MOC_SRCS})
+TARGET_LINK_LIBRARIES(iris
+	${QT_LIBRARIES}
+	${QT_QTNETWORK_LIBRARIES}
+	${QT_QTXML_LIBRARIES}
+	${QT_QT3SUPPORT_LIBRARIES}
+	qca
+	WSock32
+)
+else(WIN32)
+add_library(iris SHARED ${iris_SRCS} ${iris_MOC_SRCS} ${cutestuff_MOC_SRCS})
 target_link_libraries(iris 
 	${QT_LIBRARIES}
 	${QT_QTNETWORK_LIBRARIES}
+	${QT_QTXML_LIBRARIES}
+	${QT_QT3SUPPORT_LIBRARIES}
+	qca
 )
+endif(WIN32)
 
 set_target_properties(iris PROPERTIES VERSION 0.3.0 SOVERSION 3 )
 
