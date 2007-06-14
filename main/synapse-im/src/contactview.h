@@ -193,9 +193,9 @@ private:
 	void scVCard(ContactViewItem *);
 	void scHistory(ContactViewItem *);
 	void scOpenChat(ContactViewItem *);
-#ifdef WHITEBOARDING
+//#ifdef WHITEBOARDING
 	void scOpenWhiteboard(ContactViewItem *);
-#endif
+//#endif
 	void scAgentSetStatus(ContactViewItem *, Status &);
 	void scRemove(ContactViewItem *);
 	void doItemRenamed(ContactViewItem *, const QString &);
@@ -227,9 +227,9 @@ public:
 
 	IconAction *qa_send, *qa_chat, *qa_ren, *qa_hist, *qa_logon, *qa_recv, *qa_rem, *qa_vcard;
 	IconAction *qa_assignAvatar, *qa_clearAvatar;
-#ifdef WHITEBOARDING
+//#ifdef WHITEBOARDING
 	IconAction *qa_wb;
-#endif
+//#endif
 
 	QSize minimumSizeHint() const;
 	QSize sizeHint() const;
@@ -274,9 +274,9 @@ private slots:
 	void doContext();
 	void doSendMessage();
 	void doOpenChat();
-#ifdef WHITEBOARDING
+//#ifdef WHITEBOARDING
 	void doOpenWhiteboard();
-#endif
+//#endif
 	void doHistory();
 	void doVCard();
 	void doLogon();

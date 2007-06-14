@@ -3296,9 +3296,9 @@ void PsiAccount::actionOpenChatSpecific(const Jid &j)
 	openChat(j);
 }
 
-#ifdef WHITEBOARDING
 void PsiAccount::actionOpenWhiteboard(const Jid &j)
 {
+#ifdef WHITEBOARDING
 	UserListItem *u = find(j);
 	if(!u)
 		return;
@@ -3321,6 +3321,7 @@ void PsiAccount::actionOpenWhiteboard(const Jid &j)
 	{
 		actionOpenWhiteboardSpecific(j);
 	}
+#endif
 }
 
 /*! \brief Opens a whiteboard to \a target.
@@ -3329,11 +3330,12 @@ void PsiAccount::actionOpenWhiteboard(const Jid &j)
 
 void PsiAccount::actionOpenWhiteboardSpecific(const Jid &target, Jid ownJid, bool groupChat)
 {
+#ifdef WHITEBOARDING
 	if(ownJid.isEmpty())
 		ownJid = jid();
 	d->wbManager->openWhiteboard(target, ownJid, groupChat);
-}
 #endif
+}
 
 void PsiAccount::actionAgentSetStatus(const Jid &j, Status &s)
 {

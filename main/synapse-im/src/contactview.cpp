@@ -1963,13 +1963,13 @@ void ContactProfile::scOpenChat(ContactViewItem *i)
 		actionOpenChat(i->priority()->jid());
 }
 
-#ifdef WHITEBOARDING
 void ContactProfile::scOpenWhiteboard(ContactViewItem *i)
 {
+#ifdef WHITEBOARDING
 	if(i->type() == ContactViewItem::Contact)
 		actionOpenWhiteboard(i->u()->jid());
-}
 #endif
+}
 
 void ContactProfile::scAgentSetStatus(ContactViewItem *i, Status &s)
 {
@@ -2817,15 +2817,15 @@ void ContactView::doOpenChat()
 	i->contactProfile()->scOpenChat(i);
 }
 
-#ifdef WHITEBOARDING
 void ContactView::doOpenWhiteboard()
 {
+#ifdef WHITEBOARDING
 	ContactViewItem *i = (ContactViewItem *)selectedItem();
 	if(!i)
 		return;
 	i->contactProfile()->scOpenWhiteboard(i);
-}
 #endif
+}
 
 void ContactView::doHistory()
 {

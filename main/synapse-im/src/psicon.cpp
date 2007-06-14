@@ -363,7 +363,7 @@ bool PsiCon::init()
 	connect(d->mainwin, SIGNAL(changeProfile()), SLOT(changeProfile()));
 	connect(d->mainwin, SIGNAL(doManageAccounts()), SLOT(doManageAccounts()));
 	connect(d->mainwin, SIGNAL(doGroupChat()), SLOT(doGroupChat()));
-	connect(d->mainwin, SIGNAL(blankMessage()), SLOT(doNewBlankMessage()));
+	connect(d->mainwin, SIGNAL(blankMessage()), SLOT(doNewBlankMessage_old()));
 	connect(d->mainwin, SIGNAL(statusChanged(int)), SLOT(statusMenuChanged(int)));
 	connect(d->mainwin, SIGNAL(getLastStatus(int)), SLOT(getLastStatus(int)));
 	connect(d->mainwin, SIGNAL(statusLastChanged(int)), SLOT(setLastStatusGlobal(int)));
@@ -622,6 +622,11 @@ void PsiCon::doGroupChat()
 
 	MUCJoinDlg *w = new MUCJoinDlg(this, account);
 	w->show();
+}
+
+void PsiCon::doNewBlankMessage_old()
+{
+	doNewBlankMessage(QString(""));
 }
 
 void PsiCon::doNewBlankMessage(QString to = "")

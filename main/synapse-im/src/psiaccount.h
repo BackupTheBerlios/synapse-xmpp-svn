@@ -255,10 +255,10 @@ public slots:
 	void actionHistory(const Jid &);
 	void actionOpenChat(const Jid &);
 	void actionOpenChatSpecific(const Jid &);
-#ifdef WHITEBOARDING
+//#ifdef WHITEBOARDING
 	void actionOpenWhiteboard(const Jid &);
 	void actionOpenWhiteboardSpecific(const Jid &, Jid = Jid(), bool = false);
-#endif
+//#endif
 	void actionAgentSetStatus(const Jid &, Status &s);
 	void actionInfo(const Jid &, bool showStatusInfo=true);
 	void actionAuth(const Jid &);
