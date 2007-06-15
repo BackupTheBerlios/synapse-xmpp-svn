@@ -68,7 +68,7 @@ public:
 	CipherContext(Provider *p, const QString &type) : BasicContext(p, type) {}
 	virtual void setup(Direction dir, const SymmetricKey &key, const InitializationVector &iv) = 0;
 	virtual KeyLength keyLength() const = 0;
-	virtual unsigned int blockSize() const = 0;
+	virtual int blockSize() const = 0;
 
 	virtual bool update(const SecureArray &in, SecureArray *out) = 0;
 	virtual bool final(SecureArray *out) = 0;
@@ -138,8 +138,8 @@ public:
 	virtual void startSign(SignatureAlgorithm alg, SignatureFormat format);
 	virtual void startVerify(SignatureAlgorithm alg, SignatureFormat format);
 	virtual void update(const SecureArray &in);
-	virtual SecureArray endSign();
-	virtual bool endVerify(const SecureArray &sig);
+	virtual QByteArray endSign();
+	virtual bool endVerify(const QByteArray &sig);
 
 	// key agreement
 	virtual SymmetricKey deriveKey(const PKeyBase &theirs);
@@ -205,9 +205,9 @@ public:
 	virtual bool importKey(const PKeyBase *key) = 0;
 
 	// import / export
-	virtual SecureArray publicToDER() const;
+	virtual QByteArray publicToDER() const;
 	virtual QString publicToPEM() const;
-	virtual ConvertResult publicFromDER(const SecureArray &a);
+	virtual ConvertResult publicFromDER(const QByteArray &a);
 	virtual ConvertResult publicFromPEM(const QString &s);
 	virtual SecureArray privateToDER(const SecureArray &passphrase, PBEAlgorithm pbe) const;
 	virtual QString privateToPEM(const SecureArray &passphrase, PBEAlgorithm pbe) const;
@@ -222,9 +222,9 @@ public:
 	CertBase(Provider *p, const QString &type) : BasicContext(p, type) {}
 
 	// import / export
-	virtual SecureArray toDER() const = 0;
+	virtual QByteArray toDER() const = 0;
 	virtual QString toPEM() const = 0;
-	virtual ConvertResult fromDER(const SecureArray &a) = 0;
+	virtual ConvertResult fromDER(const QByteArray &a) = 0;
 	virtual ConvertResult fromPEM(const QString &s) = 0;
 };
 
@@ -242,7 +242,7 @@ public:
 	bool isCA;
 	bool isSelfSigned;               // cert only
 	int pathLimit;
-	SecureArray sig;
+	QByteArray sig;
 	SignatureAlgorithm sigalgo;
 	QByteArray subjectId, issuerId;  // cert only
 	QString challenge;               // csr only
@@ -256,7 +256,7 @@ public:
 	int number;
 	QDateTime thisUpdate, nextUpdate;
 	QList<CRLEntry> revoked;
-	SecureArray sig;
+	QByteArray sig;
 	SignatureAlgorithm sigalgo;
 	QByteArray issuerId;
 };
@@ -271,6 +271,7 @@ public:
 
 	virtual bool createSelfSigned(const CertificateOptions &opts, const PKeyContext &priv) = 0;
 	virtual const CertContextProps *props() const = 0;
+	virtual bool compare(const CertContext *other) const = 0;
 	virtual PKeyContext *subjectPublicKey() const = 0; // caller must delete
 	virtual bool isIssuerOf(const CertContext *other) const = 0;
 
@@ -288,6 +289,7 @@ public:
 	virtual bool canUseFormat(CertificateRequestFormat f) const = 0;
 	virtual bool createRequest(const CertificateOptions &opts, const PKeyContext &priv) = 0;
 	virtual const CertContextProps *props() const = 0;
+	virtual bool compare(const CSRContext *other) const = 0;
 	virtual PKeyContext *subjectPublicKey() const = 0; // caller must delete
 	virtual QString toSPKAC() const = 0;
 	virtual ConvertResult fromSPKAC(const QString &s) = 0;
@@ -300,6 +302,7 @@ public:
 	CRLContext(Provider *p) : CertBase(p, "crl") {}
 
 	virtual const CRLContextProps *props() const = 0;
+	virtual bool compare(const CRLContext *other) const = 0;
 };
 
 class QCA_EXPORT CertCollectionContext : public BasicContext
@@ -363,9 +366,9 @@ public:
 
 	virtual const PGPKeyContextProps *props() const = 0;
 
-	virtual SecureArray toBinary() const = 0;
+	virtual QByteArray toBinary() const = 0;
 	virtual QString toAscii() const = 0;
-	virtual ConvertResult fromBinary(const SecureArray &a) = 0;
+	virtual ConvertResult fromBinary(const QByteArray &a) = 0;
 	virtual ConvertResult fromAscii(const QString &s) = 0;
 };
 
@@ -543,7 +546,7 @@ public:
 	{
 		Success,
 		Error,
-		NeedParams,
+		Params,
 		AuthCheck,
 		Continue
 	};
@@ -593,7 +596,7 @@ public:
 
 	// results
 	virtual Result result() const = 0;
-	virtual QString mechlist() const = 0;
+	virtual QStringList mechlist() const = 0;
 	virtual QString mech() const = 0;
 	virtual bool haveClientInit() const = 0;
 	virtual QByteArray stepData() const = 0;
@@ -607,9 +610,12 @@ public:
 	// call after auth fail
 	virtual SASL::AuthCondition authCondition() const = 0;
 
-	// call after NeedParams
-	virtual SASL::Params clientParamsNeeded() const = 0;
+	// call after Params
+	virtual SASL::Params clientParams() const = 0;
 	virtual void setClientParams(const QString *user, const QString *authzid, const SecureArray *pass, const QString *realm) = 0;
+
+	// call after Params and SASL::Params::canSendRealm == true
+	virtual QStringList realmlist() const = 0;
 
 	// call after AuthCheck
 	virtual QString username() const = 0;

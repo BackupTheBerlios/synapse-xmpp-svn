@@ -683,7 +683,7 @@ void setAppName(const QString &s)
 	global->app_name = s;
 }
 
-QString arrayToHex(const SecureArray &a)
+QString arrayToHex(const QByteArray &a)
 {
 	return Hex().arrayToString(a);
 }
@@ -783,6 +783,15 @@ Provider::~Provider()
 
 void Provider::init()
 {
+}
+
+void Provider::deinit()
+{
+}
+
+int Provider::version() const
+{
+	return 0;
 }
 
 QString Provider::credit() const
@@ -886,12 +895,12 @@ void PKeyBase::update(const SecureArray &)
 {
 }
 
-SecureArray PKeyBase::endSign()
+QByteArray PKeyBase::endSign()
 {
-	return SecureArray();
+	return QByteArray();
 }
 
-bool PKeyBase::endVerify(const SecureArray &)
+bool PKeyBase::endVerify(const QByteArray &)
 {
 	return false;
 }
@@ -904,9 +913,9 @@ SymmetricKey PKeyBase::deriveKey(const PKeyBase &)
 //----------------------------------------------------------------------------
 // PKeyContext
 //----------------------------------------------------------------------------
-SecureArray PKeyContext::publicToDER() const
+QByteArray PKeyContext::publicToDER() const
 {
-	return SecureArray();
+	return QByteArray();
 }
 
 QString PKeyContext::publicToPEM() const
@@ -914,7 +923,7 @@ QString PKeyContext::publicToPEM() const
 	return QString();
 }
 
-ConvertResult PKeyContext::publicFromDER(const SecureArray &)
+ConvertResult PKeyContext::publicFromDER(const QByteArray &)
 {
 	return ErrorDecode;
 }

@@ -359,7 +359,7 @@ public:
 	    return new nssCipherContext(*this);
 	}
 
-    unsigned int blockSize() const
+    int blockSize() const
 	{
 	    return PK11_GetBlockSize( m_cipherMechanism, m_params);
 	}
@@ -414,10 +414,10 @@ public:
     {
     }
 
-	int version() const
-	{
-		return QCA_VERSION;
-	}
+    int qcaVersion() const
+    {
+	return QCA_VERSION;
+    }
 
     QString name() const
     {

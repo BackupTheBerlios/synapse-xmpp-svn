@@ -239,7 +239,7 @@ public:
 	return new BotanCipherContext( *this );
     }
 
-    unsigned int blockSize() const
+    int blockSize() const
     {
 	return Botan::block_size_of(m_algoName);
     }
@@ -305,7 +305,7 @@ public:
 	// delete m_init;
     }
 
-    int version() const
+    int qcaVersion() const
     {
         return QCA_VERSION;
     }

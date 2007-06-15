@@ -28,7 +28,7 @@ ENDIF ( QCA_GPG_EXECUTABLE )
 
 if(SASL2_FOUND)
 #  MESSAGE(STATUS "SASL2 plugin enabled")
-  add_subdirectory(qca-sasl)
+  add_subdirectory(qca-cyrus-sasl)
 endif(SASL2_FOUND)
 
 if(BOTAN_FOUND)

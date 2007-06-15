@@ -246,9 +246,9 @@ public:
 	}
 
 	virtual
-	SecureArray
+	QByteArray
 	endSign () {
-		SecureArray r = _privkeySign.signature ();
+		QByteArray r = _privkeySign.signature ();
 		_privkeySign = RSAPrivateKey ();
 		return r;
 	}
@@ -256,7 +256,7 @@ public:
 	virtual
 	bool
 	validSignature (
-		const SecureArray &sig
+		const QByteArray &sig
 	) {
 		return _pubkey.validSignature (sig);
 	}
@@ -596,7 +596,7 @@ public:
 	}
 
 	virtual
-	SecureArray
+	QByteArray
 	publicToDER () const {
 		return static_cast<softstoreRSAContext *>(_k)->_publicKey ().toDER ();
 	}
@@ -610,7 +610,7 @@ public:
 	virtual
 	ConvertResult
 	publicFromDER (
-		const SecureArray &in
+		const QByteArray &in
 	) {
 		Q_UNUSED(in);
 		return ErrorDecode;
@@ -1155,7 +1155,7 @@ public:
 
 						foreach (QString s, base64certs) {
 							entry.chain += Certificate::fromDER (
-								Base64 ().stringToArray (s),
+								Base64 ().stringToArray (s).toByteArray (),
 								&cresult
 							);
 						}
@@ -1270,7 +1270,7 @@ private:
 
 		while (n < list.size ()) {
 			Certificate cert = Certificate::fromDER (
-				Base64 ().stringToArray (_unescapeString (list[n++]))
+				Base64 ().stringToArray (_unescapeString (list[n++])).toByteArray ()
 			);
 			if (cert.isNull ()) {
 				goto cleanup;
@@ -1405,7 +1405,7 @@ public:
 public:
 	virtual
 	int
-	version() const {
+	qcaVersion() const {
 		return QCA_VERSION;
 	}
 

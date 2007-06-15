@@ -177,7 +177,7 @@ public:
 	QString out_mech;
 
 	QCA::SASL::Params need;
-	QCA::SASL::Params have;
+//	QCA::SASL::Params have;
 	QString user, authz, realm;
 	QCA::SecureArray pass;
 	Result result_;
@@ -201,14 +201,16 @@ public:
 
 		capable = true;
 		allow_plain = false;
-		need.user = false;
+/*		need.user = false;
 		need.authzid = false;
 		need.pass = false;
 		need.realm = false;
 		have.user = false;
 		have.authzid = false;
 		have.pass = false;
-		have.realm = false;
+		have.realm = false;*/
+//		need = QCA::SASL::Params(false, false, false, false);
+		need = QCA::SASL::Params(true, true, true, true);
 		user = QString();
 		authz = QString();
 		pass = QCA::SecureArray();
@@ -252,7 +254,7 @@ public:
 
 		if(!capable || mechanism_.isEmpty()) {
 			result_ = Error;
-			authCondition_ = QCA::SASL::NoMech;
+			authCondition_ = QCA::SASL::NoMechanism;
 			if (!capable)
 				qWarning("simplesasl.cpp: Not enough capabilities");
 			if (mechanism_.isEmpty()) 
@@ -278,7 +280,7 @@ public:
 			// PLAIN 
 			if (out_mech == "PLAIN") {
 				// Firnst, check if we have everything
-				if(need.user || need.pass) {
+/*				if(need.needUsername() || need.needPassword()) {
 					qWarning("simplesasl.cpp: Did not receive necessary auth parameters");
 					result_ = Error;
 					return;
@@ -287,8 +289,9 @@ public:
 					need.user = true;
 				if(!have.pass)
 					need.pass = true;
-				if(need.user || need.pass) {
-					result_ = NeedParams;
+				if(need.user || need.pass) {*/
+				if(need.needUsername() || need.needPassword()) {
+					result_ = Params; //NeedParams
 					return;
 				}
 
@@ -306,7 +309,7 @@ public:
 		}
 		else if(step == 1) {
 			// if we still need params, then the app has failed us!
-			if(need.user || need.authzid || need.pass || need.realm) {
+/*			if(need.user || need.authzid || need.pass || need.realm) {
 				qWarning("simplesasl.cpp: Did not receive necessary auth parameters");
 				result_ = Error;
 				return;
@@ -319,8 +322,9 @@ public:
 			//	need.authzid = true;
 			if(!have.pass)
 				need.pass = true;
-			if(need.user || need.authzid || need.pass) {
-				result_ = NeedParams;
+			if(need.user || need.authzid || need.pass) {*/
+			if(need.needUsername() || need.canSendAuthzid() || need.needPassword()) {
+				result_ = Params; //NeedParams;
 				return;
 			}
 
@@ -328,7 +332,7 @@ public:
 			QByteArray cs(in_buf);
 			PropList in;
 			if(!in.fromString(cs)) {
-				authCondition_ = QCA::SASL::BadProto;
+				authCondition_ = QCA::SASL::BadProtocol;
 				result_ = Error;
 				return;
 			}
@@ -421,8 +425,8 @@ public:
 		return result_;
 	}
 
-	virtual QString mechlist() const {
-		return QString();
+	virtual QStringList mechlist() const {
+		return QStringList();
 	}
 	
 	virtual QString mech() const {
@@ -457,12 +461,12 @@ public:
 		return authCondition_;
 	}
 
-	virtual QCA::SASL::Params clientParamsNeeded() const {
+	virtual QCA::SASL::Params clientParams() const {
 		return need;
 	}
 	
 	virtual void setClientParams(const QString *_user, const QString *_authzid, const QCA::SecureArray *_pass, const QString *_realm) {
-		if(_user) {
+/*		if(_user) {
 			user = *_user;
 			need.user = false;
 			have.user = true;
@@ -481,7 +485,32 @@ public:
 			realm = *_realm;
 			need.realm = false;
 			have.realm = true;
+		}*/
+		bool n_user = true;
+		bool n_authzid = true;
+		bool n_pass = true;
+		bool n_realm = true;
+		if(_user) {
+			user = *_user;
+			n_user = false;
 		}
+		if(_authzid) {
+			authz = *_authzid;
+			n_authzid = false;
+		}
+		if(_pass) {
+			pass = *_pass;
+			n_pass = false;
+		}
+		if(_realm) {
+			realm = *_realm;
+			n_realm = false;
+		}
+		need = QCA::SASL::Params(n_user, n_authzid, n_pass, n_realm);
+	}
+
+	virtual QStringList realmlist() const {
+		return QStringList();
 	}
 
 	virtual QString username() const {
@@ -527,7 +556,7 @@ public:
 			return new SimpleSASLContext(this);
 		return 0;
 	}
-	int version() const
+	int qcaVersion() const
 	{
 		return QCA_VERSION;
 	}

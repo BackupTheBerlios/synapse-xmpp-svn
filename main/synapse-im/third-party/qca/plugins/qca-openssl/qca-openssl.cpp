@@ -141,10 +141,10 @@ static SecureArray dsasig_raw_to_der(const SecureArray &in)
 	return result;
 }
 
-/*static bool is_basic_constraint(ConstraintType t)
+/*static bool is_basic_constraint(const ConstraintType &t)
 {
 	bool basic = false;
-	switch(t)
+	switch(t.known())
 	{
 		case DigitalSignature:
 		case NonRepudiation:
@@ -253,7 +253,7 @@ static X509_NAME *new_cert_name(const CertificateInfo &info)
 	return name;
 }
 
-static void try_get_name_item(X509_NAME *name, int nid, CertificateInfoType t, CertificateInfo *info)
+static void try_get_name_item(X509_NAME *name, int nid, const CertificateInfoType &t, CertificateInfo *info)
 {
 	int loc;
 	loc = -1;
@@ -265,7 +265,7 @@ static void try_get_name_item(X509_NAME *name, int nid, CertificateInfoType t, C
 	}
 }
 
-static void try_get_name_item_by_oid(X509_NAME *name, const QString &oidText, CertificateInfoType t, CertificateInfo *info)
+static void try_get_name_item_by_oid(X509_NAME *name, const QString &oidText, const CertificateInfoType &t, CertificateInfo *info)
 {
         ASN1_OBJECT *oid = OBJ_txt2obj( oidText.toLatin1().data(), 1); // 1 = only accept dotted input
 	if(!oid)
@@ -363,10 +363,10 @@ static QByteArray ipaddress_string_to_bytes(const QString &)
 	return QByteArray(4, 0);
 }
 
-static GENERAL_NAME *new_general_name(CertificateInfoType t, const QString &val)
+static GENERAL_NAME *new_general_name(const CertificateInfoType &t, const QString &val)
 {
 	GENERAL_NAME *name = 0;
-	switch(t)
+	switch(t.known())
 	{
 		case Email:
 		{
@@ -436,25 +436,13 @@ static GENERAL_NAME *new_general_name(CertificateInfoType t, const QString &val)
 			name->d.otherName = other;
 			break;
 		}
-
-		// the following are not alt_names
-		case OtherInfoType:
-		case CommonName:
-		case EmailLegacy:
-		case Organization:
-		case OrganizationalUnit:
-		case Locality:
-		case State:
-		case Country:
-	        case IncorporationLocality:
-	        case IncorporationState:
-	        case IncorporationCountry:
+		default:
 			break;
 	}
 	return name;
 }
 
-static void try_add_general_name(GENERAL_NAMES **gn, CertificateInfoType t, const QString &val)
+static void try_add_general_name(GENERAL_NAMES **gn, const CertificateInfoType &t, const QString &val)
 {
 	if(val.isEmpty())
 		return;
@@ -502,9 +490,9 @@ static GENERAL_NAME *find_next_general_name(GENERAL_NAMES *names, int type, int 
         return gn;
 }
 
-static void try_get_general_name(GENERAL_NAMES *names, CertificateInfoType t, CertificateInfo *info)
+static void try_get_general_name(GENERAL_NAMES *names, const CertificateInfoType &t, CertificateInfo *info)
 {
-        switch(t)
+        switch(t.known())
         {
                 case Email:
                 {
@@ -605,19 +593,7 @@ static void try_get_general_name(GENERAL_NAMES *names, CertificateInfoType t, Ce
                         }
                         break;
                 }
-
-                // the following are not alt_names
-		case OtherInfoType:
-                case CommonName:
-		case EmailLegacy:
-                case Organization:
-                case OrganizationalUnit:
-                case Locality:
-	        case IncorporationLocality:
-                case State:
-	        case IncorporationState:
-                case Country:
-	        case IncorporationCountry:
+		default:
                         break;
         }
 }
@@ -641,7 +617,7 @@ static X509_EXTENSION *new_cert_key_usage(const Constraints &constraints)
 	for(int n = 0; n < constraints.count(); ++n)
 	{
 		int bit = -1;
-		switch(constraints[n])
+		switch(constraints[n].known())
 		{
 			case DigitalSignature:
 				bit = Bit_DigitalSignature;
@@ -670,17 +646,7 @@ static X509_EXTENSION *new_cert_key_usage(const Constraints &constraints)
 			case DecipherOnly:
 				bit = Bit_DecipherOnly;
 				break;
-
-			// the following are not basic key usage
-			case ServerAuth:
-			case ClientAuth:
-			case CodeSigning:
-			case EmailProtection:
-			case IPSecEndSystem:
-			case IPSecTunnel:
-			case IPSecUser:
-			case TimeStamping:
-			case OCSPSigning:
+			default:
 				break;
 		}
 		if(bit != -1)
@@ -718,7 +684,7 @@ static Constraints get_cert_key_usage(X509_EXTENSION *ex)
 	for(int n = 0; n < 9; ++n)
 	{
 		if(ASN1_BIT_STRING_get_bit(keyusage, n))
-			constraints += (ConstraintType)bit_table[n];
+			constraints += ConstraintType((ConstraintTypeKnown)bit_table[n]);
 	}
 	ASN1_BIT_STRING_free(keyusage);
 	return constraints;
@@ -730,7 +696,8 @@ static X509_EXTENSION *new_cert_ext_key_usage(const Constraints &constraints)
 	for(int n = 0; n < constraints.count(); ++n)
 	{
 		int nid = -1;
-		switch(constraints[n])
+		// TODO: don't use known/nid, and instead just use OIDs
+		switch(constraints[n].known())
 		{
 			case ServerAuth:
 				nid = NID_server_auth;
@@ -759,17 +726,7 @@ static X509_EXTENSION *new_cert_ext_key_usage(const Constraints &constraints)
 			case OCSPSigning:
 				nid = NID_OCSP_sign;
 				break;
-
-			// the following are not extended key usage
-			case DigitalSignature:
-			case NonRepudiation:
-			case KeyEncipherment:
-			case DataEncipherment:
-			case KeyAgreement:
-			case KeyCertificateSign:
-			case CRLSign:
-			case EncipherOnly:
-			case DecipherOnly:
+			default:
 				break;
 		}
 		if(nid != -1)
@@ -800,6 +757,7 @@ static Constraints get_cert_ext_key_usage(X509_EXTENSION *ex)
 		if(nid == NID_undef)
 			continue;
 
+		// TODO: don't use known/nid, and instead just use OIDs
 		int t = -1;
 		switch(nid)
 		{
@@ -835,7 +793,7 @@ static Constraints get_cert_ext_key_usage(X509_EXTENSION *ex)
 		if(t == -1)
 			continue;
 
-		constraints.append((ConstraintType)t);
+		constraints.append(ConstraintType((ConstraintTypeKnown)t));
 	}
 	sk_ASN1_OBJECT_pop_free(extkeyusage, ASN1_OBJECT_free);
 	return constraints;
@@ -1812,12 +1770,12 @@ public:
 		evp.update(in);
 	}
 
-	virtual SecureArray endSign()
+	virtual QByteArray endSign()
 	{
-		return evp.endSign();
+		return evp.endSign().toByteArray();
 	}
 
-	virtual bool endVerify(const SecureArray &sig)
+	virtual bool endVerify(const QByteArray &sig)
 	{
 		return evp.endVerify(sig);
 	}
@@ -2081,16 +2039,16 @@ public:
 		evp.update(in);
 	}
 
-	virtual SecureArray endSign()
+	virtual QByteArray endSign()
 	{
 		SecureArray out = evp.endSign();
 		if(transformsig)
-			return dsasig_der_to_raw(out);
+			return dsasig_der_to_raw(out).toByteArray();
 		else
-			return out;
+			return out.toByteArray();
 	}
 
-	virtual bool endVerify(const SecureArray &sig)
+	virtual bool endVerify(const QByteArray &sig)
 	{
 		SecureArray in;
 		if(transformsig)
@@ -2686,17 +2644,17 @@ public:
 		return 0;
 	}
 
-	virtual SecureArray publicToDER() const
+	virtual QByteArray publicToDER() const
 	{
 		EVP_PKEY *pkey = get_pkey();
 
 		// OpenSSL does not have DH import/export support
 		if(pkey->type == EVP_PKEY_DH)
-			return SecureArray();
+			return QByteArray();
 
 		BIO *bo = BIO_new(BIO_s_mem());
 		i2d_PUBKEY_bio(bo, pkey);
-		SecureArray buf = bio2buf(bo);
+		QByteArray buf = bio2ba(bo);
 		return buf;
 	}
 
@@ -2710,11 +2668,11 @@ public:
 
 		BIO *bo = BIO_new(BIO_s_mem());
 		PEM_write_bio_PUBKEY(bo, pkey);
-		SecureArray buf = bio2buf(bo);
-		return QString::fromLatin1(buf.toByteArray());
+		QByteArray buf = bio2ba(bo);
+		return QString::fromLatin1(buf);
 	}
 
-	virtual ConvertResult publicFromDER(const SecureArray &in)
+	virtual ConvertResult publicFromDER(const QByteArray &in)
 	{
 		delete k;
 		k = 0;
@@ -2922,7 +2880,7 @@ public:
 		return (!cert && !req && !crl);
 	}
 
-	SecureArray toDER() const
+	QByteArray toDER() const
 	{
 		BIO *bo = BIO_new(BIO_s_mem());
 		if(cert)
@@ -2931,7 +2889,7 @@ public:
 			i2d_X509_REQ_bio(bo, req);
 		else if(crl)
 			i2d_X509_CRL_bio(bo, crl);
-		SecureArray buf = bio2buf(bo);
+		QByteArray buf = bio2ba(bo);
 		return buf;
 	}
 
@@ -2944,11 +2902,11 @@ public:
 			PEM_write_bio_X509_REQ(bo, req);
 		else if(crl)
 			PEM_write_bio_X509_CRL(bo, crl);
-		SecureArray buf = bio2buf(bo);
-		return QString::fromLatin1(buf.toByteArray());
+		QByteArray buf = bio2ba(bo);
+		return QString::fromLatin1(buf);
 	}
 
-	ConvertResult fromDER(const SecureArray &in, Type t)
+	ConvertResult fromDER(const QByteArray &in, Type t)
 	{
 		reset();
 
@@ -3065,7 +3023,7 @@ public:
 		return new MyCertContext(*this);
 	}
 
-	virtual SecureArray toDER() const
+	virtual QByteArray toDER() const
 	{
 		return item.toDER();
 	}
@@ -3075,7 +3033,7 @@ public:
 		return item.toPEM();
 	}
 
-	virtual ConvertResult fromDER(const SecureArray &a)
+	virtual ConvertResult fromDER(const QByteArray &a)
 	{
 		_props = CertContextProps();
 		ConvertResult r = item.fromDER(a, X509Item::TypeCert);
@@ -3214,6 +3172,31 @@ public:
 		return &_props;
 	}
 
+	virtual bool compare(const CertContext *other) const
+	{
+		const CertContextProps *a = &_props;
+		const CertContextProps *b = other->props();
+
+		PublicKey akey, bkey;
+		PKeyContext *ac = subjectPublicKey();
+		akey.change(ac);
+		PKeyContext *bc = other->subjectPublicKey();
+		bkey.change(bc);
+
+		// logic from Botan
+		if(a->sig != b->sig || a->sigalgo != b->sigalgo || akey != bkey)
+			return false;
+
+		if(a->issuer != b->issuer || a->subject != b->subject)
+			return false;
+		if(a->serial != b->serial || a->version != b->version)
+			return false;
+		if(a->start != b->start || a->end != b->end)
+			return false;
+
+		return true;
+	}
+
 	// does a new
 	virtual PKeyContext *subjectPublicKey() const
 	{
@@ -3349,7 +3332,7 @@ public:
 
 		if (x->signature)
 		{
-			p.sig = SecureArray(x->signature->length);
+			p.sig = QByteArray(x->signature->length, 0);
 			for (int i=0; i< x->signature->length; i++)
 				p.sig[i] = x->signature->data[i];
 		}
@@ -3442,7 +3425,7 @@ public:
 		return new MyCSRContext(*this);
 	}
 
-	virtual SecureArray toDER() const
+	virtual QByteArray toDER() const
 	{
 		return item.toDER();
 	}
@@ -3452,7 +3435,7 @@ public:
 		return item.toPEM();
 	}
 
-	virtual ConvertResult fromDER(const SecureArray &a)
+	virtual ConvertResult fromDER(const QByteArray &a)
 	{
 		_props = CertContextProps();
 		ConvertResult r = item.fromDER(a, X509Item::TypeReq);
@@ -3566,6 +3549,25 @@ public:
 		return &_props;
 	}
 
+	virtual bool compare(const CSRContext *other) const
+	{
+		const CertContextProps *a = &_props;
+		const CertContextProps *b = other->props();
+
+		PublicKey akey, bkey;
+		PKeyContext *ac = subjectPublicKey();
+		akey.change(ac);
+		PKeyContext *bc = other->subjectPublicKey();
+		bkey.change(bc);
+
+		if(a->sig != b->sig || a->sigalgo != b->sigalgo || akey != bkey)
+			return false;
+
+		// TODO: Anything else we should compare?
+
+		return true;
+	}
+
 	virtual PKeyContext *subjectPublicKey() const // does a new
 	{
 		MyPKeyContext *kc = new MyPKeyContext(provider());
@@ -3647,7 +3649,7 @@ public:
 
 		if (x->signature)
 		{
-			p.sig = SecureArray(x->signature->length);
+			p.sig = QByteArray(x->signature->length, 0);
 			for (int i=0; i< x->signature->length; i++)
 				p.sig[i] = x->signature->data[i];
 		}
@@ -3705,7 +3707,7 @@ public:
 		return new MyCRLContext(*this);
 	}
 
-	virtual SecureArray toDER() const
+	virtual QByteArray toDER() const
 	{
 		return item.toDER();
 	}
@@ -3715,8 +3717,9 @@ public:
 		return item.toPEM();
 	}
 
-	virtual ConvertResult fromDER(const SecureArray &a)
+	virtual ConvertResult fromDER(const QByteArray &a)
 	{
+		_props = CRLContextProps();
 		ConvertResult r = item.fromDER(a, X509Item::TypeCRL);
 		if(r == ConvertGood)
 			make_props();
@@ -3741,6 +3744,31 @@ public:
 	virtual const CRLContextProps *props() const
 	{
 		return &_props;
+	}
+
+	virtual bool compare(const CRLContext *other) const
+	{
+		const CRLContextProps *a = &_props;
+		const CRLContextProps *b = other->props();
+
+		if(a->issuer != b->issuer)
+			return false;
+		if(a->number != b->number)
+			return false;
+		if(a->thisUpdate != b->thisUpdate)
+			return false;
+		if(a->nextUpdate != b->nextUpdate)
+			return false;
+		if(a->revoked != b->revoked)
+			return false;
+		if(a->sig != b->sig)
+			return false;
+		if(a->sigalgo != b->sigalgo)
+			return false;
+		if(a->issuerId != b->issuerId)
+			return false;
+
+		return true;
 	}
 
 	void make_props()
@@ -3812,7 +3840,7 @@ public:
 
 		if (x->signature)
 		{
-			p.sig = SecureArray(x->signature->length);
+			p.sig = QByteArray(x->signature->length, 0);
 			for (int i=0; i< x->signature->length; i++)
 				p.sig[i] = x->signature->data[i];
 		}
@@ -5948,8 +5976,7 @@ public:
 			X509_STORE *store = X509_STORE_new();
 			QList<Certificate> cert_list = cms->trustedCerts.certificates();
 			QList<CRL> crl_list = cms->trustedCerts.crls();
-			int n;
-			for(n = 0; n < cert_list.count(); ++n)
+			for(int n = 0; n < cert_list.count(); ++n)
 			{
 				//printf("trusted: [%s]\n", qPrintable(cert_list[n].commonName()));
 				const MyCertContext *cc = static_cast<const MyCertContext *>(cert_list[n].context());
@@ -5957,7 +5984,7 @@ public:
 				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
 				X509_STORE_add_cert(store, x);
 			}
-			for(n = 0; n < crl_list.count(); ++n)
+			for(int n = 0; n < crl_list.count(); ++n)
 			{
 				const MyCRLContext *cc = static_cast<const MyCRLContext *>(crl_list[n].context());
 				X509_CRL *x = cc->item.crl;
@@ -5966,7 +5993,7 @@ public:
 			}
 			// add these crls also
 			crl_list = untrusted_crls;
-			for(n = 0; n < crl_list.count(); ++n)
+			for(int n = 0; n < crl_list.count(); ++n)
 			{
 				const MyCRLContext *cc = static_cast<const MyCRLContext *>(crl_list[n].context());
 				X509_CRL *x = cc->item.crl;
@@ -6174,7 +6201,7 @@ public:
 		return new opensslCipherContext( *this );
 	}
 
-	unsigned int blockSize() const
+	int blockSize() const
 	{
 		return EVP_CIPHER_CTX_block_size(&m_context);
 	}
@@ -6302,7 +6329,7 @@ public:
 		ERR_free_strings();*/
 	}
 
-	int version() const
+	int qcaVersion() const
 	{
 		return QCA_VERSION;
 	}

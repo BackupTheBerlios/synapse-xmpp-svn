@@ -389,6 +389,11 @@ void TLS::setCertificate(const CertificateChain &cert, const PrivateKey &key)
 	d->localKey = key;
 }
 
+CertificateCollection TLS::trustedCertificates() const
+{
+	return d->trusted;
+}
+
 void TLS::setTrustedCertificates(const CertificateCollection &trusted)
 {
 	d->trusted = trusted;
@@ -465,6 +470,11 @@ bool TLS::canSetHostName() const
 {
 	// TODO
 	return false;
+}
+
+bool TLS::compressionEnabled() const
+{
+	return d->tryCompress;
 }
 
 void TLS::setCompressionEnabled(bool b)
@@ -565,6 +575,11 @@ CertificateChain TLS::localCertificateChain() const
 	return d->localCert;
 }
 
+PrivateKey TLS::localPrivateKey() const
+{
+	return d->localKey;
+}
+
 CertificateChain TLS::peerCertificateChain() const
 {
 	return d->peerCert;
@@ -639,6 +654,12 @@ int TLS::packetsOutgoingAvailable() const
 	return 0;
 }
 
+int TLS::packetMTU() const
+{
+	// TODO
+	return 0;
+}
+
 void TLS::setPacketMTU(int size) const
 {
 	// TODO
@@ -646,9 +667,67 @@ void TLS::setPacketMTU(int size) const
 }
 
 //----------------------------------------------------------------------------
+// SASL::Params
+//----------------------------------------------------------------------------
+class SASL::Params::Private
+{
+public:
+	bool needUsername, canSendAuthzid, needPassword, canSendRealm;
+};
+
+SASL::Params::Params()
+:d(new Private)
+{
+}
+
+SASL::Params::Params(bool user, bool authzid, bool pass, bool realm)
+:d(new Private)
+{
+	d->needUsername = user;
+	d->canSendAuthzid = authzid;
+	d->needPassword = pass;
+	d->canSendRealm = realm;
+}
+
+SASL::Params::Params(const SASL::Params &from)
+:d(new Private(*from.d))
+{
+}
+
+SASL::Params::~Params()
+{
+	delete d;
+}
+
+SASL::Params & SASL::Params::operator=(const SASL::Params &from)
+{
+	*d = *from.d;
+	return *this;
+}
+
+bool SASL::Params::needUsername() const
+{
+	return d->needUsername;
+}
+
+bool SASL::Params::canSendAuthzid() const
+{
+	return d->canSendAuthzid;
+}
+
+bool SASL::Params::needPassword() const
+{
+	return d->needPassword;
+}
+
+bool SASL::Params::canSendRealm() const
+{
+	return d->canSendRealm;
+}
+
+//----------------------------------------------------------------------------
 // SASL
 //----------------------------------------------------------------------------
-
 /*
   These don't map, but I don't think it matters much..
     SASL_TRYAGAIN  (-8)  transient failure (e.g., weak key)
@@ -690,7 +769,7 @@ public:
 		else if(c->result() == SASLContext::Continue)
 			QMetaObject::invokeMethod(sasl, "nextStep", Qt::QueuedConnection, Q_ARG(QByteArray, c->stepData())); // TODO: double-check this!
 		else if(c->result() == SASLContext::AuthCheck ||
-		        c->result() == SASLContext::NeedParams)
+		        c->result() == SASLContext::Params)
 			QMetaObject::invokeMethod(this, "tryAgain", Qt::QueuedConnection);
 		else
 			QMetaObject::invokeMethod(sasl, "error", Qt::QueuedConnection);
@@ -918,14 +997,14 @@ void SASL::setExternalSSF(int x)
 	d->ext_ssf = x;
 }
 
-void SASL::setLocalAddr(const QString &addr, quint16 port)
+void SASL::setLocalAddress(const QString &addr, quint16 port)
 {
 	d->localSet   = true;
 	d->local.addr = addr;
 	d->local.port = port;
 }
 
-void SASL::setRemoteAddr(const QString &addr, quint16 port)
+void SASL::setRemoteAddress(const QString &addr, quint16 port)
 {
 	d->remoteSet   = true;
 	d->remote.addr = addr;
@@ -1019,7 +1098,12 @@ QString SASL::mechanism() const
 
 QStringList SASL::mechanismList() const
 {
-	return d->c->mechlist().split(" ");
+	return d->c->mechlist();
+}
+
+QStringList SASL::realmList() const
+{
+	return d->c->realmlist();
 }
 
 int SASL::ssf() const
@@ -1110,9 +1194,9 @@ void SASL::Private::tryAgain()
 				emit q->error();
 				return;
 			}
-			else if(d->c->result() == SASLContext::NeedParams) {
+			else if(d->c->result() == SASLContext::Params) {
 				//d->tried = false;
-				Params np = d->c->clientParamsNeeded();
+				Params np = d->c->clientParams();
 				emit q->needParams(np);
 				return;
 			}
@@ -1134,9 +1218,9 @@ void SASL::Private::tryAgain()
 				emit q->error();
 				return;
 			}
-			else if(d->c->result() == SASLContext::NeedParams) {
+			else if(d->c->result() == SASLContext::Params) {
 				//d->tried = false;
-				Params np = d->c->clientParamsNeeded();
+				Params np = d->c->clientParams();
 				emit q->needParams(np);
 				return;
 			}

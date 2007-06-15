@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2005  Justin Karneges <justin@affinix.com>
+ * Copyright (C) 2003-2007  Justin Karneges <justin@affinix.com>
  * Copyright (C) 2004,2005,2007  Brad Hards <bradh@frogmouth.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -37,6 +37,21 @@ Random *global_random();
 Random::Random(const QString &provider)
 :Algorithm("random", provider)
 {
+}
+
+Random::Random(const Random &from)
+:Algorithm(from)
+{
+}
+
+Random::~Random()
+{
+}
+
+Random & Random::operator=(const Random &from)
+{
+	Algorithm::operator=(from);
+	return *this;
 }
 
 uchar Random::nextByte()
@@ -78,6 +93,27 @@ Hash::Hash(const QString &type, const QString &provider)
 {
 }
 
+Hash::Hash(const Hash &from)
+:Algorithm(from), BufferedComputation(from)
+{
+}
+
+Hash::~Hash()
+{
+}
+
+Hash & Hash::operator=(const Hash &from)
+{
+	Algorithm::operator=(from);
+	return *this;
+}
+
+QString Hash::type() const
+{
+	// algorithm type is the same as the hash type
+	return Algorithm::type();
+}
+
 void Hash::clear()
 {
 	static_cast<HashContext *>(context())->clear();
@@ -104,12 +140,12 @@ void Hash::update(const char *data, int len)
 }
 
 // Reworked from KMD5, from KDE's kdelibs
-void Hash::update(QIODevice &file)
+void Hash::update(QIODevice *file)
 {
 	char buffer[1024];
 	int len;
 
-	while ((len=file.read(reinterpret_cast<char*>(buffer), sizeof(buffer))) > 0)
+	while ((len=file->read(reinterpret_cast<char*>(buffer), sizeof(buffer))) > 0)
 		update(buffer, len);
 }
 
@@ -125,7 +161,7 @@ SecureArray Hash::hash(const SecureArray &a)
 
 QString Hash::hashToString(const SecureArray &a)
 {
-	return arrayToHex(hash(a));
+	return arrayToHex(hash(a).toByteArray());
 }
 
 //----------------------------------------------------------------------------
@@ -134,6 +170,9 @@ QString Hash::hashToString(const SecureArray &a)
 class Cipher::Private
 {
 public:
+	QString type;
+	Cipher::Mode mode;
+	Cipher::Padding pad;
 	Direction dir;
 	SymmetricKey key;
 	InitializationVector iv;
@@ -141,13 +180,16 @@ public:
 	bool ok, done;
 };
 
-Cipher::Cipher( const QString &type, Mode m, Padding pad,
+Cipher::Cipher(const QString &type, Mode mode, Padding pad,
 	Direction dir, const SymmetricKey &key,
 	const InitializationVector &iv,
-	const QString &provider )
-:Algorithm(withAlgorithms( type, m, pad ), provider)
+	const QString &provider)
+:Algorithm(withAlgorithms(type, mode, pad), provider)
 {
 	d = new Private;
+	d->type = type;
+	d->mode = mode;
+	d->pad = pad;
 	if(!key.isEmpty())
 		setup(dir, key, iv);
 }
@@ -170,6 +212,26 @@ Cipher & Cipher::operator=(const Cipher &from)
 	return *this;
 }
 
+QString Cipher::type() const
+{
+	return d->type;
+}
+
+Cipher::Mode Cipher::mode() const
+{
+	return d->mode;
+}
+
+Cipher::Padding Cipher::padding() const
+{
+	return d->pad;
+}
+
+Direction Cipher::direction() const
+{
+	return d->dir;
+}
+
 KeyLength Cipher::keyLength() const
 {
 	return static_cast<const CipherContext *>(context())->keyLength();
@@ -181,7 +243,7 @@ bool Cipher::validKeyLength(int n) const
 	return ((n >= len.minimum()) && (n <= len.maximum()) && (n % len.multiple() == 0));
 }
 
-unsigned int Cipher::blockSize() const
+int Cipher::blockSize() const
 {
 	return static_cast<const CipherContext *>(context())->blockSize();
 }
@@ -281,9 +343,9 @@ public:
 
 
 MessageAuthenticationCode::MessageAuthenticationCode(const QString &type,
-						     const SymmetricKey &key,
-						     const QString &provider)
-  :Algorithm(type, provider)
+	const SymmetricKey &key,
+	const QString &provider)
+:Algorithm(type, provider)
 {
 	d = new Private;
 	setup(key);
@@ -305,6 +367,12 @@ MessageAuthenticationCode & MessageAuthenticationCode::operator=(const MessageAu
 	Algorithm::operator=(from);
 	*d = *from.d;
 	return *this;
+}
+
+QString MessageAuthenticationCode::type() const
+{
+	// algorithm type is the same as the mac type
+	return Algorithm::type();
 }
 
 KeyLength MessageAuthenticationCode::keyLength() const

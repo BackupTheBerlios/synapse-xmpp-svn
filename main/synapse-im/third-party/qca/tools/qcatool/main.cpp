@@ -26,7 +26,9 @@
 #include <QTextStream>
 #include <QTimer>
 
-#define VERSION "1.0.0"
+const char *const APPNAME = "qcatool";
+const char *const EXENAME = "qcatool2";
+const char *const VERSION = "1.0.0";
 
 static QStringList wrapstring(const QString &str, int width)
 {
@@ -181,7 +183,7 @@ private:
 
 	AnimatedKeyGen()
 	{
-		gen.setBlocking(false);
+		gen.setBlockingEnabled(false);
 		connect(&gen, SIGNAL(finished()), SLOT(gen_finished()));
 		connect(&t, SIGNAL(timeout()), SLOT(t_timeout()));
 	}
@@ -1777,10 +1779,10 @@ static void print_info_ordered(const QString &title, const QCA::CertificateInfoO
 		}
 		else
 		{
-			if(pair.section() == QCA::CertificateInfoPair::DN)
-				name = QString("DN:") + pair.oid();
+			if(pair.type().section() == QCA::CertificateInfoType::DN)
+				name = QString("DN:") + pair.type().id();
 			else
-				name = QString("AN:") + pair.oid();
+				name = QString("AN:") + pair.type().id();
 		}
 
 		printf("   %s: %s\n", qPrintable(name), pair.value().toUtf8().data());
@@ -2520,8 +2522,8 @@ static QPair<QCA::PGPKey, QCA::PGPKey> get_S(const QString &name)
 
 static void usage()
 {
-	printf("qcatool: simple qca utility\n");
-	printf("usage: qcatool (options) [command]\n");
+	printf("%s: simple qca utility\n", APPNAME);
+	printf("usage: %s (options) [command]\n", EXENAME);
 	printf(" options: --pass=x, --newpass=x, --nonroots=x, --roots=x, --nosys,\n");
 	printf("          --noprompt, --ordered, --debug, --log-file=x, --log-level=n,\n");
 	printf("          --nobundle\n");
@@ -2683,7 +2685,7 @@ int main(int argc, char **argv)
 		int maj = (ver >> 16) & 0xff;
 		int min = (ver >> 8) & 0xff;
 		int bug = ver & 0xff;
-		printf("qcatool version %s by Justin Karneges\n", VERSION);
+		printf("%s version %s by Justin Karneges\n", APPNAME, VERSION);
 		printf("Using QCA version %d.%d.%d\n", maj, min, bug);
 		return 0;
 	}
@@ -3737,7 +3739,7 @@ int main(int argc, char **argv)
 			// pgp should always be ascii
 			if(pgp)
 				msg->setFormat(QCA::SecureMessage::Ascii);
-			msg->setEnableBundleSigner(!nobundle);
+			msg->setBundleSignerEnabled(!nobundle);
 			msg->startSign(mode);
 			msg->update(plain);
 			msg->end();
