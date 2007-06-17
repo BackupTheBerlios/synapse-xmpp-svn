@@ -26,10 +26,10 @@
 // Should also be overridable through an optional file.
 
 #define PROG_NAME "Synapse IM"
-#define PROG_VERSION "0.3 \"alfa\"" " (" __DATE__ ")"; //CVS Builds are dated
+#define PROG_VERSION "0.4 \"alfa 2\"" " (" __DATE__ ")"; //CVS Builds are dated
 //#define PROG_VERSION "0.11-beta5";
 #define PROG_CAPS_NODE "http://psi-im.org/caps";
-#define PROG_CAPS_VERSION "0.3-dev-rev1";
+#define PROG_CAPS_VERSION "0.4-dev-rev1";
 #define PROG_OPTIONS_NS "http://psi-im.org/options";
 #define PROG_STORAGE_NS "http://psi-im.org/storage";
 
