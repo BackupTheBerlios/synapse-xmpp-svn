@@ -20,9 +20,11 @@ set(tunecontroller_H
 
 if (WIN32)
 add_definitions(-DTC_WINAMP)
+set(tunecontroller_SRCS ${tunecontroller_SRCS}
+	tools/tunecontroller/plugins/winamp/winampplugin.cpp
+)
 set(tunecontroller_noMOC_SRCS ${tunecontroller_noMOC_SRCS}
 	tools/tunecontroller/plugins/winamp/winampcontroller.cpp
-	tools/tunecontroller/plugins/winamp/winampplugin.cpp
 )
 set(tunecontroller_H ${tunecontroller_H}
 	tools/tunecontroller/plugins/winamp/winampcontroller.h 
