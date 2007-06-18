@@ -192,7 +192,6 @@ public:
 
 	void updatePEP(QString *mood, QString *tune)
 	{
-		printf("updatePEP()\n");
 		QString PEP_;
 		if (mood && !mood->isEmpty())
 			PEP_ = QString("<b>") + tr("Mood") + " :</b> " + *mood;

@@ -240,6 +240,8 @@ int main(int argc, char *argv[])
 	QApplication::addLibraryPath(ApplicationInfo::homeDir());
 	QApplication::addLibraryPath(ApplicationInfo::resourcesDir());
 	QApplication::setQuitOnLastWindowClosed(false);
+	
+	QCA::scanForPlugins();
 
 	// Initialize QCA
 	QCA::setProperty("pgp-always-trust", true);

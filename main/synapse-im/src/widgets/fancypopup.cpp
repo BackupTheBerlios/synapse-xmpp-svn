@@ -47,7 +47,7 @@
 //----------------------------------------------------------------------------
 
 FancyPopup::FancyPopup(QWidget *parent, QString title, const PsiIcon *icon, int timeout, bool copyIcon)
- : QWidget( parent, "Synapse-IM OSD", Qt::Popup | Qt::WType_TopLevel | Qt::WNoAutoErase | Qt::WStyle_Customize | Qt::WX11BypassWM | Qt::WStyle_StaysOnTop | Qt::WStyle_NoBorder ), m_timer(new QTimer()), m_timeout(timeout), m_prl(NULL), m_title(title)
+ : QWidget( parent, "Synapse-IM OSD", Qt::ToolTip | Qt::WType_TopLevel | Qt::WNoAutoErase | Qt::WStyle_Customize | Qt::WX11BypassWM | Qt::WStyle_StaysOnTop | Qt::WStyle_NoBorder ), m_timer(new QTimer()), m_timeout(timeout), m_prl(NULL), m_title(title)
 // : QWidget( parent, "Synapse-IM OSD", Qt::WType_TopLevel | Qt::WNoAutoErase | Qt::WStyle_Customize | Qt::WX11BypassWM | Qt::WStyle_StaysOnTop | Qt::WStyle_Tool ), m_timer(new QTimer()), m_timeout(timeout), m_prl(NULL), m_title(title)
 {
 	QWidget::setAttribute(Qt::WA_DeleteOnClose);
