@@ -44,6 +44,7 @@ class saslProvider : public Provider
 public:
 	saslProvider();
 	void init();
+	void deinit();
 	~saslProvider();
 	int qcaVersion() const;
 	QString name() const;
@@ -866,6 +867,10 @@ saslProvider::saslProvider()
 }
 
 void saslProvider::init()
+{
+}
+
+void saslProvider::deinit()
 {
 }
 

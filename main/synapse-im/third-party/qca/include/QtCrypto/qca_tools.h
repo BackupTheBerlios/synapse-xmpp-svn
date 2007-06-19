@@ -75,6 +75,54 @@ QCA_EXPORT void *qca_secure_realloc(void *p, int bytes);
 namespace QCA {
 
 /**
+   \class MemoryRegion qca_tools.h QtCrypto
+
+   Array of bytes that may be optionally secured
+
+   This class is mostly unusable on its own.  Either use it as a SecureArray
+   subclass or call toByteArray() to convert to QByteArray.
+
+   Note that this class is implicitly shared (that is, copy on write).
+*/
+class QCA_EXPORT MemoryRegion
+{
+public:
+	MemoryRegion();
+	MemoryRegion(const char *str);
+	MemoryRegion(const QByteArray &from);
+	MemoryRegion(const MemoryRegion &from);
+	~MemoryRegion();
+	MemoryRegion & operator=(const MemoryRegion &from);
+	MemoryRegion & operator=(const QByteArray &from);
+
+	bool isNull() const;
+	bool isSecure() const;
+	QByteArray toByteArray() const;
+
+	bool isEmpty() const;
+	int size() const;
+
+	const char *data() const;
+	const char *constData() const;
+	const char & at(int index) const;
+
+protected:
+	MemoryRegion(bool secure);
+	MemoryRegion(int size, bool secure);
+	MemoryRegion(const QByteArray &from, bool secure);
+	char *data();
+	char & at(int index);
+	bool resize(int size);
+	void set(const QByteArray &from, bool secure);
+	void setSecure(bool secure);
+
+private:
+	bool _secure;
+	class Private;
+	QSharedDataPointer<Private> d;
+};
+
+/**
    \class SecureArray qca_tools.h QtCrypto
 
    Secure array of bytes
@@ -88,7 +136,7 @@ namespace QCA {
 
    Note that this class is implicitly shared (that is, copy on write).
 */
-class QCA_EXPORT SecureArray
+class QCA_EXPORT SecureArray : public MemoryRegion
 {
 public:
 	/**
@@ -119,6 +167,15 @@ public:
 	   \sa operator=()
 	*/
 	SecureArray(const QByteArray &a);
+
+	/**
+	   Construct a secure byte array from a MemoryRegion
+
+	   Note that this copies, rather than references the source array
+
+	   \sa operator=()
+	*/
+	SecureArray(const MemoryRegion &a);
 
 	/**
 	   Construct a (shallow) copy of another secure byte array
@@ -241,7 +298,7 @@ public:
 	   \note The number of characters is 1 based, so if
 	   you ask for fill('x', 10), it will fill from
 	*/
-        void fill(char fillChar, int fillToPosition = -1);
+	void fill(char fillChar, int fillToPosition = -1);
 
 	/**
 	   Copy the contents of the secure array out to a 
@@ -254,6 +311,21 @@ public:
 	   Append a secure byte array to the end of this array
 	*/
 	SecureArray & append(const SecureArray &a);
+
+	/**
+	   Equality operator. Returns true if both arrays have the same
+	   data (and the same length, of course).
+	*/
+	bool operator==(const MemoryRegion &other) const;
+	
+	/**
+	   Inequality operator. Returns true if both arrays have different
+	   length, or the same length but different data.
+	*/
+	inline bool operator!=(const MemoryRegion &other) const
+	{
+		return !(*this == other);
+	}
 
 	/**
 	   Append a secure byte array to the end of this array
@@ -276,33 +348,10 @@ protected:
 	   \param from the byte array to copy
 	*/
 	void set(const QByteArray &from);
-
-private:
-	class Private;
-	QSharedDataPointer<Private> d;
 };
 
 /**
-   Equality operator. Returns true if the two SecureArray
-   arguments have the same data (and the same length, of course).
-
-   \relates SecureArray
-*/
-QCA_EXPORT bool operator==(const SecureArray &a, const SecureArray &b);
-
-/**
-   Inequality operator. Returns true if the two SecureArray
-   arguments have different length, or the same length but
-   different data
-
-   \relates SecureArray
-*/
-QCA_EXPORT bool operator!=(const SecureArray &a, const SecureArray &b);
-
-/**
    Returns an array that is the result of concatenating a and b
-
-   \relates SecureArray
 */
 QCA_EXPORT const SecureArray operator+(const SecureArray &a, const SecureArray &b);
 
@@ -477,8 +526,8 @@ aString = aBiggishInteger.toString(); // aString is now "5878990"
 	   \param n the BigInteger to compare with
 
 	   \return zero if the values are the same, negative if the argument
-	   is less than the value of this BigInteger, and positive if the argument
-	   value is greater than this BigInteger
+	   is less than the value of this BigInteger, and positive if the
+	   argument value is greater than this BigInteger
 
 	   \code
 BigInteger a( "400" );
@@ -492,80 +541,68 @@ result = b.compare( c );        // return negative, -400 < 200
 	*/
 	int compare(const BigInteger &n) const;
 
+	/**
+	   Equality operator. Returns true if the two BigInteger values
+	   are the same, including having the same sign.
+	*/
+	inline bool operator==(const BigInteger &other) const
+	{
+		return (compare(other) == 0);
+	}
+
+	/**
+	   Inequality operator. Returns true if the two BigInteger values
+	   are different in magnitude, sign or both.
+	*/
+	inline bool operator!=(const BigInteger &other) const
+	{
+		return !(*this == other);
+	}
+
+	/**
+	   Less than or equal operator. Returns true if the BigInteger value
+	   on the left hand side is equal to or less than the BigInteger
+	   value on the right hand side.
+	*/
+	inline bool operator<=(const BigInteger &other) const
+	{
+		return (compare(other) <= 0);
+	}
+
+	/**
+	   Greater than or equal operator. Returns true if the BigInteger
+	   value on the left hand side is equal to or greater than the
+	   BigInteger value on the right hand side.
+	*/
+	inline bool operator>=(const BigInteger &other) const
+	{
+		return (compare(other) >= 0);
+	}
+
+	/**
+	   Less than operator. Returns true if the BigInteger value
+	   on the left hand side is less than the BigInteger value
+	   on the right hand side.
+	*/
+	inline bool operator<(const BigInteger &other) const
+	{
+		return (compare(other) < 0);
+	}
+
+	/**
+	   Greater than operator. Returns true if the BigInteger value
+	   on the left hand side is greater than the BigInteger value
+	   on the right hand side.
+	*/
+	inline bool operator>(const BigInteger &other) const
+	{
+		return (compare(other) > 0);
+	}
+
 private:
 	class Private;
 	QSharedDataPointer<Private> d;
 };
-
-/**
-   Equality operator. Returns true if the two BigInteger values
-   are the same, including having the same sign
-
-   \relates BigInteger
-*/
-inline bool operator==(const BigInteger &a, const BigInteger &b)
-{
-	return (0 == a.compare( b ) );
-}
-
-/**
-   Inequality operator. Returns true if the two BigInteger values
-   are different in magnitude, sign or both
-
-   \relates BigInteger
-*/
-inline bool operator!=(const BigInteger &a, const BigInteger &b)
-{
-	return (0 != a.compare( b ) );
-}
-
-/**
-   Less than or equal operator. Returns true if the BigInteger value
-   on the left hand side is equal to or less than the BigInteger value
-   on the right hand side.
-
-   \relates BigInteger
-*/
-inline bool operator<=(const BigInteger &a, const BigInteger &b)
-{
-	return (a.compare( b ) <= 0 );
-}
-
-/**
-   Greater than or equal operator. Returns true if the BigInteger value
-   on the left hand side is equal to or greater than the BigInteger value
-   on the right hand side.
-
-   \relates BigInteger
-*/
-inline bool operator>=(const BigInteger &a, const BigInteger &b)
-{
-	return (a.compare( b ) >= 0 );
-}
-
-/**
-   Less than operator. Returns true if the BigInteger value
-   on the left hand side is less than the BigInteger value
-   on the right hand side.
-
-   \relates BigInteger
-*/
-inline bool operator<(const BigInteger &a, const BigInteger &b)
-{
-	return (a.compare( b ) < 0 );
-}
-
-/**
-   Greater than operator. Returns true if the BigInteger value
-   on the left hand side is greater than the BigInteger value
-   on the right hand side.
-
-   \relates BigInteger
-*/
-inline bool operator>(const BigInteger &a, const BigInteger &b)
-{
-	return (a.compare( b ) > 0 );
-}
 
 /**
    Stream operator

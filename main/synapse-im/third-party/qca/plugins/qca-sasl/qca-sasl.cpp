@@ -869,6 +869,10 @@ void saslProvider::init()
 {
 }
 
+void saslProvider::deinit()
+{
+}
+
 saslProvider::~saslProvider()
 {
 	if(client_init || server_init)

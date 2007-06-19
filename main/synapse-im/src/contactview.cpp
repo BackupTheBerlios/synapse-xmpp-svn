@@ -3035,17 +3035,20 @@ void RichListViewItem::setStatus(int status)
 
 void RichListViewItem::greyscaleAvatar()
 {
-	QImage *result = new QImage(avatar->toImage());
-	for (int y = 0; y < result->height(); ++y) {
-		for (int x = 0; x < result->width(); ++x) {
-			int pixel = result->pixel(x, y);
-			int gray = qGray(pixel);
-			int alpha = qAlpha(pixel);
-			result->setPixel(x, y, qRgba(gray, gray, gray, alpha));
+	if(avatar!=0) {
+		QImage *result = new QImage(avatar->toImage());
+		for (int y = 0; y < result->height(); ++y) {
+			for (int x = 0; x < result->width(); ++x) {
+				int pixel = result->pixel(x, y);
+				int gray = qGray(pixel);
+				int alpha = qAlpha(pixel);
+				result->setPixel(x, y, qRgba(gray, gray, gray, alpha));
+			}
 		}
+		delete avatar;
+		avatar = new QPixmap(QPixmap::fromImage(*result));
+		delete result;
 	}
-	*avatar = avatar->fromImage(*result);
-	delete result;
 }
 
 void RichListViewItem::scaleAvatar()
@@ -3055,15 +3058,22 @@ void RichListViewItem::scaleAvatar()
 	if(v_avatarShow && v_avatarFactory != NULL)
 	{
 		avatar = new QPixmap(v_avatarFactory->getAvatar(v_jid.bare()));
-		avatar_x = avatar->width();
-		avatar_y = avatar->height();
-		if((avatar_x != 0 )&&( avatar_y !=0))
-		{
-			int x = (avatar_x > avatar_y)? v_avatarSize : ((avatar_x/avatar_y)*v_avatarSize);
-			int y = (avatar_x > avatar_y)? ((avatar_y/avatar_x)*v_avatarSize) : v_avatarSize;
-			*avatar = avatar->scaled(x,y);
+		if(avatar != 0) {
 			avatar_x = avatar->width();
 			avatar_y = avatar->height();
+			if((avatar_x != 0 )&&( avatar_y !=0))
+			{
+				int x = (avatar_x > avatar_y)? v_avatarSize : ((avatar_x/avatar_y)*v_avatarSize);
+				int y = (avatar_x > avatar_y)? ((avatar_y/avatar_x)*v_avatarSize) : v_avatarSize;
+				*avatar = avatar->scaled(x,y);
+				avatar_x = avatar->width();
+		    		avatar_y = avatar->height();
+			} else {
+				delete avatar;
+				avatar = 0;
+				avatar_x = 0;
+				avatar_y = 0;
+			}
 		}
 	}
 }
@@ -3071,7 +3081,7 @@ void RichListViewItem::scaleAvatar()
 void RichListViewItem::setup()
 {
 	Q3ListViewItem::setup();
-	if(avatar)
+	if(avatar!=0)
 	{
 		delete avatar;
 		avatar = 0;
@@ -3092,7 +3102,7 @@ void RichListViewItem::setup()
 		v_avatarShow = true;
 		scaleAvatar();
 
- 		if((v_status == STATUS_OFFLINE) && (avatar_x != 0))
+ 		if((v_status == STATUS_OFFLINE) && (avatar != 0) && (avatar_x != 0))
 			greyscaleAvatar();
 
 		int left = v_avatarSize + 2;
@@ -3275,7 +3285,7 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 	QRect avatar_rect;
 	if(v_synapseStyle) {
 		avatar_rect = QRect(0, 0, v_avatarSize, avatar_y);
-		if(avatar) 
+		if(avatar!=0) 
 			p->drawPixmap(avatar_rect, *avatar);
 		if(px && (avatar_x == 0))
 		{
@@ -3288,7 +3298,7 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 	} else {
 		if(v_avatarShow) {
 			avatar_rect = QRect(width-avatar_x, 0, avatar_x, avatar_y);
-			if(avatar) 
+			if(avatar!=0) 
 				p->drawPixmap(avatar_rect, *avatar);
 		}
 		if(px)

@@ -522,6 +522,10 @@ public:
 	{
 	}
 
+	void deinit()
+	{
+	}
+
 	QString name() const {
 		return "simplesasl";
 	}

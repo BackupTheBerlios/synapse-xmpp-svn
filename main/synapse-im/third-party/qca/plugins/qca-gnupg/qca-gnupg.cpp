@@ -1092,6 +1092,10 @@ public:
 	{
 	}
 
+	virtual void deinit()
+	{
+	}
+
 	virtual int qcaVersion() const
 	{
 		return QCA_VERSION;

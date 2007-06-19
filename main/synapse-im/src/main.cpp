@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
 	int returnValue = app.exec();
 	delete psi;
 
-	QCA::unloadAllPlugins();
+//	QCA::unloadAllPlugins();
 
 	return returnValue;
 }

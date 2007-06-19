@@ -122,6 +122,7 @@ public:
 
 MainWin::Private::Private(PsiCon *_psi, MainWin *_mainWin)
 {
+	statusLastMenu = 0;
 	psi = _psi;
 	mainWin = _mainWin;
 
@@ -599,7 +600,10 @@ void MainWin::buildStatusLastMenu()
 {
 //	d->getAction("status_lastly")->addTo(d->statusMenu);
 	if(d->statusLastMenu)
+	{
 		delete d->statusLastMenu;
+		d->statusLastMenu = 0;
+	}
 
 //	d->statusLastMenu = new QMenu(0);
 	d->statusLastMenu = d->statusMenu->addMenu(IconsetFactory::iconPtr("status/ask")->icon(),tr("Lastly used.."));
