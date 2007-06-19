@@ -63,6 +63,13 @@ else(SPEEX_FOUND)
     MESSAGE(STATUS "Speex not found -> disabling Jingle support")
 endif(SPEEX_FOUND)
 
+find_package(ASPELL)
+if(ASPELL_FOUND)
+    MESSAGE(STATUS "Found ASpell -> enabling Spellchecking support")
+else(ASPELL_FOUND)
+    MESSAGE(STATUS "ASpell not found -> disabling Spellchecking support")
+endif(ASPELL_FOUND)
+
 add_subdirectory(third-party/qca)
 
 if(SPEEX_FOUND)
