@@ -347,6 +347,7 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	QMenu *viewMenu = new QMenu(this);
 	mainMenuBar()->insertItem(tr("View"), viewMenu);
 	d->getAction("show_offline")->addTo(viewMenu);
+	d->getAction("show_no_offline_status_msg")->addTo(viewMenu);
 	if (PsiOptions::instance()->getOption("options.ui.menu.view.show-away").toBool())
 		d->getAction("show_away")->addTo(viewMenu);
 	d->getAction("show_hidden")->addTo(viewMenu);
