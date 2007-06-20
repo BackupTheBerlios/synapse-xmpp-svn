@@ -102,6 +102,7 @@
 				<status-messages comment="Status messages for contacts">
 					<single-line comment="Show status messages on the same line as the nickname" type="bool">false</single-line>
 					<show comment="Show status messages" type="bool">true</show>
+					<show-offline-without-status-message" type="bool">true</show>
 				</status-messages>
 				<tooltip comment="Display options for the contact list tooltips">
 					<avatar comment="Display avatar" type="bool">true</avatar>
