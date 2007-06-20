@@ -31,7 +31,7 @@ public:
     
 
 public slots:    
-    void start( uint32_t ip, int port, int codecPayload);
+    bool start( uint32_t ip, int port, int codecPayload);
     void stop();
     
     void timerClick();

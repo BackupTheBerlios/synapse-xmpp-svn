@@ -15,9 +15,7 @@ public:
 	QString sid;
 	XMPP::Jid jid;
 	XMPP::Jid initiator;
-	QString ip;
-	QString port;
-	QString protocol;
+	QList<Transport::Params> tpl;
 	Transport *transport_;	
 };
 #endif

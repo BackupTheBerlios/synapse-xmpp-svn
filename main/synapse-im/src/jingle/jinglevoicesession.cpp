@@ -144,9 +144,8 @@ bool JingleVoiceSession::setTransport(QString sid,QDomElement &e)
 		if(found) {
 			QDomElement candidate = findSubTag(trans, "candidate", &found);
 			if(found) {
-				s->ip = candidate.attribute("ip");
-				s->port = candidate.attribute("port");
-				s->protocol = candidate.attribute("protocol");
+				Transport::Params addr(candidate.attribute("ip"), candidate.attribute("port"), candidate.attribute("protocol"));
+				s->tpl.append(addr); // Changed to params list;
 			}
 		}
 		emit incoming(s->jid,sid);

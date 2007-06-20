@@ -23,6 +23,18 @@
 class Transport : public QObject {
 	Q_OBJECT
 public:
+
+	class Params {
+	public:
+		Params(QString _ip, QString _port, QString _protocol)
+		: ip(_ip), port(_port), protocol(_protocol) {};
+		~Params() {};
+
+		QString ip;
+		QString port;
+		QString protocol;
+	};	
+
 	Transport();
 	~Transport();
 

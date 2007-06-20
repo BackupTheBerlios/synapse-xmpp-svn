@@ -144,7 +144,7 @@ static int audioCallback( void *inputBuffer, void *outputBuffer, // {{{
 }
 
 
-void MediaStream::start(uint32_t ip, int port, int codecPayload )
+bool MediaStream::start(uint32_t ip, int port, int codecPayload )
 {
     if ( isRunning() )
         stop();
@@ -159,7 +159,7 @@ printf("getFactory(%d)\n", codecPayload);
     VoiceCodecFactory *factory = CodecsManager::instance()->codecFactory(codecPayload);
     if ( !factory ) {
         printf("VoiceCodecFactory not found!\n");
-        return;
+        return true;
     }
 
     d->codecPayload = codecPayload;
@@ -183,7 +183,7 @@ printf("session.Create()\n");
     if ( status<0 ) {
 //        qDebug("can't create RTP session, %s", RTPGetErrorString(status).c_str() );
         d->session.Destroy(); 
-        return;
+        return false;
     }
 
 printf("session.AddDestination()\n");
@@ -193,7 +193,7 @@ printf("session.AddDestination()\n");
     if ( status<0 ) {
 //         qDebug("can't add rtp destination, %s", RTPGetErrorString(status).c_str() );
         d->session.Destroy(); 
-        return;
+        return false;
     }
 
     //initialise audio
@@ -202,7 +202,7 @@ printf("session.AddDestination()\n");
     if( status != paNoError ) {
 //        qDebug( "PortAudio error: %s", Pa_GetErrorText(status) );
         stop();
-        return;
+        return true;
     }
 
     status = Pa_OpenDefaultStream(
@@ -220,7 +220,7 @@ printf("session.AddDestination()\n");
     if( status != paNoError ) {
 //         qDebug( "PortAudio error: %s", Pa_GetErrorText(status) );
         stop();
-        return;
+        return true;
     }
 
     
@@ -242,7 +242,7 @@ printf("session.AddDestination()\n");
     
 //    qDebug("mediastream started");
     printf("mediastream started\n");
-        
+    return true;
 } // }}}
 
 
