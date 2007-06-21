@@ -422,7 +422,7 @@ void MainWin::registerAction( IconAction *action )
 		{ "show_agents",  toggled, cvlist, SLOT( setShowAgents(bool) ) },
 		{ "show_self",    toggled, cvlist, SLOT( setShowSelf(bool) ) },
 		{ "show_statusmsg", toggled, cvlist, SLOT( setShowStatusMsg(bool) ) },
-		{ "show_no_offline_status_msg", toggled, cvlist, SLOT( setShowNoOfflineStatusMsg(bool) ) },
+		{ "show_no_offline_status_msg", toggled, cvlist, SLOT( setShowOfflineWithoutStatusMessage(bool) ) },
 
 		{ "button_options", activated, this, SIGNAL( doOptions() ) },
 
@@ -488,7 +488,7 @@ void MainWin::registerAction( IconAction *action )
 		{ "show_self",    cvlist, SIGNAL( showSelf(bool) ), setChecked },
 		{ "show_agents",  cvlist, SIGNAL( showAgents(bool) ), setChecked },
 		{ "show_statusmsg", cvlist, SIGNAL( showStatusMsg(bool) ), setChecked },
-		{ "show_no_offline_status_msg", cvlist, SIGNAL( showNoOfflineStatusMsg(bool) ), setChecked },
+		{ "show_no_offline_status_msg", cvlist, SIGNAL( showOfflineWithoutStatusMessage(bool) ), setChecked },
 		{ "", 0, 0, 0 }
 	};
 
@@ -500,9 +500,9 @@ void MainWin::registerAction( IconAction *action )
 			if (aName == "show_statusmsg") {
 				action->setChecked( PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.show").toBool() );
 			}
-			else if (aName == "show_no_offline_status_msg") {
+/*			else if (aName == "show_no_offline_status_msg") {
 				action->setChecked( PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.show-offline-without-status-message").toBool() );
-			}
+			}*/
 			else
 				action->setChecked( true );
 		}

@@ -597,7 +597,7 @@ void ContactProfile::removeUnneededContactItems(Entry *e)
 		}
 		else {
 			if(!e->alerting) {
-				if((!d->cv->isShowOffline() && !u.isAvailable()) || (!d->cv->isShowAway() && u.isAway()) || (!d->cv->isShowHidden() && u.isHidden()))
+				if(((!d->cv->isShowOffline() || (!d->cv->isShowOfflineWithoutStatusMessage() && u.lastAvailable().isNull()) ) && !u.isAvailable()) || (!d->cv->isShowAway() && u.isAway()) || (!d->cv->isShowHidden() && u.isHidden()))
 					delAll = true;
 			}
 		}
@@ -972,6 +972,8 @@ void ContactProfile::ensureVisible(Entry *e)
 	if(!e->alerting) {
 		if(!d->cv->isShowAgents() && e->u.isTransport())
 			d->cv->setShowAgents(true);
+		if(!d->cv->isShowOfflineWithoutStatusMessage() && !e->u.isAvailable())
+			d->cv->setShowOffline(true);
 		if(!d->cv->isShowOffline() && !e->u.isAvailable())
 			d->cv->setShowOffline(true);
 		if(!d->cv->isShowAway() && e->u.isAway())
@@ -2324,7 +2326,8 @@ private slots:
 };
 
 ContactView::ContactView(QWidget *parent, const char *name)
-:Q3ListView(parent, name, Qt::WNoAutoErase | Qt::WResizeNoErase)
+:Q3ListView(parent, name, Qt::WNoAutoErase | Qt::WResizeNoErase),
+v_showOffline(true), v_showAway(true), v_showHidden(true), v_showAgents(true), v_showSelf(true)
 {
 	d = new Private(this);
 
@@ -2352,11 +2355,7 @@ ContactView::ContactView(QWidget *parent, const char *name)
 	connect(this, SIGNAL(doubleClicked(Q3ListViewItem *)),SLOT(qlv_doubleclick(Q3ListViewItem *)) );
 	connect(this, SIGNAL(contextMenuRequested(Q3ListViewItem *, const QPoint &, int)), SLOT(qlv_contextMenuRequested(Q3ListViewItem *, const QPoint &, int)));
 
-	v_showOffline = true;
-	v_showAway = true;
-	v_showHidden = true;
-	v_showAgents = true;
-	v_showSelf = true;
+	v_showOfflineWithoutStatusMessage = PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.show-offline-without-status-message").toBool();
 	v_showStatusMsg = PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.show").toBool();
 
 	d->lastSize = QSize( 0, 0 );
@@ -2471,6 +2470,24 @@ void ContactView::setShowOffline(bool x)
 	}
 }
 
+void ContactView::setShowOfflineWithoutStatusMessage(bool x)
+{
+	PsiOptions::instance()->setOption("options.ui.contactlist.status-messages.show-offline-without-status-message",x);
+
+	if (v_showOfflineWithoutStatusMessage != x) {
+		v_showOfflineWithoutStatusMessage = x;
+		showOfflineWithoutStatusMessage(v_showOfflineWithoutStatusMessage);
+
+		Q3PtrListIterator<ContactProfile> it(d->profiles);
+		for(ContactProfile *cp; (cp = it.current()); ++it) {
+			if(!v_showOfflineWithoutStatusMessage)
+				cp->removeAllUnneededContactItems();
+			else
+				cp->addAllNeededContactItems();
+		}
+	}
+}
+
 void ContactView::setShowAway(bool x)
 {
 	bool oldstate = v_showAway;
@@ -2521,18 +2538,6 @@ void ContactView::setShowStatusMsg(bool x)
 		
 		recalculateSize();
 	}
-}
-
-void ContactView::setShowNoOfflineStatusMsg(bool x)
-{
-	PsiOptions::instance()->setOption("options.ui.contactlist.status-messages.show-offline-without-status-message",x);
-//	emit showStatusMsg(x);
-	Q3PtrListIterator<ContactProfile> it(d->profiles);
-	for(ContactProfile *cp; (cp = it.current()); ++it) {
-		cp->resetAllContactItemNames();
-	}
-	
-	recalculateSize();
 }
 
 /*
@@ -2978,43 +2983,18 @@ void RichListViewStyleSheet::scaleFont(QFont& font, int logicalSize) const
 RichListViewStyleSheet* RichListViewStyleSheet::instance_ = 0;
 
 
-RichListViewItem::RichListViewItem( Q3ListView * parent ) : Q3ListViewItem(parent)
+RichListViewItem::RichListViewItem( Q3ListView * parent ) : Q3ListViewItem(parent),
+v_rt(0), v_active(false), v_selected(false), v_rich(true), avatar(NULL), v_avatarSize(0), v_avatarFactory(NULL)
 {
-	v_rt = 0;
-	v_active = v_selected = false;
-	v_rich = !PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.single-line").toBool();
-	if (PsiOptions::instance()->getOption("options.ui.contactlist.SynapseStyle").toBool() )
-	{
-		v_synapseStyle = true;
-		v_rich = true;
-	} else {
-		v_synapseStyle = false;
-	}
 	setStatus(STATUS_OFFLINE);	
-	noOfflineStatusMsg = false;
-	avatar = 0;
-	v_avatarShow = false;
-	v_avatarFactory = NULL;
 }
 
-RichListViewItem::RichListViewItem( Q3ListViewItem * parent ) : Q3ListViewItem(parent)
+RichListViewItem::RichListViewItem( Q3ListViewItem * parent ) : Q3ListViewItem(parent),
+v_rt(0), v_active(false), v_selected(false), v_rich(true), avatar(NULL), v_avatarSize(0), v_avatarFactory(NULL)
 {
-	v_rt = 0;
-	v_active = v_selected = false;
-	v_rich = !PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.single-line").toBool();
-	if (PsiOptions::instance()->getOption("options.ui.contactlist.SynapseStyle").toBool() )
-	{
-		v_synapseStyle = true;
-		v_rich = true;
-	} else {
-		v_synapseStyle = false;
-	}
-	noOfflineStatusMsg = false;
 	setStatus(STATUS_OFFLINE);
-	v_avatarShow = v_synapseStyle ||  PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toBool();
-	avatar = 0;
-	v_avatarSize = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt();
-	v_avatarFactory = NULL;
+	if(PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toBool())
+		v_avatarSize = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt();
 }
 
 RichListViewItem::~RichListViewItem()
@@ -3035,7 +3015,7 @@ void RichListViewItem::setStatus(int status)
 
 void RichListViewItem::greyscaleAvatar()
 {
-	if(avatar!=0) {
+	if(avatar!=NULL) {
 		QImage *result = new QImage(avatar->toImage());
 		for (int y = 0; y < result->height(); ++y) {
 			for (int x = 0; x < result->width(); ++x) {
@@ -3052,27 +3032,23 @@ void RichListViewItem::greyscaleAvatar()
 }
 
 void RichListViewItem::scaleAvatar()
-{
-	v_avatarSize = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt();
+{	if(PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toBool())
+		v_avatarSize = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt();
 
-	if(v_avatarShow && v_avatarFactory != NULL)
+	if(v_avatarSize!=0 && v_avatarFactory != NULL)
 	{
 		avatar = new QPixmap(v_avatarFactory->getAvatar(v_jid.bare()));
-		if(avatar != 0) {
-			avatar_x = avatar->width();
-			avatar_y = avatar->height();
+		if(avatar != NULL) {
+			int avatar_x = avatar->width();
+			int avatar_y = avatar->height();
 			if((avatar_x != 0 )&&( avatar_y !=0))
 			{
 				int x = (avatar_x > avatar_y)? v_avatarSize : ((avatar_x/avatar_y)*v_avatarSize);
 				int y = (avatar_x > avatar_y)? ((avatar_y/avatar_x)*v_avatarSize) : v_avatarSize;
 				*avatar = avatar->scaled(x,y);
-				avatar_x = avatar->width();
-		    		avatar_y = avatar->height();
 			} else {
 				delete avatar;
-				avatar = 0;
-				avatar_x = 0;
-				avatar_y = 0;
+				avatar = NULL;
 			}
 		}
 	}
@@ -3081,140 +3057,67 @@ void RichListViewItem::scaleAvatar()
 void RichListViewItem::setup()
 {
 	Q3ListViewItem::setup();
-	if(avatar!=0)
+	if(avatar!=NULL)
 	{
 		delete avatar;
 		avatar = 0;
 	}
-	if (v_synapseStyle) {
-		int h = 0;
-		QString txt = text(0);
-		if( txt.isEmpty() ){
-			delete v_rt;
-			v_rt = 0;
-			return;
-		}
 
-		const Q3ListView* lv = listView();
-		const QPixmap* px = pixmap(0);
-		avatar_x = 0;
-		avatar_y = 0;
-		v_avatarShow = true;
-		scaleAvatar();
+	int h = 0;
+	QString txt = text(0);
+	if( txt.isEmpty() ){
+		delete v_rt;
+		v_rt = 0;
+		return;
+	}
 
- 		if((v_status == STATUS_OFFLINE) && (avatar != 0) && (avatar_x != 0))
-			greyscaleAvatar();
+	const Q3ListView* lv = listView();
+	const QPixmap* px = pixmap(0);
+	scaleAvatar();
 
-		int left = v_avatarSize + 2;
-		v_active = lv->isActiveWindow();
-		v_selected = isSelected();
+	if((v_status == STATUS_OFFLINE) && (avatar != 0))
+		greyscaleAvatar();
 
-		if ( v_selected  ) {
-			txt = QString("<font color=\"%1\">").arg(listView()->colorGroup().color( QColorGroup::HighlightedText ).name()) + txt + "</font>";
-		}
-		
-		if(v_rt)
-			delete v_rt;
+	int left = v_avatarSize + 2;
+	if ((left == 2)) left += 16;
+	v_active = lv->isActiveWindow();
+	v_selected = isSelected();
 
-		v_rt = new QTextDocument();
-		v_rt->setUndoRedoEnabled(false);
-		v_rt->setDefaultFont(lv->font());
-
-		PsiRichText::install(v_rt);
-		PsiRichText::setText(v_rt, txt);
-
-		int max_width = lv->columnWidth(0) - left;// - depth() * lv->treeStepSize();
-		PsiRichText::ensureTextLayouted(v_rt, max_width);
-
-		v_widthUsed = v_rt->size().toSize().width();
-
-		if(v_rt->size().toSize().width() > max_width)
-			v_widthUsed = max_width;
-
-		int sh = (int) v_rt->size().toSize().height();
-		h = QMAX( h, sh );
-		if (pixmap(0) != NULL) h = QMAX( h, pixmap(0)->height() + icon_vpadding);
-		h = QMAX( h, avatar_y);
-
-		if ( h % 2 > 0 )
-			h++;
-
-		setHeight( h );
+	if ( v_selected  ) {
+		txt = QString("<font color=\"%1\">").arg(listView()->colorGroup().color( QColorGroup::HighlightedText ).name()) + txt + "</font>";
+	}
 	
-	} else if (v_rich) {
-	//	int h = height();
-		int h = 0;
-		QString txt = text(0);
-		if( txt.isEmpty() ){
-			delete v_rt;
-			v_rt = 0;
-			return;
-		}
-		
-		const Q3ListView* lv = listView();
-		const QPixmap* px = pixmap(0);
-		avatar_x = 0;
-		avatar_y = 0;
-		v_avatarShow = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toBool();
+	if(v_rt)
+		delete v_rt;
 
-		scaleAvatar();
+	v_rt = new QTextDocument();
+	v_rt->setUndoRedoEnabled(false);
+	v_rt->setDefaultFont(lv->font());
 
-		int left =  lv->itemMargin();
-		if (px)
-			left += px->width() + lv->itemMargin();
-		else
-			left += 0;
+	PsiRichText::install(v_rt);
+	PsiRichText::setText(v_rt, txt);
 
-		v_active = lv->isActiveWindow();
-		v_selected = isSelected();
+	int max_width = lv->columnWidth(0) - left;
+	PsiRichText::ensureTextLayouted(v_rt, max_width);
 
-		if ( v_selected  ) {
-			txt = QString("<font color=\"%1\">").arg(listView()->colorGroup().color( QColorGroup::HighlightedText ).name()) + txt + "</font>";
-		}
-		
-		if(v_rt)
-			delete v_rt;
+	v_widthUsed = v_rt->size().toSize().width();
 
-		v_rt = new QTextDocument();
-		v_rt->setUndoRedoEnabled(false);
-		v_rt->setDefaultFont(lv->font());
+	if(v_rt->size().toSize().width() > max_width)
+		v_widthUsed = max_width;
 
-		PsiRichText::install(v_rt);
-		PsiRichText::setText(v_rt, txt);
-		
-		int max_width = lv->columnWidth(0) - left - avatar_x - depth() * lv->treeStepSize();
-		PsiRichText::ensureTextLayouted(v_rt, max_width);
+	int sh = (int) v_rt->size().toSize().height();
+	h = QMAX( h, sh );
+	if (pixmap(0) != NULL) h = QMAX( h, pixmap(0)->height() + icon_vpadding);
+	if (avatar != NULL) h = QMAX( h, avatar->height() );
 
-		v_widthUsed = v_rt->size().toSize().width();
+	if ( h % 2 > 0 )
+		h++;
 
-		if((v_rt->size().toSize().width() > max_width)&&(v_avatarShow))
-		{
-			v_widthUsed = max_width;
-		}
-
-		int sh = (int) v_rt->size().toSize().height();
-		h = QMAX( h, sh );
-		if (px != NULL) h = QMAX( h, px->height() + icon_vpadding);
-		h = QMAX( h, avatar_y);
-
-		if ( h % 2 > 0 )
-			h++;
-
-		setHeight( h );
-	}
-	if(!PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.show-offline-without-status-message").toBool() && noOfflineStatusMsg && (avatar_x == 0)) {
-		setHeight( 0 );
-	}
-}
-
-void RichListViewItem::setNoOfflineStatusMsg(bool is)
-{
-	noOfflineStatusMsg = is;
+	setHeight( h );
 }
 
 void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int align)
 {
-	if(PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.show-offline-without-status-message").toBool() || !noOfflineStatusMsg || (v_avatarShow && (avatar_x != 0))) {
 	if(!v_rt){
 		Q3ListViewItem::paintCell(p, cg, column, width, align);
 		return;
@@ -3228,9 +3131,6 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 		setup();
 	
 	int r = 0;
-	if(!v_synapseStyle)
-		r = lv->itemMargin();
-
 	
 	const QBrush *paper;
 	// setup (colors, sizes, ...)
@@ -3253,18 +3153,10 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 		pxw = px->width();
 		pxh = px->height();
 		pxrect = QRect(r, icon_vpadding, pxw, pxh);
-		r += pxw + ((v_synapseStyle) ? 2 : lv->itemMargin());
+		r += pxw + 2;
 	}
 
-	//if(px)
-	//	pxrect.moveTop((height() - pxh)/2);
-
-	// start drawing
-//	QRect rtrect(r, (height() - v_rt->height())/2, v_widthUsed, v_rt->height());
-// 	QRect rtrect = QRect(2*lv->itemMargin()+v_avatarSize, 0, v_widthUsed, height());
-	QRect rtrect = QRect(v_avatarSize+2, 0, v_widthUsed, height());
-	if(!v_synapseStyle)
-		rtrect = QRect(r, 0, v_widthUsed, height());
+	QRect rtrect = QRect((v_avatarSize!=0) ? (v_avatarSize+2) : 18, 0, v_widthUsed, height());
 	QAbstractTextDocumentLayout *layout = v_rt->documentLayout();
 	QAbstractTextDocumentLayout::PaintContext context;
 	
@@ -3282,33 +3174,20 @@ void RichListViewItem::paintCell(QPainter *p, const QColorGroup &cg, int column,
 	p->setClipRegion(clip);
 	p->fillRect( 0, 0, width, height(), *paper );
 
-	QRect avatar_rect;
-	if(v_synapseStyle) {
-		avatar_rect = QRect(0, 0, v_avatarSize, avatar_y);
-		if(avatar!=0) 
-			p->drawPixmap(avatar_rect, *avatar);
-		if(px && (avatar_x == 0))
-		{
-			pxrect = QRect((v_avatarSize-pxw)/2,0,pxw,pxh);
+	if (px)	{
+		if (avatar != NULL) {
+			pxrect = QRect(0, 0, v_avatarSize, avatar->height());
+			p->drawPixmap(pxrect, *avatar);
+			pxrect = QRect(v_avatarSize - pxw,avatar->height() - pxh,pxw,pxh);
 			p->drawPixmap(pxrect, *px);
-		} else if (px) {
-			pxrect = QRect(v_avatarSize - pxw,avatar_y - pxh,pxw,pxh);
+		} else {
+			pxrect = QRect((v_avatarSize!=0)?((v_avatarSize-pxw)/2) : 0,0,pxw,pxh);
 			p->drawPixmap(pxrect, *px);
 		}
-	} else {
-		if(v_avatarShow) {
-			avatar_rect = QRect(width-avatar_x, 0, avatar_x, avatar_y);
-			if(avatar!=0) 
-				p->drawPixmap(avatar_rect, *avatar);
-		}
-		if(px)
-			p->drawPixmap(pxrect, *px);
 	}
-
 
 	p->restore();
 	delete paper;
-	}
 }
 
 int RichListViewItem::widthUsed()
@@ -3993,10 +3872,10 @@ void ContactViewItem::resetName(bool forceNoStatusMsg)
 			QString statusMsg;
 			if (d->u->priority() != d->u->userResourceList().end()) {
 				statusMsg = (*d->u->priority()).status().status();
-				setNoOfflineStatusMsg(false);
+//				setNoOfflineStatusMsg(false);
 			} else {
 				statusMsg = d->u->lastUnavailableStatus().status();
-				setNoOfflineStatusMsg(statusMsg.isEmpty());
+//				setNoOfflineStatusMsg(statusMsg.isEmpty());
 			}
 			
 			if (d->status_single) {
@@ -4055,10 +3934,10 @@ void ContactViewItem::resetMetaName(bool forceNoStatusMsg)
 			QString statusMsg;
 			if (u->priority() != u->userResourceList().end()) {
 				statusMsg = (*u->priority()).status().status();
-				setNoOfflineStatusMsg(false);
+//				setNoOfflineStatusMsg(false);
 			} else {
 				statusMsg = u->lastUnavailableStatus().status();
-				setNoOfflineStatusMsg(statusMsg.isEmpty());
+//				setNoOfflineStatusMsg(statusMsg.isEmpty());
 			}
 			
 			if (d->status_single) {

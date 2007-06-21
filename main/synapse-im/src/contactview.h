@@ -215,6 +215,7 @@ public:
 	~ContactView();
 
 	bool isShowOffline() const { return v_showOffline; }
+	bool isShowOfflineWithoutStatusMessage() const { return v_showOfflineWithoutStatusMessage; }
 	bool isShowAgents() const { return v_showAgents; }
 	bool isShowAway() const { return v_showAway; }
 	bool isShowHidden() const { return v_showHidden; }
@@ -243,6 +244,7 @@ protected:
 
 signals:
 	void showOffline(bool);
+	void showOfflineWithoutStatusMessage(bool);
 	void showAway(bool);
 	void showHidden(bool);
 	void showAgents(bool);
@@ -251,12 +253,12 @@ signals:
 
 public slots:
 	void setShowOffline(bool);
+	void setShowOfflineWithoutStatusMessage(bool);
 	void setShowAgents(bool);
 	void setShowAway(bool);
 	void setShowHidden(bool);
 	void setShowSelf(bool);
 	void setShowStatusMsg(bool);
-	void setShowNoOfflineStatusMsg(bool);
 	void optionsUpdate();
 	void recalculateSize();
 
@@ -292,7 +294,7 @@ private:
 	Private *d;
 
 	QPoint mousePressPos; // store pressed position, idea taken from Licq
-	bool v_showOffline, v_showAgents, v_showAway, v_showHidden, v_showSelf, v_showStatusMsg;
+	bool v_showOffline, v_showOfflineWithoutStatusMessage, v_showAgents, v_showAway, v_showHidden, v_showSelf, v_showStatusMsg;
 	bool lcto_active; // double click active?
 	QPoint lcto_pos;
 	Q3ListViewItem *lcto_item;
@@ -331,7 +333,6 @@ public:
 	RichListViewItem( Q3ListView * parent );
 	RichListViewItem( Q3ListViewItem * parent );
 	virtual void setText(int column, const QString& text);
-	virtual void setNoOfflineStatusMsg(bool is);
 	virtual void setup();
 	virtual ~RichListViewItem();
 	void setJid(const Jid& jid);
@@ -348,20 +349,12 @@ private:
 	int v_widthUsed;
 	bool v_selected, v_active;
 	bool v_rich;
-	bool noOfflineStatusMsg;
 	QTextDocument* v_rt;
-    // Synapse Style
-	bool v_synapseStyle;
 	int v_status;
-    // Avatars
-	bool v_avatarShow;
 	int v_avatarSize;
 	Jid v_jid;
 	AvatarFactory *v_avatarFactory;
 	QPixmap *avatar;
-	int avatar_x;
-	int avatar_y;
-    // ------
 };
 
 // ContactViewItem: an entry in the ContactView (profile, group, or contact)
