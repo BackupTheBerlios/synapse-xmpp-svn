@@ -526,13 +526,14 @@ void WbManager::startNegotiation(const Jid &target, const Jid &ownJid, bool grou
 		return;
 	// else, generate an arbitrary session
 	// TODO: this could conflict with other clients starting a session at the same time though it's extremely unlikely
-	bool existing = true;
+//	bool existing = true;
 	if(session.isEmpty()) {
-		existing = false;
+//		existing = false;
 		do {
 			session = QTime::currentTime().toString("msz");
 		} while (findWbDlg(session));
 	}
+	bool existing = potentialSessions.contains(session);
 	// Prepare the list of features
 	if(!features.size()) {
 		// If none is specified, try all supported features;
