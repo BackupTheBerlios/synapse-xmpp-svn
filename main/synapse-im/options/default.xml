@@ -150,6 +150,7 @@
 			<style comment="Options related to windows styles" >
 			 <name type="QString" comment="Name of choosen windows style" >Cleanlooks</name>
 			 <use-palette type="bool" comment="Use default style colors" >true</use-palette>
+			 <rosterEmoticons type="bool" comment="Show emoticons in roster" >true</rosterEmoticons>
 			</style>
 			<systemtray comment="Options related to the system tray">
 				<use-old comment="Use the old system tray code (deprecated)" type="bool">false</use-old>

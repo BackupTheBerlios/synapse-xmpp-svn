@@ -3094,9 +3094,14 @@ void RichListViewItem::setup()
 	v_rt->setUndoRedoEnabled(false);
 	v_rt->setDefaultFont(lv->font());
 
-	PsiRichText::install(v_rt);
+	if (PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool())
+	{
+		PsiRichText::install(v_rt);
+	}
 	PsiRichText::setText(v_rt, txt);
+//	} else {
 
+//	)
 	int max_width = lv->columnWidth(0) - left;
 	PsiRichText::ensureTextLayouted(v_rt, max_width);
 
