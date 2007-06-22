@@ -97,6 +97,10 @@ public:
 	QMenu *trayMenu;
 	QString statusTip;
 
+	QComboBox *cb_search;
+	QString searchString,searchString2;
+	bool blockString;
+
 	PopupAction *optionsButton, *statusButton;
 	IconActionGroup *statusGroup;
 	EventNotifierAction *eventNotifier;
@@ -284,7 +288,12 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 #endif
 	d->vb_main->setMargin(layoutMargin);
 	d->vb_main->setSpacing(layoutMargin);
-
+//-------------------------- Here can go search toolbar!!
+	d->cb_search = new QComboBox(center);
+	d->cb_search->setEditable(true);
+	d->blockString = false;
+	d->vb_main->addWidget(d->cb_search);
+	connect(d->cb_search, SIGNAL(editTextChanged(const QString&)), this, SLOT(searchRoster(const QString&)));
 	d->vb_main->addWidget(cvlist);
 
 #ifdef Q_WS_MAC
@@ -562,6 +571,28 @@ void MainWin::setUseDock(bool use)
 	updateReadNext(d->nextAnim, d->nextAmount);
 
 	d->tray->show();
+}
+
+void MainWin::searchRoster(const QString &text)
+{
+	d->searchString = text;
+	QTimer::singleShot(800, this, SLOT(searchRoster2()));
+	if(!d->blockString)
+	{
+		d->blockString = true;
+		d->searchString2 = d->searchString;
+	}
+}
+
+void MainWin::searchRoster2()
+{
+	if(d->searchString2 != d->searchString)
+		d->searchString2 = d->searchString;
+	else {
+		d->blockString = false;
+		d->searchString2 = d->searchString;
+		cvlist->setSearch(d->searchString2);
+	}
 }
 
 void MainWin::updateStatusLastMenu()

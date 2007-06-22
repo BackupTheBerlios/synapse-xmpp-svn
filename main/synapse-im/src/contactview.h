@@ -162,6 +162,9 @@ private:
 	void checkDestroyMeta(ContactViewItem *meta);
 	ContactViewItem *addContactItem(Entry *e, ContactViewItem *group_item);
 	ContactViewItem *ensureContactItem(Entry *e, ContactViewItem *group_item);
+
+	void setSearch(const QString &text);
+
 	void removeContactItem(Entry *e, ContactViewItem *i);
 	void addNeededContactItems(Entry *e);
 	void removeUnneededContactItems(Entry *e);
@@ -222,6 +225,8 @@ public:
 	bool isShowSelf() const { return v_showSelf; }
 	bool isShowStatusMsg() const { return v_showStatusMsg; }
 
+	bool isShowSearch() const { return v_showSearch; }
+
 	void clear();
 	void resetAnim();
 	QTimer *animTimer() const;
@@ -252,6 +257,8 @@ signals:
 	void showStatusMsg(bool);
 
 public slots:
+	void setSearch(const QString &);
+
 	void setShowOffline(bool);
 	void setShowOfflineWithoutStatusMessage(bool);
 	void setShowAgents(bool);
@@ -294,7 +301,7 @@ private:
 	Private *d;
 
 	QPoint mousePressPos; // store pressed position, idea taken from Licq
-	bool v_showOffline, v_showOfflineWithoutStatusMessage, v_showAgents, v_showAway, v_showHidden, v_showSelf, v_showStatusMsg;
+	bool v_showOffline, v_showOfflineWithoutStatusMessage, v_showAgents, v_showAway, v_showHidden, v_showSelf, v_showStatusMsg, v_showSearch;
 	bool lcto_active; // double click active?
 	QPoint lcto_pos;
 	Q3ListViewItem *lcto_item;

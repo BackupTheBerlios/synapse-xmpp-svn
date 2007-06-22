@@ -142,6 +142,9 @@ private slots:
 	void registerAction( IconAction * );
 
 public slots:
+	void searchRoster(const QString &text);
+	void searchRoster2();
+
 	void updateStatusLastMenu();
 
 	void setWindowIcon(const QPixmap&);

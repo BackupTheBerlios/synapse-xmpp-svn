@@ -541,7 +541,7 @@ void ContactProfile::addNeededContactItems(Entry *e)
 
 	const UserListItem &u = e->u;
 
-	if(u.inList()) {
+	if(u.inList() && !d->cv->isShowSearch()) {
 		// don't add if we're not supposed to see it
 		if(u.isTransport()) {
 			if(!d->cv->isShowAgents() && !e->alerting) {
@@ -665,6 +665,16 @@ void ContactProfile::clearContactItems(Entry *e)
 	Q3PtrListIterator<ContactViewItem> it(e->cvi);
 	for(ContactViewItem *i; (i = it.current());)
 		removeContactItem(e, i);
+}
+
+void ContactProfile::setSearch(const QString &text)
+{
+	Q3PtrListIterator<Entry> it(d->roster);
+	for(Entry *e; (e = it.current()); ++it)
+		if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
+			addNeededContactItems(e);
+		else
+			clearContactItems(e);
 }
 
 void ContactProfile::addAllNeededContactItems()
@@ -2449,6 +2459,20 @@ void ContactView::keyPressEvent(QKeyEvent *e)
 	else {
 		if (!d->doTypeAhead(e))
 			Q3ListView::keyPressEvent(e);
+	}
+}
+
+void ContactView::setSearch(const QString &text)
+{
+	v_showSearch = !text.isEmpty();
+	Q3PtrListIterator<ContactProfile> it(d->profiles);
+	for(ContactProfile *cp; (cp = it.current()); ++it) {
+		if(v_showSearch)
+			cp->setSearch(text);
+		else {
+			cp->removeAllUnneededContactItems();
+			cp->addAllNeededContactItems();
+		}
 	}
 }
 
