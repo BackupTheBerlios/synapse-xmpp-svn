@@ -79,3 +79,12 @@ endif(SPEEX_FOUND)
 add_subdirectory(iris)
 
 add_subdirectory(src)
+
+set(data_SRCS
+    certs/
+    iconsets/
+    sound/
+)
+
+INSTALL(DIRECTORY ${data_SRCS}  DESTINATION share/synapse-im
+	PATTERN "SVN" EXCLUDE)
