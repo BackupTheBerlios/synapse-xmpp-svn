@@ -669,12 +669,41 @@ void ContactProfile::clearContactItems(Entry *e)
 
 void ContactProfile::setSearch(const QString &text)
 {
-	Q3PtrListIterator<Entry> it(d->roster);
-	for(Entry *e; (e = it.current()); ++it)
-		if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
-			addNeededContactItems(e);
-		else
-			clearContactItems(e);
+	if(text.contains(" "))
+	{
+		if(text.contains("-"))
+		{
+			int x = text.indexOf("-");
+			QString ntext = text.right(text.length() - (x+1));
+			QString htext = text.left(x-1);
+			printf("x: %d\nntext: %s\nhtext: %s\n", x, ntext.ascii(), htext.ascii());
+			Q3PtrListIterator<Entry> it(d->roster);
+			for(Entry *e; (e = it.current()); ++it)
+//				if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
+				if(e->u.name().contains(htext, Qt::CaseSensitive) && !e->u.name().contains(ntext, Qt::CaseSensitive))
+					addNeededContactItems(e);
+				else
+					clearContactItems(e);
+		} else {
+			int x = text.indexOf("st:");
+			QString htext = text.left(x-1);
+			QString stext = text.right(x+3);
+			Q3PtrListIterator<Entry> it(d->roster);
+			for(Entry *e; (e = it.current()); ++it)
+//				if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
+				if(e->u.name().contains(htext, Qt::CaseSensitive) && ((e->u.isAvailable() && stext.contains("Avail")) || (e->u.isAway() && stext.contains("Away")) || (!e->u.isAvailable() && stext.contains("Off"))) )
+					addNeededContactItems(e);
+				else
+					clearContactItems(e);
+		}
+	} else {
+		Q3PtrListIterator<Entry> it(d->roster);
+		for(Entry *e; (e = it.current()); ++it)
+			if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
+				addNeededContactItems(e);
+			else
+				clearContactItems(e);
+	}
 }
 
 void ContactProfile::addAllNeededContactItems()
