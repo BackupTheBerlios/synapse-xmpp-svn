@@ -164,7 +164,7 @@ private:
 	bool v_private;
 	QStringList secList;
 	QString v_keyID;
-	QPixmap v_avatar;
+//	QPixmap v_avatar;
 	Mood v_mood;
 	QString v_tune;
 	GeoLocation v_geoLocation;

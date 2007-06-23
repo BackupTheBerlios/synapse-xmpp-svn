@@ -293,13 +293,14 @@ void UserResourceList::sort()
 // UserListItem
 //----------------------------------------------------------------------------
 UserListItem::UserListItem(bool self)
+: v_inList(false), v_self(self), v_private(false), v_gMailNotify(NULL), v_avatarFactory(NULL), lastmsgtype(-1)
 {
-	v_inList = false;
+/*	v_inList = false;
 	v_self = self;
 	v_private = false;
 	v_gMailNotify = NULL;
 	v_avatarFactory = NULL;
-	lastmsgtype = -1;
+	lastmsgtype = -1;*/
 }
 
 UserListItem::~UserListItem()
