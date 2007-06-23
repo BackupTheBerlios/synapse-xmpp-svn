@@ -145,6 +145,7 @@ void AccountModifyDlg::init()
 	ck_amp->setChecked(acc.opt_amp);
 	ck_keepAlive->setChecked(acc.opt_keepAlive);
 	ck_ignoreSSLWarnings->setChecked(acc.opt_ignoreSSLWarnings);
+	ck_ignoreHostMismatch->setChecked(acc.opt_ignoreHostMismatch);
 	le_dtProxy->setText(acc.dtProxy.full());
 	
 	ck_newMail->setChecked(acc.opt_newMail);
@@ -548,6 +549,7 @@ void AccountModifyDlg::save()
 	acc.opt_log = ck_log->isChecked();
 	acc.opt_keepAlive = ck_keepAlive->isChecked();
 	acc.opt_ignoreSSLWarnings = ck_ignoreSSLWarnings->isChecked();
+	acc.opt_ignoreHostMismatch = ck_ignoreHostMismatch->isChecked();
 	acc.dtProxy = le_dtProxy->text();
 	
 	acc.opt_newMail = ck_newMail->isChecked();

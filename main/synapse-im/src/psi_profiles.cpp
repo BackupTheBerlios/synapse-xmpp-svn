@@ -115,6 +115,7 @@ void UserAccount::reset()
 	opt_login_message = "";
 	opt_reconn = FALSE;
 	opt_ignoreSSLWarnings = false;
+	opt_ignoreHostMismatch = false;
 
 	proxy_index = 0;
 	proxy_type = PROXY_NONE;
@@ -154,6 +155,7 @@ QDomElement UserAccount::toXml(QDomDocument &doc, const QString &tagName)
 	setBoolAttribute(a, "autostatus", opt_login_as);
 	setBoolAttribute(a, "reconn", opt_reconn);
 	setBoolAttribute(a, "ignoreSSLWarnings", opt_ignoreSSLWarnings);
+	setBoolAttribute(a, "ignoreHostMismatch", opt_ignoreHostMismatch);
 	//setBoolAttribute(a, "gpg", opt_gpg);
 
 	setBoolAttribute(a, "newMail", opt_newMail);
@@ -297,6 +299,9 @@ void UserAccount::fromXml(const QDomElement &a)
 	}	
 	readBoolAttribute(a, "reconn", &opt_reconn);
 	readBoolAttribute(a, "ignoreSSLWarnings", &opt_ignoreSSLWarnings);
+	if (a.hasAttribute("ignoreHostMismatch"))
+		readBoolAttribute(a, "ignoreHostMismatch", &opt_ignoreHostMismatch);
+
 	//readBoolAttribute(a, "gpg", &opt_gpg);
 	if (a.hasAttribute("automatic-resource")) {
 		readBoolAttribute(a, "automatic-resource", &opt_automatic_resource);

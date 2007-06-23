@@ -1180,7 +1180,7 @@ void PsiAccount::tls_handshaken()
 {
 	QCA::Certificate cert = d->tls->peerCertificateChain().primary();
 	int r = d->tls->peerIdentityResult();
-	if (r == QCA::TLS::Valid && !d->tlsHandler->certMatchesHostname()) r = QCA::TLS::HostMismatch;
+	if (r == QCA::TLS::Valid && (!d->tlsHandler->certMatchesHostname() && !d->acc.opt_ignoreHostMismatch )) r = QCA::TLS::HostMismatch;
 	if(r != QCA::TLS::Valid && !d->acc.opt_ignoreSSLWarnings) {
 		QCA::Validity validity =  d->tls->peerCertificateValidity();
 		QString str = CertUtil::resultToString(r,validity);

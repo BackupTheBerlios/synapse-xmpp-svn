@@ -44,6 +44,9 @@
      <property name="tabShape" >
       <enum>QTabWidget::Rounded</enum>
      </property>
+     <property name="currentIndex" >
+      <number>3</number>
+     </property>
      <widget class="QWidget" name="tab_account" >
       <attribute name="title" >
        <string>Account</string>
@@ -669,9 +672,6 @@
          </item>
          <item>
           <widget class="QComboBox" name="cb_ssl" >
-           <property name="sizeAdjustPolicy" >
-            <enum>QComboBox::AdjustToContents</enum>
-           </property>
            <property name="sizePolicy" >
             <sizepolicy>
              <hsizetype>1</hsizetype>
@@ -679,6 +679,9 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="sizeAdjustPolicy" >
+            <enum>QComboBox::AdjustToContents</enum>
            </property>
           </widget>
          </item>
@@ -708,6 +711,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="ck_ignoreHostMismatch" >
+         <property name="text" >
+          <string>Ignore hostname mismatch while checking certificate</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="ck_legacy_ssl_probe" >
          <property name="text" >
           <string>Probe legacy SSL port</string>
@@ -731,9 +741,6 @@
          </item>
          <item>
           <widget class="QComboBox" name="cb_plain" >
-           <property name="sizeAdjustPolicy" >
-            <enum>QComboBox::AdjustToContents</enum>
-           </property>
            <property name="sizePolicy" >
             <sizepolicy>
              <hsizetype>1</hsizetype>
@@ -741,6 +748,9 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="sizeAdjustPolicy" >
+            <enum>QComboBox::AdjustToContents</enum>
            </property>
           </widget>
          </item>
@@ -786,9 +796,6 @@
          </item>
          <item>
           <widget class="QComboBox" name="cb_security_level" >
-           <property name="sizeAdjustPolicy" >
-            <enum>QComboBox::AdjustToContents</enum>
-           </property>
            <property name="sizePolicy" >
             <sizepolicy>
              <hsizetype>1</hsizetype>
@@ -796,6 +803,9 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="sizeAdjustPolicy" >
+            <enum>QComboBox::AdjustToContents</enum>
            </property>
           </widget>
          </item>
