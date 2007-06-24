@@ -872,7 +872,8 @@ void PsiCon::setStatusFromDialog(const Status &s, bool withPriority, int pos)
 		d->lastStatusStrings[0].type = s.type();
 		d->mainwin->updateStatusLastMenu();
 	}
-	lastStatusString = s.status();
+	d->lastStatusString = s.status();
+//	lastStatusString = s.status();
 	setGlobalStatus(s, withPriority);
 }
 
