@@ -4228,10 +4228,10 @@ void ContactViewItem::setContact(UserListItem *u)
 		resetStatus();
 		needUpdate = true;
 	}
-	if(newName != oldName) {
-		resetName();
-		needUpdate = true;
-	}
+//	if(newName != oldName) {
+	resetName();
+	needUpdate = true;
+//	}
 
 	if(needUpdate)
 		updatePosition();
