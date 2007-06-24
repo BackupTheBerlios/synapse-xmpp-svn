@@ -889,6 +889,25 @@ void Client::slotRosterRequestFinished()
 	rosterRequestFinished(r->success(), r->statusCode(), r->statusString());
 }
 
+void Client::addMetacontact(const Jid& j, const QString& t, int priority)
+{
+	emit cs_addMetacontact(j,t,priority);
+}
+
+void Client::delMetacontact(const Jid& j, const QString& t)
+{
+	emit cs_delMetacontact(j,t);
+}
+
+void Client::metacontactsRequest()
+{
+	JT_Metacontacts *mc = new JT_Metacontacts(rootTask());
+	connect(mc, SIGNAL(recivedMeta(Jid, QString, int)), SIGNAL(updateMeta(Jid, QString, int)));
+	connect(this, SIGNAL(cs_addMetacontact(const Jid&, const QString&, int)), mc, SLOT(addMetacontact(const Jid&, const QString&, int)));
+	connect(this, SIGNAL(cs_delMetacontact(const Jid&, const QString&)), mc, SLOT(delMetacontact(const Jid&, const QString&)));
+	mc->go(false);	
+}
+
 void Client::importRoster(const Roster &r)
 {
 	for(Roster::ConstIterator it = r.begin(); it != r.end(); ++it) {

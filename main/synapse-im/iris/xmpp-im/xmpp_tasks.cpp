@@ -1913,4 +1913,123 @@ bool JT_AMP::test(const QString &feature)
 {
 	return d->features.contains(feature);
 }
+//----------------------------------------------------------------------------
+// JT_Metacontacts
+//----------------------------------------------------------------------------
+JT_Metacontacts::JT_Metacontacts(Task *parent)
+: Task(parent)
+{
+}
+
+JT_Metacontacts::~JT_Metacontacts()
+{
+}
+
+void JT_Metacontacts::resetList()
+{
+	list_ = doc()->createElement("storage");
+	list_.setAttribute("xmlns", "storage:metacontacts");
+}
+
+void JT_Metacontacts::addMetacontact(const Jid& j, const  QString &tag, int priority)
+{
+	QDomElement meta = doc()->createElement("meta");
+	meta.setAttribute("jid", j.bare());
+	meta.setAttribute("tag", tag);
+	meta.setAttribute("order", priority);
+
+	list_.appendChild(meta);
+
+	commit();
+}
+
+void JT_Metacontacts::delMetacontact(const Jid& j, const QString &tag)
+{
+	if(list_.childNodes().count() < 2) {
+		resetList();
+	} else {
+		for(QDomNode n = list_.firstChild(); !n.isNull(); n = n.nextSibling())
+		{
+			QDomElement f = n.toElement();
+			if(f.isNull())
+				continue;
+			if((f.tagName() == "meta") && (j.bare().compare(f.attribute("jid")) == 0) && (tag.compare(f.attribute("tag")) == 0)) {
+				list_.removeChild(n);
+				break;
+			}
+		}
+		QDomElement oldList = list_;
+		resetList();
+		for(QDomNode n = oldList.firstChild(); !n.isNull(); n = n.nextSibling())
+		{
+			QDomElement f = n.toElement();
+			if(f.isNull())
+				continue;
+			if(f.tagName() == "meta") {
+				QDomElement meta = f;
+				list_.appendChild(meta);
+			}
+		}
+	}
+	commit();
+}
+
+void JT_Metacontacts::onGo()
+{
+	QDomElement iq = createIQ(doc(), "get", "", id());
+	QDomElement query = doc()->createElement("query");
+	query.setAttribute("xmlns", "jabber:iq:private");
+	QDomElement storage = doc()->createElement("storage");
+	storage.setAttribute("xmlns", "storage:metacontacts");
+	query.appendChild(storage);
+	iq.appendChild(query);
+	send(iq);
+}
+
+bool JT_Metacontacts::take(const QDomElement &e)
+{
+	if(!iqVerify(e, "", id()))
+		return false;
+
+	if(e.attribute("type") == "result") {
+		bool found;
+		QDomElement q = findSubTag(e, "query", &found);
+		if (found && q.attribute("xmlns") == "jabber:iq:private")
+		{
+			QDomElement r = findSubTag(q, "storage", &found);
+			if (found && r.attribute("xmlns") == "storage:metacontacts")
+			{
+// 				if(firstTime_) {
+				for(QDomNode n = r.firstChild(); !n.isNull(); n = n.nextSibling())
+				{
+					QDomElement f = n.toElement();
+					if(f.isNull())
+						continue;
+					if(f.tagName() == "meta")
+						emit recivedMeta(Jid(f.attribute("jid")), f.attribute("tag"), QVariant(f.attribute("order")).toInt());
+				}
+//					firstTime_ = false;
+//				}
+				list_ = r;
+				setSuccess(true);
+			return true;
+			}
+		}
+	}
+	else {
+		setError(e);
+	}
+	return false;
+}
+
+
+void JT_Metacontacts::commit()
+{
+	QDomElement iq = createIQ(doc(), "set", "", id());
+	QDomElement query = doc()->createElement("query");
+	query.setAttribute("xmlns", "jabber:iq:private");
+	query.appendChild(list_);
+	iq.appendChild(query);
+	send(iq);
+}
 

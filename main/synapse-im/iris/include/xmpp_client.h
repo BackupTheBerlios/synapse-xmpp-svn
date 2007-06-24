@@ -78,6 +78,9 @@ namespace XMPP
 		Jid jid() const;
 
 		void rosterRequest();
+		void metacontactsRequest();
+		void addMetacontact(const Jid&, const QString&, int);
+		void delMetacontact(const Jid&, const QString&);
 		void sendMessage(const Message &);
 		void sendSubscription(const Jid &, const QString &, const QString& nick = QString());
 		void setPresence(const Status &);
@@ -135,6 +138,11 @@ namespace XMPP
 		void rosterItemAdded(const RosterItem &);
 		void rosterItemUpdated(const RosterItem &);
 		void rosterItemRemoved(const RosterItem &);
+
+		void cs_addMetacontact(const Jid&, const QString&, int);
+		void updateMeta(Jid, QString, int);
+		void cs_delMetacontact(const Jid&, const QString&);
+
 		void resourceAvailable(const Jid &, const Resource &);
 		void resourceUnavailable(const Jid &, const Resource &);
 		void presenceError(const Jid &, int, const QString &);

@@ -308,6 +308,7 @@ private slots:
 	void client_rosterItemAdded(const RosterItem &);
 	void client_rosterItemUpdated(const RosterItem &);
 	void client_rosterItemRemoved(const RosterItem &);
+	void client_rosterUpdateMeta(Jid, QString, int);
 	void client_resourceAvailable(const Jid &, const Resource &);
 	void client_resourceUnavailable(const Jid &, const Resource &);
 	void client_presenceError(const Jid &, int, const QString &);

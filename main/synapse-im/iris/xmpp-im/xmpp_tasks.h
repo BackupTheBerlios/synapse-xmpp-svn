@@ -429,6 +429,29 @@ namespace XMPP
 		class Private;
 		Private *d;
 	};
+	class JT_Metacontacts : public Task
+	{
+		Q_OBJECT
+	public:
+		JT_Metacontacts(Task *);
+		~JT_Metacontacts();
+
+		void onGo();
+		bool take(const QDomElement &);
+
+	public slots:
+		void addMetacontact(const Jid&, const QString&, int);
+		void delMetacontact(const Jid&, const QString&);
+
+	signals:
+		void recivedMeta(Jid, QString, int);
+
+	private:
+		void commit();
+		void resetList();
+
+		QDomElement list_;
+	};
 }
 
 #endif

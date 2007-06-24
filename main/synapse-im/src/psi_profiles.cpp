@@ -195,13 +195,6 @@ QDomElement UserAccount::toXml(QDomDocument &doc, const QString &tagName)
 	for ( ; rit != roster.end(); ++rit) {
 		const RosterItem &i = *rit;
 		QDomElement tag = i.toXml(&doc);
-		QStringList m = i.metas();
-		for(QStringList::ConstIterator it = m.begin(); it != m.end(); ++it)
-		{
-			QDomElement jp = textTag(doc,"meta", *it);
-			jp.setAttribute("rank",QString::number(i.jidPriority()));
-			tag.appendChild(jp);
-		}
 		r.appendChild(tag);
 	}
 
@@ -392,19 +385,6 @@ void UserAccount::fromXml(const QDomElement &a)
 				RosterItem ri;
 				if(!ri.fromXml(i))
 					continue;
-				QStringList m;
-				for(QDomNode n1 = i.firstChild(); !n1.isNull(); n1 = n1.nextSibling())
-				{
-					QDomElement i1 = n1.toElement();
-					if(i1.isNull())
-						continue;
-					if(i1.tagName() == "meta")
-					{
-						m += tagContent(i1);
-						ri.setJidPriority(i1.attribute("rank").toInt());
-					}
-	    			}
-				ri.setMetas(m);
 				roster += ri;
 			}
 		}

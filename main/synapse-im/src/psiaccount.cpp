@@ -523,6 +523,9 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	connect(d->client, SIGNAL(rosterItemAdded(const RosterItem &)), SLOT(client_rosterItemUpdated(const RosterItem &)));
 	connect(d->client, SIGNAL(rosterItemUpdated(const RosterItem &)), SLOT(client_rosterItemUpdated(const RosterItem &)));
 	connect(d->client, SIGNAL(rosterItemRemoved(const RosterItem &)), SLOT(client_rosterItemRemoved(const RosterItem &)));
+
+	connect(d->client, SIGNAL(updateMeta(Jid, QString, int)), SLOT(client_rosterUpdateMeta(Jid, QString, int)));
+
 	connect(d->client, SIGNAL(resourceAvailable(const Jid &, const Resource &)), SLOT(client_resourceAvailable(const Jid &, const Resource &)));
 	connect(d->client, SIGNAL(resourceUnavailable(const Jid &, const Resource &)), SLOT(client_resourceUnavailable(const Jid &, const Resource &)));
 	connect(d->client, SIGNAL(presenceError(const Jid &, int, const QString &)), SLOT(client_presenceError(const Jid &, int, const QString &)));
@@ -1570,6 +1573,19 @@ void PsiAccount::client_rosterRequestFinished(bool success, int, const QString &
 	//	PsiOptions::instance()->load(d->client);
 
 	setStatusDirect(d->loginStatus, d->loginWithPriority);
+	d->client->metacontactsRequest();
+}
+
+void PsiAccount::client_rosterUpdateMeta(Jid j, QString t, int priority)
+{
+	printf("META - Jid: %s\n", j.bare().ascii());
+	UserListItem *u = d->userList.find(j);
+	if(!u)
+		return;
+
+	if(!u->addMeta(t, priority))
+		return;
+	cpUpdate(*u);
 }
 
 void PsiAccount::resolveContactName()
@@ -3404,7 +3420,6 @@ void PsiAccount::actionAdd(const Jid &j)
 
 void PsiAccount::actionMetaAdd(const Jid &j, const QString &m, int priority)
 {
-	printf("actionMetaAdd()...\n");
 	UserListItem *u = d->userList.find(j);
 	if(!u)
 		return;
@@ -3412,12 +3427,11 @@ void PsiAccount::actionMetaAdd(const Jid &j, const QString &m, int priority)
 	if(!u->addMeta(m, priority))
 		return;
 	cpUpdate(*u);
-	printf("...actionMetaAdd()\n");
+	emit d->client->addMetacontact(j, m, priority);
 }
 
 void PsiAccount::actionMetaRemove(const Jid &j, const QString &m)
 {
-	printf("actionMetaRemove()...\n");
 	UserListItem *u = d->userList.find(j);
 	if(!u)
 		return;
@@ -3425,7 +3439,7 @@ void PsiAccount::actionMetaRemove(const Jid &j, const QString &m)
 	if(!u->removeMeta(m))
 		return;
 	cpUpdate(*u);
-	printf("...actionMetaRemove()\n");
+	emit d->client->delMetacontact(j, m);
 }
 
 void PsiAccount::actionGroupAdd(const Jid &j, const QString &g)

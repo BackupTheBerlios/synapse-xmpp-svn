@@ -403,6 +403,8 @@ void ContactProfile::checkDestroyGroup(ContactViewItem *group)
 
 void ContactProfile::checkDestroyMeta(ContactViewItem *meta)
 {
+	meta->resetMetaStatus();
+	meta->resetMetaName();
 	if(meta->childCount() == 0) {
 		d->metas.remove(meta);
 		delete meta;
