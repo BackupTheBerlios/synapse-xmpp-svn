@@ -152,9 +152,6 @@
 			 <use-palette type="bool" comment="Use default style colors" >true</use-palette>
 			 <rosterEmoticons type="bool" comment="Show emoticons in roster" >true</rosterEmoticons>
 			</style>
-			<systemtray comment="Options related to the system tray">
-				<use-old comment="Use the old system tray code (deprecated)" type="bool">false</use-old>
-			</systemtray>
 			<tip comment="Tip of the day options">
 				<show comment="Show the tip of the day upon startup" type="bool">true</show>
 				<number comment="The next tip to show" type="int">0</number>

@@ -117,7 +117,6 @@ public:
 	QAction *statusLastAction[5];
 
 	int lastStatus;
-	bool old_trayicon;
 
 	void registerActions();
 	IconAction *getAction( QString name );
@@ -263,11 +262,6 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	d->trayMenu = 0;
 	d->statusTip = "";
 	d->nickname = "";
-#ifdef Q_WS_MAC
-	d->old_trayicon = false;
-#else
-	d->old_trayicon = PsiOptions::instance()->getOption("options.ui.systemtray.use-old").toBool();
-#endif
 
 	QString styleName = PsiOptions::instance()->getOption("options.ui.style.name").toString();
 	if(!styleName.isEmpty())
@@ -558,11 +552,7 @@ void MainWin::setUseDock(bool use)
 	if(d->tray)
 		return;
 
-	d->tray = new PsiTrayIcon("Synapse-IM", d->trayMenu, d->old_trayicon);
-	if (d->old_trayicon) {
-		connect(d->tray, SIGNAL(closed()), SLOT(dockActivated()));
-		connect(qApp, SIGNAL(trayOwnerDied()), SLOT(dockActivated()));
-	}
+	d->tray = new PsiTrayIcon("Synapse-IM", d->trayMenu);
 	connect(d->tray, SIGNAL(clicked(const QPoint &, int)), SLOT(trayClicked(const QPoint &, int)));
 	connect(d->tray, SIGNAL(doubleClicked(const QPoint &)), SLOT(trayDoubleClicked()));
 	d->tray->setIcon( PsiIconset::instance()->statusPtr( STATUS_OFFLINE ));
