@@ -122,6 +122,16 @@ private slots:
 	void doHistory();
 	void doClear();
 	void doClearButton();
+//--- XHTML-IM Formating
+	void toggleItalic();
+	void toggleBold();
+	void toggleUnderline();
+
+	void toggleRed();
+	void toggleGreen();
+	void toggleBlue();
+	void toggleBlack();
+//----------------------
 	void doSend();
 	void doVoice();
 	void doOtr();

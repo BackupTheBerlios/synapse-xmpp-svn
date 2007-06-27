@@ -161,6 +161,17 @@ private slots:
 	void updateIdentityVisibility();
 	void accountUpdatedActivity();
 	void doWhois(bool force=false);
+//XHTML-IM
+	void toggleItalic();
+	void toggleBold();
+	void toggleUnderline();
+
+	void toggleRed();
+	void toggleGreen();
+	void toggleBlue();
+	void toggleBlack();
+//----------
+
 	void doSend();
 	void doReadNext();
 	void doChat();

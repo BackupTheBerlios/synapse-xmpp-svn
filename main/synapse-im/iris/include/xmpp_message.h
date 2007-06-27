@@ -104,6 +104,9 @@ namespace XMPP {
 		HTMLElement html(const QString &lang="") const;
 		void setHTML(const HTMLElement &s, const QString &lang="");
 		bool containsHTML() const;
+		
+		QString htmlString() const;
+		void setHTMLString(QString);
 
 		// JEP-0066
 		UrlList urlList() const;

@@ -1017,6 +1017,7 @@ public:
 	HttpAuthRequest httpAuthRequest;
 	XData xdata;
 	QMap<QString,HTMLElement> htmlElements;
+	QString htmlString;
  	QDomElement wb;
 	AMPRules *amp_rules;
 	
@@ -1147,6 +1148,11 @@ HTMLElement Message::html(const QString &lang) const
 		return HTMLElement();
 }
 
+QString Message::htmlString() const
+{
+	return d->htmlString;
+}
+
 //! \brief Tells if message has xhtml-im items.
 //!
 //! Returns true if there is at least one xhtml-im body
@@ -1228,6 +1234,11 @@ void Message::setBody(const QString &s, const QString &lang)
 void Message::setHTML(const HTMLElement &e, const QString &lang)
 {
 	d->htmlElements[lang] = e;
+}
+
+void Message::setHTMLString(QString s)
+{
+	d->htmlString = s;
 }
 
 void Message::setThread(const QString &s, bool send)
@@ -1537,6 +1548,23 @@ Stanza Message::toStanza(Stream *stream) const
 		}
 	}
 
+	if(d->htmlElements.contains(""))
+	{
+		QDomElement e = s.createElement("http://jabber.org/protocol/xhtml-im", "html");
+		QDomElement x = s.createElement("http://www.w3.org/1999/xhtml","body");
+		int t;
+		QDomNodeList nl = d->htmlElements[""].body().childNodes();
+		for(t = 0; t < nl.count(); ++t) {
+			QDomNode n = nl.item(t);
+			if(n.isElement())
+				x.appendChild(n.toElement());
+			else
+				x.appendChild(n.cloneNode());
+		}
+ 		e.appendChild(x);
+		s.appendChild(e);
+	}
+
 	if(d->type == "error")
 		s.setError(d->error);
 
@@ -1773,6 +1801,7 @@ bool Message::fromStanza(const Stanza &s, int timeZoneOffset)
 			if (e.tagName() == "body" && e.namespaceURI() == "http://www.w3.org/1999/xhtml") {
 				QString lang = e.attributeNS(NS_XML, "lang", "");
 				d->htmlElements[lang] = e;
+				d->htmlString = html().toString();
 			}
 		}
 	}

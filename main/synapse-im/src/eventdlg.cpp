@@ -58,6 +58,7 @@
 #include "common.h"
 #include "pgputil.h"
 #include "xmpp_htmlelement.h"
+#include "xmpp_xmlcommon.h"
 #include "userlist.h"
 #include "iconwidget.h"
 #include "fancylabel.h"
@@ -535,6 +536,9 @@ public:
 	XDataWidget* xdata;
 	QLabel* xdata_instruction;
 	RosterExchangeItems rosterExchangeItems;
+// XHTML-IM
+	QAction *act_italic, *act_bold, *act_underline;
+	QAction *act_red, *act_green, *act_blue, *act_black;
 
 	bool urlOnShow;
 
@@ -994,6 +998,43 @@ void EventDlg::init()
 		setTabOrder(d->le_from, d->le_subj);
 	setTabOrder(d->le_subj, d->mle);
 
+// Text formating XHTML-IM
+	d->act_italic = new QAction(this);
+	connect(d->act_italic, SIGNAL(activated()), SLOT(toggleItalic()));
+	addAction(d->act_italic);
+
+	d->act_bold = new QAction(this);
+	connect(d->act_bold, SIGNAL(activated()), SLOT(toggleBold()));
+	addAction(d->act_bold);
+
+	d->act_underline = new QAction(this);
+	connect(d->act_underline, SIGNAL(activated()), SLOT(toggleUnderline()));
+	addAction(d->act_underline);
+
+	d->act_red = new QAction(this);
+	connect(d->act_red, SIGNAL(activated()), SLOT(toggleRed()));
+	addAction(d->act_red);
+
+	d->act_green = new QAction(this);
+	connect(d->act_green, SIGNAL(activated()), SLOT(toggleGreen()));
+	addAction(d->act_green);
+
+	d->act_blue = new QAction(this);
+	connect(d->act_blue, SIGNAL(activated()), SLOT(toggleBlue()));
+	addAction(d->act_blue);
+
+	d->act_black = new QAction(this);
+	connect(d->act_black, SIGNAL(activated()), SLOT(toggleBlack()));
+	addAction(d->act_black);
+
+	d->act_italic->setShortcuts(ShortcutManager::instance()->shortcuts("chat.italic"));
+	d->act_bold->setShortcuts(ShortcutManager::instance()->shortcuts("chat.bold"));
+	d->act_underline->setShortcuts(ShortcutManager::instance()->shortcuts("chat.underline"));
+	d->act_red->setShortcuts(ShortcutManager::instance()->shortcuts("chat.red"));
+	d->act_green->setShortcuts(ShortcutManager::instance()->shortcuts("chat.green"));
+	d->act_blue->setShortcuts(ShortcutManager::instance()->shortcuts("chat.blue"));
+	d->act_black->setShortcuts(ShortcutManager::instance()->shortcuts("chat.black"));
+
 	updatePGP();
 	connect(d->pa, SIGNAL(pgpKeyChanged()), SLOT(updatePGP()));
 	connect(d->pa, SIGNAL(encryptedMessageSent(int, bool, int)), SLOT(encryptedMessageSent(int, bool, int)));
@@ -1429,6 +1470,56 @@ void EventDlg::closeEvent(QCloseEvent *e)
 	e->accept();
 }
 
+void EventDlg::toggleItalic()
+{
+	if(!d->mle->isEnabled())
+		return;
+	d->mle->setFontItalic(!d->mle->fontItalic());
+}
+
+void EventDlg::toggleBold()
+{
+	if(!d->mle->isEnabled())
+		return;
+	d->mle->setFontWeight((d->mle->fontWeight() == QFont::Normal) ? QFont::Bold : QFont::Normal);
+}
+
+void EventDlg::toggleUnderline()
+{
+	if(!d->mle->isEnabled())
+		return;
+	d->mle->setFontUnderline(!d->mle->fontUnderline());
+}
+
+void EventDlg::toggleRed()
+{
+	if(!d->mle->isEnabled())
+		return;
+	d->mle->setTextColor(QColor(255,0,0));
+}
+
+void EventDlg::toggleGreen()
+{
+	if(!d->mle->isEnabled())
+		return;
+	d->mle->setTextColor(QColor(0,255,0));
+}
+
+void EventDlg::toggleBlue()
+{
+	if(!d->mle->isEnabled())
+		return;
+	d->mle->setTextColor(QColor(0,0,255));
+}
+
+void EventDlg::toggleBlack()
+{
+	if(!d->mle->isEnabled())
+		return;
+	d->mle->setTextColor(QColor(255,255,255));
+}
+
+
 void EventDlg::doSend()
 {
 	if(!d->composing)
@@ -1460,6 +1551,14 @@ void EventDlg::doSend()
 	m.setBody(d->mle->text());
 	m.setSubject(d->le_subj->text());
 	m.setUrlList(d->attachView->urlList());
+// XHTML-IM
+	QDomDocument dom;
+	dom.setContent(d->mle->toHtml());
+	bool found;
+	QDomElement e = findSubTag(dom.documentElement(), "body", &found);
+	HTMLElement html(e);
+	m.setHTML(html,"");
+//---------
 	m.setTimeStamp(QDateTime::currentDateTime());
 	m.setThread(d->thread);
 	if(d->tb_pgp->isChecked())
@@ -1860,8 +1959,8 @@ void EventDlg::updateEvent(PsiEvent *e)
 			d->pb_http_deny->show();
 		}
 
-		bool xhtml = m.containsHTML() && PsiOptions::instance()->getOption("options.html.chat.render").toBool() && !m.html().text().isEmpty();
-		QString txt = xhtml ? m.html().toString("div") : TextUtil::plain2rich(m.body());
+		bool xhtml = m.containsHTML() && PsiOptions::instance()->getOption("options.html.chat.render").toBool() && !m.htmlString().isEmpty();
+		QString txt = xhtml ? m.htmlString() : TextUtil::plain2rich(m.body());
 
 		// show subject line if the incoming message has one
 		if(m.subject() != "" && !option.showSubjects)

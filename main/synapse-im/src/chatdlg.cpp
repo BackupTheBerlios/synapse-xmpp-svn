@@ -58,6 +58,7 @@
 #include "textutil.h"
 #include "xmpp_message.h"
 #include "xmpp_htmlelement.h"
+#include "xmpp_xmlcommon.h"
 #include "fancylabel.h"
 #include "msgmle.h"
 #include "iconselect.h"
@@ -289,6 +290,9 @@ public:
 	IconAction *act_clear, *act_history, *act_info, *act_pgp, *act_icon, *act_file, *act_compact, *act_voice, *act_otr;
 	QAction *act_send, *act_scrollup, *act_scrolldown, *act_close;
 	QAction *act_tb;
+// XHTML-IM
+	QAction *act_italic, *act_bold, *act_underline;
+	QAction *act_red, *act_green, *act_blue, *act_black;
 
 	int pending;
 	bool keepOpen, warnSend;
@@ -493,6 +497,36 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 	addAction(d->act_scrolldown);
 	connect(d->act_scrolldown,SIGNAL(activated()), SLOT(scrollDown()));
 
+// Text formating XHTML-IM
+	d->act_italic = new QAction(this);
+	connect(d->act_italic, SIGNAL(activated()), SLOT(toggleItalic()));
+	addAction(d->act_italic);
+
+	d->act_bold = new QAction(this);
+	connect(d->act_bold, SIGNAL(activated()), SLOT(toggleBold()));
+	addAction(d->act_bold);
+
+	d->act_underline = new QAction(this);
+	connect(d->act_underline, SIGNAL(activated()), SLOT(toggleUnderline()));
+	addAction(d->act_underline);
+
+	d->act_red = new QAction(this);
+	connect(d->act_red, SIGNAL(activated()), SLOT(toggleRed()));
+	addAction(d->act_red);
+
+	d->act_green = new QAction(this);
+	connect(d->act_green, SIGNAL(activated()), SLOT(toggleGreen()));
+	addAction(d->act_green);
+
+	d->act_blue = new QAction(this);
+	connect(d->act_blue, SIGNAL(activated()), SLOT(toggleBlue()));
+	addAction(d->act_blue);
+
+	d->act_black = new QAction(this);
+	connect(d->act_black, SIGNAL(activated()), SLOT(toggleBlack()));
+	addAction(d->act_black);
+//--------------------------
+
 	setShortcuts();
 
 	ui_.toolbar->setWindowTitle(tr("Chat toolbar"));
@@ -584,6 +618,14 @@ void ChatDlg::setShortcuts()
 	d->act_scrollup->setShortcuts(ShortcutManager::instance()->shortcuts("common.scroll-up"));
 	d->act_scrolldown->setShortcuts(ShortcutManager::instance()->shortcuts("common.scroll-down"));
 
+	d->act_italic->setShortcuts(ShortcutManager::instance()->shortcuts("chat.italic"));
+	d->act_bold->setShortcuts(ShortcutManager::instance()->shortcuts("chat.bold"));
+	d->act_underline->setShortcuts(ShortcutManager::instance()->shortcuts("chat.underline"));
+
+	d->act_red->setShortcuts(ShortcutManager::instance()->shortcuts("chat.color.red"));
+	d->act_green->setShortcuts(ShortcutManager::instance()->shortcuts("chat.color.green"));
+	d->act_blue->setShortcuts(ShortcutManager::instance()->shortcuts("chat.color.blue"));
+	d->act_black->setShortcuts(ShortcutManager::instance()->shortcuts("chat.color.black"));
 	//if(!option.useTabs) {
 	//	d->act_close->setShortcuts(ShortcutManager::instance()->shortcuts("common.close"));
 	//}
@@ -1196,6 +1238,55 @@ void ChatDlg::updateCaption()
 	emit unreadMessageUpdate(this, d->pending);
 }
 
+void ChatDlg::toggleItalic()
+{
+	if(!ui_.mle->chatEdit()->isEnabled())
+		return;
+	ui_.mle->chatEdit()->setFontItalic(!ui_.mle->chatEdit()->fontItalic());
+}
+
+void ChatDlg::toggleBold()
+{
+	if(!ui_.mle->chatEdit()->isEnabled())
+		return;
+	ui_.mle->chatEdit()->setFontWeight((ui_.mle->chatEdit()->fontWeight() == QFont::Normal) ? QFont::Bold : QFont::Normal);
+}
+
+void ChatDlg::toggleUnderline()
+{
+	if(!ui_.mle->chatEdit()->isEnabled())
+		return;
+	ui_.mle->chatEdit()->setFontUnderline(!ui_.mle->chatEdit()->fontUnderline());
+}
+
+void ChatDlg::toggleRed()
+{
+	if(!ui_.mle->chatEdit()->isEnabled())
+		return;
+	ui_.mle->chatEdit()->setTextColor(QColor(255,0,0));
+}
+
+void ChatDlg::toggleGreen()
+{
+	if(!ui_.mle->chatEdit()->isEnabled())
+		return;
+	ui_.mle->chatEdit()->setTextColor(QColor(0,255,0));
+}
+
+void ChatDlg::toggleBlue()
+{
+	if(!ui_.mle->chatEdit()->isEnabled())
+		return;
+	ui_.mle->chatEdit()->setTextColor(QColor(0,0,255));
+}
+
+void ChatDlg::toggleBlack()
+{
+	if(!ui_.mle->chatEdit()->isEnabled())
+		return;
+	ui_.mle->chatEdit()->setTextColor(QColor(255,255,255));
+}
+
 void ChatDlg::doSend()
 {
 	if(!ui_.mle->chatEdit()->isEnabled())
@@ -1226,8 +1317,26 @@ void ChatDlg::doSend()
 	Message m(d->jid);
 	m.setType("chat");
 	m.setBody(ui_.mle->chatEdit()->text());
+// XHTML-IM
+	QDomDocument dom;
+	dom.setContent(ui_.mle->chatEdit()->toHtml());
+	bool found;
+	QDomElement e = findSubTag(dom.documentElement(), "body", &found);
+	HTMLElement html(e.cloneNode().toElement());
+	HTMLElement html1(e.cloneNode().toElement());
+	m.setHTML(html,"");
+//---------
 	m.setTimeStamp(QDateTime::currentDateTime());
 	
+	if(d->act_pgp->isChecked())
+		m.setWasEncrypted(true);
+	d->m = m;
+
+// XHTML-IM
+	d->m.setHTML(html1,"");
+	d->m.setHTMLString(html1.toString("span"));
+//---------
+
 	if(d->pa->useAMP() && d->pa->serverInfoManager()->hasAMP("http://jabber.org/protocol/amp?action=notify") && d->pa->serverInfoManager()->hasAMP("http://jabber.org/protocol/amp?condition=deliver"))
 	{
 		AMPRule r1("deliver","notify","none");
@@ -1236,10 +1345,6 @@ void ChatDlg::doSend()
 		m.ampRules()->append(r2);
 	}
 		
-	if(d->act_pgp->isChecked())
-		m.setWasEncrypted(true);
-	d->m = m;
-
  	// Request events
  	if (option.messageEvents) {
 		// Only request more events when really necessary
@@ -1294,6 +1399,7 @@ void ChatDlg::encryptedMessageSent(int x, bool b, int e)
 
 void ChatDlg::incomingMessage(const Message &m)
 {
+	
 	if (m.body().isEmpty()) {
 		/* Event message */
 		if (m.containsEvent(CancelEvent))
@@ -1382,10 +1488,8 @@ void ChatDlg::appendMessage(const Message &m, bool local)
 		emote = true;
 
 	QString txt;
-
-	if(m.containsHTML() && PsiOptions::instance()->getOption("options.html.chat.render").toBool() && !m.html().text().isEmpty()) {
-		txt = m.html().toString("span");
-
+	if(m.containsHTML() && PsiOptions::instance()->getOption("options.html.chat.render").toBool() && !m.htmlString().isEmpty()) {
+		txt = m.htmlString();
 		if(emote) {
 			int cmd = txt.indexOf(me_cmd);
 			txt = txt.remove(cmd, me_cmd.length());

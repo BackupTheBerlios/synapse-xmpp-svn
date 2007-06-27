@@ -1982,7 +1982,6 @@ void PsiAccount::processIncomingMessage(const Message &_m)
 	}
 
 	Message m = _m;
-
 	// smartchat: try to match up the incoming event to an existing chat
 	// (prior to 0.9, m.from() always contained a resource)
 	Jid j;
@@ -3826,10 +3825,11 @@ void PsiAccount::handleEvent(PsiEvent *e)
 
 	if(e->type() == PsiEvent::Message) {
 		MessageEvent *me = (MessageEvent *)e;
-		const Message &m = me->message();
+		Message m = me->message();
 
 		// Pass message events to chat window
 		if ((m.containsEvents() || m.chatState() != StateNone) && m.body().isEmpty()) {
+			printf("Events pass\n");
 			if (option.messageEvents) {
 				ChatDlg *c = findDialog<ChatDlg*>(e->from());
 				if(!c)
@@ -4048,6 +4048,7 @@ void PsiAccount::queueEvent(PsiEvent *e)
 		 if(e->type() == PsiEvent::Message) {
 			MessageEvent *me = (MessageEvent *)e;
 			const Message &m = me->message();
+			
 			 if (m.type() == "chat")
 				doPopup = option.popupChats;
 			else if (m.type() == "headline")

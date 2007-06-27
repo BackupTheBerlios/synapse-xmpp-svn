@@ -771,7 +771,7 @@ static QDomElement oldStyleNS(const QDomElement &e)
 	while(!par.isNull() && par.namespaceURI().isNull())
 		par = par.parentNode();
 	bool noShowNS = false;
-	if(!par.isNull() && par.namespaceURI() == e.namespaceURI())
+	if(!par.isNull() && (par.namespaceURI() == e.namespaceURI()))
 		noShowNS = true;
 
 	QDomElement i;

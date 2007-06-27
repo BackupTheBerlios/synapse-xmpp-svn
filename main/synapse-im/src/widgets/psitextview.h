@@ -53,7 +53,7 @@ protected:
 	// document structure and we can't override them to
 	// handle Icons correctly
 	void append(const QString &) { }
-	void toHtml() const { }
+/*	void toHtml() const { }*/
 	void toPlainText() const { }
 	void insertHtml(const QString &) { }
 	void insertPlainText(const QString &) { }

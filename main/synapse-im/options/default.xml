@@ -177,6 +177,15 @@
 					<item type="QKeySequence">Enter</item>
 				</send>
 				<clear type="QKeySequence" comment="Clear the text" />
+				<italic type="QKeySequence" comment="Set/Unset italic">Ctrl+I</italic>
+				<bold type="QKeySequence" comment="Set/Unset bold">Ctrl+B</bold>
+				<underline type="QKeySequence" comment="Set/Unset underline">Ctrl+U</underline>
+				<color comment="Shortcuts for changing colors">
+					<red type="QKeySequence" comment="Red">Ctrl+1</red>
+					<green type="QKeySequence" comment="Green">Ctrl+2</green>
+					<blue type="QKeySequence" comment="Blue">Ctrl+3</blue>
+					<black type="QKeySequence" comment="Black">Ctrl+0</black>
+				</color>
 			</chat>
 			<contactlist comment="Shortcuts in the contactlist" >
 				<assign-custom-avatar type="QKeySequence" comment="Assign a custom avatar to the selected contact" />
