@@ -50,6 +50,7 @@ class TuneController;
 class PsiContactList;
 class Q3DockWindow;
 class MainWin;
+class CoreInterface;
 namespace OpenPGP {
 	class Engine;
 }
@@ -119,6 +120,8 @@ public:
 
 	IconSelectPopup *iconSelectPopup() const;
 	void processEvent(PsiEvent *);
+
+	CoreInterface *loadCorePlugin(QString name);
 
 	QString lastStatusString;
 

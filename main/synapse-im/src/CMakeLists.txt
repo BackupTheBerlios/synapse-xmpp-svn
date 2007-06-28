@@ -117,7 +117,7 @@ set(synapse-im_noMOC_SRCS
 	conferencebookmark.cpp
 	desktoputil.cpp
 	entitytimetask.cpp
-	garchive_otr.cpp
+#	garchive_otr.cpp
 	gcuserview.cpp
 	geolocation.cpp
 	historydb.cpp
@@ -211,9 +211,9 @@ set(synapse-im_SRCS
 	actionlist.cpp
  	privacymanager.cpp
 	psiactionlist.cpp
-	gmail_notify.cpp
+#	gmail_notify.cpp
 	httpauthmanager.cpp
-	garchive.cpp
+#	garchive.cpp
 	psicon.cpp
 	psiaccount.cpp
 )
@@ -247,8 +247,8 @@ set(synapse-im_H
 	eventdlg.h
 #	entitytimetask.h
 	filetransdlg.h
-	garchive.h
-	gmail_notify.h
+#	garchive.h
+#	gmail_notify.h
 	gcuserview.h
 	groupchatdlg.h
 	mucaffiliationsmodel.h
@@ -306,6 +306,7 @@ set(synapse-im_H
 	voicecaller.h
 	xdata_widget.h
 	xmlconsole.h
+	plugins/core/coreinterface.h
 )
 
 set(res_RC
@@ -366,6 +367,15 @@ endif(WIN32)
 if(SPEEX_FOUND)
 set(synapse-im_SRCS ${synapse-im_SRCS} ${jingle_SRCS})
 endif(SPEEX_FOUND)
+
+#///
+INCLUDE_DIRECTORIES(
+	plugins/core
+	plugins/core/gmail
+	plugins/core/garchive
+)
+
+add_subdirectory(plugins)
 
 add_executable(synapse-im
 	${synapse-im_SRCS}
@@ -429,3 +439,5 @@ ADD_DEFINITIONS(${QT_DEFINITIONS})
 ADD_DEFINITIONS(${QT_NO_DEBUG})
 
 INSTALL(TARGETS synapse-im DESTINATION ${EXECUTABLE_INSTALL_DIR})
+
+

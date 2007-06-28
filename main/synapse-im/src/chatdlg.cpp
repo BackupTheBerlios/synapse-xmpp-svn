@@ -831,7 +831,7 @@ void ChatDlg::updateOtr()
 	d->act_otr->setEnabled((d->pa->gArchive() != NULL) && d->pa->gArchive()->isEnabled());
 	if((d->pa->gArchive() != NULL) && d->pa->gArchive()->isEnabled())
 	{
-		d->pa->gArchive()->isOtrOn(jid().full()) ? appendSysMsg(tr("--- Your are now off the record! ---")) : appendSysMsg(tr("--- Recording is on! ---"));
+		d->pa->gArchive()->isEvent(jid().full()) ? appendSysMsg(tr("--- Your are now off the record! ---")) : appendSysMsg(tr("--- Recording is on! ---"));
 	}
 }
 

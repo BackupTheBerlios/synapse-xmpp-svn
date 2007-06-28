@@ -5,6 +5,7 @@
 #include "xmpp_xmlcommon.h"
 #include <QObject>
 #include <QTimer>
+#include <QtGui>
 #include "contactview.h"
 #include "psicon.h"
 #include "mainwin.h"
@@ -171,8 +172,7 @@ Message *JT_GMailNotify::newMailInfo()
 	return &message_;
 }
 
-GMailNotify::GMailNotify(PsiAccount *pa, const Jid& receiver, bool enable)
-:QObject()
+void GMailNotify::setup(PsiAccount *pa, const Jid& receiver, bool enable)
 {
 	pa_ = pa;
 	task_ = new JT_GMailNotify(pa_->client()->rootTask(), receiver);
@@ -192,6 +192,14 @@ void GMailNotify::init()
 		task_->go(false);
 }
 
+void GMailNotify::reset()
+{
+}
+
+void GMailNotify::changed()
+{
+}
+
 void GMailNotify::setJid(const XMPP::Jid& j)
 {
 	if(enabled_)
@@ -208,23 +216,18 @@ void GMailNotify::done()
 	cvi_->repaint();
 }
 
-bool GMailNotify::isNewMail()
+bool GMailNotify::isEvent(const XMPP::Jid &reciver)
 {
 	if(enabled_)
 		return (task_->isNewMail());
 	return FALSE;
 }
 
-int GMailNotify::newMailCount()
+int GMailNotify::countEvents()
 {
 	if(enabled_)
 		return (task_->newMailCount());
 	return 0;
-}
-
-QPixmap GMailNotify::newMailIcon()
-{
-	return IconsetFactory::iconPixmap("psi/sendMessage");
 }
 
 bool GMailNotify::isEnabled()
@@ -249,4 +252,15 @@ void GMailNotify::setCvi(ContactViewItem *i)
 	cvi_ = i;
 }
 
-#include "gmail_notify.moc"
+QString GMailNotify::name()
+{
+	return QString("Google Mail Notification");
+}
+
+QString GMailNotify::version()
+{
+	return QString("20070627");
+}
+
+
+Q_EXPORT_PLUGIN2(google_mailnotification, GMailNotify);

@@ -497,8 +497,8 @@ QString UserListItem::makeBareTip(bool trim, bool doLinkify) const
 	else
 		str += QString("<div style='white-space:pre'>%1</div>").arg(Qt::escape(nick));
 
-	if(v_self && v_gMailNotify != NULL && v_gMailNotify->isNewMail())
-		str += QString("<div style='white-space:pre'><icon name=\"psi/sendMessage\"> %1: %2</nobr></div>").arg(Qt::escape(QObject::tr("New mails"))).arg(Qt::escape(QString("%1").arg(v_gMailNotify->newMailCount())));
+	if(v_self && v_gMailNotify != NULL && v_gMailNotify->isEvent(jid()))
+		str += QString("<div style='white-space:pre'><icon name=\"psi/sendMessage\"> %1: %2</nobr></div>").arg(Qt::escape(QObject::tr("New mails"))).arg(Qt::escape(QString("%1").arg(v_gMailNotify->countEvents())));
 
 	// subscription
 	if(!v_self && subscription().type() != Subscription::Both)

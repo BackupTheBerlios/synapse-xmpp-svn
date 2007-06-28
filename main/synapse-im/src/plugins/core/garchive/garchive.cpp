@@ -6,6 +6,7 @@
 #include "psiaccount.h"
 #include "chatdlg.h"
 #include "userlist.h"
+#include <QtGui>
 
 using namespace Otr;
 
@@ -205,14 +206,18 @@ void JT_GArchive::onGo()
 	send(r);
 }
 
-GArchive::GArchive(PsiAccount *_pa,const Jid& j, bool enabled)
+void GArchive::setup(PsiAccount *_pa,const Jid& j, bool enabled)
 {
 	pa_ = _pa;
 	receiver_ = j;
 	task_ = NULL;
 	save_ = false;
 	if(enabled)
-		enable();
+		setEnabled(true);
+}
+
+void GArchive::init()
+{
 }
 
 void GArchive::reset()
@@ -222,9 +227,13 @@ void GArchive::reset()
 		task_->go(false);
 }
 
-void GArchive::enable()
+void GArchive::setJid(const XMPP::Jid& j)
 {
-	if(task_ == NULL)
+}
+
+void GArchive::setEnabled(bool en)
+{
+	if(task_ == NULL && en)
 	{
 		task_ = new JT_GArchive(pa_->client()->rootTask(),receiver_);
 		connect(task_,SIGNAL(otrChanged(const XMPP::Jid&)),SLOT(otrChanged(const XMPP::Jid&)));
@@ -244,13 +253,19 @@ GArchive::~GArchive()
 		delete task_;
 }
 
-bool GArchive::isOtrOn(const Jid& jid)
+bool GArchive::isEvent(const Jid& jid)
 {
 	if(task_ != NULL)
 		return task_->isOtrOn(jid);
 	else
 		return true;
 }
+
+int GArchive::countEvents()
+{
+	return 0;
+}
+
 
 void GArchive::otrChanged(const XMPP::Jid& jid)
 {
@@ -259,7 +274,7 @@ void GArchive::otrChanged(const XMPP::Jid& jid)
 		t->updateOtr();
 }
 
-void GArchive::changeSave()
+void GArchive::changed()
 {
 	if(task_ != NULL)
 		task_->setSave(!(isEnabled()));
@@ -288,6 +303,27 @@ void GArchive::setSave(bool state)
 	}
 	save_ = state;
 }
+
+QString GArchive::name()
+{
+	return QString("Google Message Archives");
+}
+
+QString GArchive::version()
+{
+	return QString("20070627");
+}
+
+ContactViewItem *GArchive::cvi()
+{
+	return NULL;
+}
+
+void GArchive::setCvi(ContactViewItem *i)
+{
+}
+
+Q_EXPORT_PLUGIN2(google_archive, GArchive);
 
 #include "garchive.moc"
 

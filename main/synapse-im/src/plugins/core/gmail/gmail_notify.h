@@ -3,27 +3,34 @@
 
 #include <QObject>
 #include "xmpp.h"
+#include "coreinterface.h"
 
 class PsiAccount;
 class JT_GMailNotify;
 class ContactViewItem;
 
-class GMailNotify : public QObject
+class GMailNotify : public CoreInterface
 {
-	Q_OBJECT
+        Q_INTERFACES(CoreInterface);
 public:
-	GMailNotify(PsiAccount *pa, const XMPP::Jid& receiver, bool enable);
 	~GMailNotify();
 	
+	QString name();
+	QString version();
+
+	void setup(PsiAccount *pa, const XMPP::Jid& receiver, bool enable);
 	void init();
+	void reset();
 	void setJid(const XMPP::Jid& receiver);
 	
-	bool isNewMail();
-	int newMailCount();
-	QPixmap newMailIcon();
+	bool isEvent(const XMPP::Jid &reciver);
+	int countEvents();
 	
 	bool isEnabled();
 	void setEnabled(bool enable);
+
+	void changed();
+
 	ContactViewItem *cvi();
 	void setCvi(ContactViewItem *i);
 	
@@ -36,5 +43,4 @@ private:
 	ContactViewItem *cvi_;
 	bool enabled_;
 };
-
 #endif

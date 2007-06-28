@@ -1081,7 +1081,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		pm.insertItem(IconsetFactory::icon("psi/disco").icon(), tr("Service &Discovery"), 9);
 		if (PsiOptions::instance()->getOption("options.ui.message.enabled").toBool())
 			pm.insertItem(IconsetFactory::icon("psi/sendMessage").icon(), tr("New &blank message"), 6);
-		if(d->pa->serverInfoManager()->hasGoogleArchive())
+		if(d->pa->serverInfoManager()->hasGoogleArchive() && d->pa->gArchive() != NULL)
 			if(d->pa->gArchive()->isEnabled())
 				pm.insertItem(IconsetFactory::icon("psi/history").icon(), tr("Disable logging"), 15);
 			else
@@ -1150,7 +1150,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
  		}
 		else if (x == 15) {
 			if(online)
-				d->pa->gArchive()->changeSave();
+				d->pa->gArchive()->changed();
 		}
 		else if(x >= status_start) {
 			int status = x - status_start;
@@ -3661,12 +3661,13 @@ void ContactViewItem::paintCell(QPainter *p, const QColorGroup & cg, int column,
 			p->drawPixmap(x, y, pix);
 			x += 24;
 			
+			Jid jid;
 			GMailNotify *gmn = contactProfile()->gMailNotify();
 			if(gmn != NULL && gmn->cvi() == NULL)
 				gmn->setCvi(this);
-			if(gmn != NULL && gmn->isNewMail())
+			if(gmn != NULL && gmn->isEvent(jid))
 			{
-				const QPixmap &pix1 = gmn->newMailIcon();
+				const QPixmap &pix1 = IconsetFactory::iconPixmap("psi/sendMessage");
 				int z = (height() - pix1.height()) / 2;
 				p->drawPixmap(x, z, pix1);
 				x += 24;

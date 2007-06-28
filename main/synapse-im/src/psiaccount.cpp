@@ -276,6 +276,8 @@ public:
 	// Tune
 	Tune lastTune;
 
+	// Google Mail Notification
+//	GMailNotify *gmn;
 	// Google Archive
 	GArchive *ga;
 
@@ -678,9 +680,9 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	d->psi->setToggles(d->acc.tog_offline, d->acc.tog_away, d->acc.tog_agents, d->acc.tog_hidden,d->acc.tog_self);
 
 	// GMailNotify
-	GMailNotify *gmn = new GMailNotify(this,jid(),d->serverInfoManager->hasGoogleMailNotify());
-	gmn->init();
-	d->self.setGMailNotify(gmn);
+//	GMailNotify *gmn = new GMailNotify(this,jid(),d->serverInfoManager->hasGoogleMailNotify());
+//	gmn->init();
+//	d->self.setGMailNotify(gmn);
 
 	d->setEnabled(d->acc.opt_enabled);
 
@@ -688,7 +690,7 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	connect(capsManager(),SIGNAL(capsChanged(const Jid&)),SLOT(capsChanged(const Jid&)));
 
 	// Google Archive
-	d->ga = new GArchive(this, jid(), d->serverInfoManager->hasGoogleArchive());
+//	d->ga = new GArchive(this, jid(), d->serverInfoManager->hasGoogleArchive());
 	
 	//printf("PsiAccount: [%s] loaded\n", name().latin1());
 	d->xmlConsole = new XmlConsole(this);
@@ -1602,9 +1604,31 @@ void PsiAccount::resolveContactName()
 void PsiAccount::serverFeaturesChanged()
 {
 	setPEPAvailable(d->serverInfoManager->hasPEP());
-	d->self.gMailNotify()->setEnabled(d->serverInfoManager->hasGoogleMailNotify());
-	if(d->serverInfoManager->hasGoogleArchive())
-		d->ga->enable();
+//	d->self.gMailNotify()->setEnabled(d->serverInfoManager->hasGoogleMailNotify());
+//	if(d->serverInfoManager->hasGoogleArchive())
+//		d->ga->enable();
+	if(d->serverInfoManager->hasGoogleMailNotify() && d->self.gMailNotify() == NULL) {
+		CoreInterface *ci = d->psi->loadCorePlugin("libgoogle_notify");
+		if(ci != NULL) {
+			GMailNotify *gmn = (GMailNotify*)ci;
+			if(gmn) {
+				gmn->setup(this,jid(),true);
+				gmn->init();
+				d->self.setGMailNotify(gmn);
+			}
+		}
+	} else if(!d->serverInfoManager->hasGoogleMailNotify() && d->self.gMailNotify() != NULL)
+		d->self.gMailNotify()->setEnabled(false);
+	else if(d->serverInfoManager->hasGoogleMailNotify() && d->self.gMailNotify() != NULL)
+		d->self.gMailNotify()->setEnabled(true);
+
+	if(d->serverInfoManager->hasGoogleArchive() && d->ga == NULL) {
+		CoreInterface *ci = d->psi->loadCorePlugin("libgoogle_archive");
+		if(ci != NULL) {
+			d->ga = (GArchive*)ci;
+			d->ga->setup(this,jid(),true);
+		}
+	}
 }
 
 void PsiAccount::setPEPAvailable(bool b) 
