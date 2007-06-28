@@ -23,6 +23,8 @@ public:
 	void setAlert(const PsiIcon *);
 	bool isAnimating() const;
 
+	void showMessage(const QString &title, const QString &msg, QSystemTrayIcon::MessageIcon = QSystemTrayIcon::MessageIcon(1), int msecs = 10000);
+
 signals:
 	void clicked(const QPoint &, int);
 	void doubleClicked(const QPoint &);

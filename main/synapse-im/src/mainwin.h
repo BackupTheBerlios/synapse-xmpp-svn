@@ -27,6 +27,7 @@
 #include <QString>
 #include <QStringList>
 #include "profiles.h"
+#include <QSystemTrayIcon>
 
 #include "advwidget.h"
 #ifdef HAVE_DBUS
@@ -72,6 +73,9 @@ public:
 	void saveToolbarsPositions();
 	PsiCon *psiCon() const;
 	DBus *dbus;
+
+	void showMessage(const QString &title, const QString &msg, QSystemTrayIcon::MessageIcon = QSystemTrayIcon::MessageIcon(1), int msecs = 10000);
+
 protected:
 	void closeEvent(QCloseEvent *);
 	void keyPressEvent(QKeyEvent *);

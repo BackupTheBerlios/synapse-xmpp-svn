@@ -8,6 +8,7 @@
 #include <qlabel.h>
 #include <qcombobox.h>
 #include <qlineedit.h>
+#include "psioptions.h"
 
 #include "ui_opt_events.h"
 
@@ -74,6 +75,7 @@ QWidget *OptionsTabEvents::widget()
 	list_alerts.insert(1,d->rb_aBlink);
 	list_alerts.insert(2,d->rb_aAnimate);
 */
+
 	return w;
 }
 
@@ -104,6 +106,7 @@ void OptionsTabEvents::applyOptions(Options *opt)
 	opt->ppOnline  = d->ck_popupOnOnline->isChecked();
 	opt->ppOffline = d->ck_popupOnOffline->isChecked();
 	opt->ppStatus  = d->ck_popupOnStatus->isChecked();
+	PsiOptions::instance()->setOption("options.ui.popupType", d->cb_popupType->currentText());
 }
 
 void OptionsTabEvents::restoreOptions(const Options *opt)
@@ -131,4 +134,15 @@ void OptionsTabEvents::restoreOptions(const Options *opt)
 	d->ck_popupOnOnline->setChecked( opt->ppOnline );
 	d->ck_popupOnOffline->setChecked( opt->ppOffline );
 	d->ck_popupOnStatus->setChecked( opt->ppStatus );
+
+	d->cb_popupType->clear();
+	QStringList typeList;
+	typeList << "Basic" << "Full";
+	QString typeName = PsiOptions::instance()->getOption("options.ui.popupType").toString();
+	int n = 0;
+	for(n=0;n<typeList.count();n++)
+		if(typeName.compare(typeList.at(n))==0)
+			break;
+	d->cb_popupType->addItems(typeList);
+	d->cb_popupType->setCurrentItem(n);
 }

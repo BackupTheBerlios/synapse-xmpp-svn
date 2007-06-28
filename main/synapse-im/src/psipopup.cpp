@@ -42,10 +42,9 @@
 #include <QBoxLayout>
 #include <QList>
 #include <QTextDocument>
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-#include "SnarlInterface.h"
+#include <QSystemTrayIcon>
 #include "applicationinfo.h"
-#endif
+#include "mainwin.h"
 
 #include "avatars.h"
 /**
@@ -94,12 +93,9 @@ public:
 	Jid jid;
 	Status status;
 	PsiEvent *event;
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-	QString caption;
-	QString text;
-	QString icon;
-#endif
 	PsiIcon *titleIcon;
+	QString titleText_;
+	QString name_;
 	bool display;
 };
 
@@ -129,9 +125,9 @@ void PsiPopup::Private::init(const PsiIcon *_titleIcon, QString titleText, PsiAc
 	psi = acc->psi();
 	account = acc;
 	display = true;
-
 	if ( !option.ppIsOn )
 		return;
+	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
 
 	if ( !psiPopupList )
 		psiPopupList = new QList<PsiPopup *>();
@@ -148,11 +144,6 @@ void PsiPopup::Private::init(const PsiIcon *_titleIcon, QString titleText, PsiAc
 	else
 		titleIcon = new PsiIcon(*_titleIcon);
 
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-	caption = titleText;
-	icon = ApplicationInfo::homeDir() + "/iconsets/roster/default/" + icon + ".png";
-#endif
-
 	popup = new FancyPopup(0,titleText, titleIcon, 3000, false);
 	connect(popup, SIGNAL(clicked(int)), SLOT(popupClicked(int)));
 	connect(popup, SIGNAL(destroyed()), SLOT(popupDestroyed()));
@@ -161,6 +152,11 @@ void PsiPopup::Private::init(const PsiIcon *_titleIcon, QString titleText, PsiAc
 	if ( _titleIcon )
 		id += _titleIcon->name();
 	id += titleText;
+	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic")
+	{
+		printf("basic\n");
+		titleText_ = titleText;
+	}
 }
 
 void PsiPopup::Private::popupDestroyed()
@@ -240,7 +236,6 @@ PsiRichLabel *PsiPopup::Private::createContactInfo(const PsiIcon *icon, QString 
 	textLabel->setFont(font);
 
 	textLabel->setWordWrap(false);
-//	textLabel->setText(QString("<qt>%1</qt>").arg(clipText(text)));
 	textLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
 
 	return textLabel;
@@ -274,55 +269,34 @@ PsiPopup::PsiPopup(PopupType type, PsiAccount *acc)
 	case AlertOnline:
 		text += PsiPopup::tr("Contact online");
 		icon = (PsiIcon *)IconsetFactory::iconPtr("status/online");
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		d->icon = "online";
-#endif
 		break;
 	case AlertOffline:
 		text += PsiPopup::tr("Contact offline");
 		icon = (PsiIcon *)IconsetFactory::iconPtr("status/offline");
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		d->icon = "offline";
-#endif
 		break;
 	case AlertStatusChange:
 		text += PsiPopup::tr("Status change");
 		icon = (PsiIcon *)IconsetFactory::iconPtr("status/online");
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		d->icon = "online";
-#endif
 		break;
 	case AlertMessage:
 		text += PsiPopup::tr("Incoming message");
 		icon = (PsiIcon *)IconsetFactory::iconPtr("psi/message");
 		doAlertIcon = true;
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		d->icon = "message";
-#endif
 		break;
 	case AlertChat:
 		text += PsiPopup::tr("Incoming chat message");
 		icon= (PsiIcon *)IconsetFactory::iconPtr("psi/chat");
 		doAlertIcon = true;
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		d->icon = "chat";
-#endif
 		break;
 	case AlertHeadline:
 		text += PsiPopup::tr("Headline");
 		icon= (PsiIcon *)IconsetFactory::iconPtr("psi/headline");
 		doAlertIcon = true;
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		d->icon = "headline";
-#endif
 		break;
 	case AlertFile:
 		text += PsiPopup::tr("Incoming file");
 		icon= (PsiIcon *)IconsetFactory::iconPtr("psi/file");
 		doAlertIcon = true;
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		d->icon = "file";
-#endif
 		break;
 	default:
 		break;
@@ -333,6 +307,8 @@ PsiPopup::PsiPopup(PopupType type, PsiAccount *acc)
 
 void PsiPopup::setData(const PsiIcon *icon, QString text,const Jid& j) //sets layout in popup
 {
+	d->jid = j;
+	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
 	if ( !d->popup ) {
 		deleteLater();
 		return;
@@ -344,20 +320,23 @@ void PsiPopup::setData(const PsiIcon *icon, QString text,const Jid& j) //sets la
 		d->id += icon->name();
 	d->id += text;
 
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-	d->text = TextUtil::rich2plain(text);
-#endif
 	show();
+	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic") {
+		show();
+	}
 }
 
 void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, const PsiEvent *event)
 {
+	d->jid    = j;
+	d->name_ = (u->name().isEmpty()) ? j.bare() : u->name();
+	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
+
 	if ( !d->popup ) {
 		deleteLater();
 		return;
 	}
 
-	d->jid    = j;
 	d->status = r.status();
 	d->event  = (PsiEvent *)event;
 
@@ -430,33 +409,19 @@ void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, c
 			message += "<font color=\"red\"><b>" + tr("Subject:") + " " + jmessage->subject() + "</b></font><br>";
 		message += TextUtil::plain2rich( jmessage->body() );
 
-/*		QLabel *messageLabel = new QLabel(d->popup);
-		QFont font = messageLabel->font();
-		font.setPointSize(option.smallFontSize);
-		messageLabel->setFont(font);
-
-		messageLabel->setWordWrap(true);
-		messageLabel->setTextFormat(Qt::RichText);
-		messageLabel->setText( d->clipText(TextUtil::linkify( message )) );
-		messageLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-		vbox->addWidget(messageLabel);
-
-		// update id
-		if ( icon )
-			d->id += icon->name();
-		d->id += contactText;
-		d->id += message;
-
-		d->popup->addLayout( vbox );*/
 		contactText += "<br/>" + message;
 		setData((const PsiIcon*)icon, (QString)contactText, j);
 
+		show();
+	}
+	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic") {
 		show();
 	}
 }
 
 void PsiPopup::show()
 {
+	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
 	if ( !d->popup ) {
 		deleteLater();
 		return;
@@ -472,20 +437,17 @@ void PsiPopup::show()
 			}
 		}
 	}
-
 	if ( d->display ) {
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		SnarlInterface snarl;
-		if(snarl.snShowMessage(d->caption.toStdString(), d->text.toStdString(), 5, d->icon.toStdString(), 0, 0) == 0) {
-#endif
 		psiPopupList->append( this );
 		d->popup->show();
-#if defined(Q_WS_WIN) && defined(HAVE_SNARL)
-		}
-#endif
 	}
 	else {
 		deleteLater();
+	}
+
+	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic") {
+		printf("basic\n");
+		d->psi->mainWin()->showMessage(d->titleText_, d->jid.bare(),QSystemTrayIcon::MessageIcon(0), 5000);
 	}
 }
 

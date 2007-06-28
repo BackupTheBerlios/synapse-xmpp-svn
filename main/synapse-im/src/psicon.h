@@ -49,6 +49,7 @@ class ChatDlg;
 class TuneController;
 class PsiContactList;
 class Q3DockWindow;
+class MainWin;
 namespace OpenPGP {
 	class Engine;
 }
@@ -69,6 +70,7 @@ public:
 
 	PsiContactList* contactList() const;
 	ContactView *contactView() const;
+	MainWin *mainWin();
 //	EDB *edb() const;
 	TuneController* tuneController() const;
 	ProxyManager *proxy() const;

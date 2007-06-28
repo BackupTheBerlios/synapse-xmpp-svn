@@ -54,6 +54,7 @@
 			<enable comment="Enable AntiEvil scanner" type="bool">true</enable>
 		</anti-evil>
 		<ui comment="User interface options">
+			<popupType comment="Type of popup" type="QString" >Basic</popupType>
 			<account comment="Account options">
 				<data-proxy comment="Allow changing the data transfer proxy" type="bool">true</data-proxy>
 				<ignore-ssl-warnings comment="Show the ignore SSL warnings option" type="bool">true</ignore-ssl-warnings>

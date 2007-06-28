@@ -1342,6 +1342,11 @@ void PsiCon::processEvent(PsiEvent *e)
 	}
 }
 
+MainWin *PsiCon::mainWin()
+{
+	return d->mainwin;
+}
+
 void PsiCon::mainWinGeomChanged(QRect saveableGeometry)
 {
 	d->mwgeom = saveableGeometry;

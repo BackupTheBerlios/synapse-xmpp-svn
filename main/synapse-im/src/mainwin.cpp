@@ -517,6 +517,12 @@ PsiCon *MainWin::psiCon() const
 	return d->psi;
 }
 
+void MainWin::showMessage(const QString &title, const QString &msg, QSystemTrayIcon::MessageIcon mi, int msecs)
+{
+	if(d->tray)
+		d->tray->showMessage(title, msg, mi, msecs);
+}
+
 void MainWin::setWindowOpts(bool _onTop, bool _asTool)
 {
 	if(_onTop == d->onTop && _asTool == d->asTool)

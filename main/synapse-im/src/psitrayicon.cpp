@@ -73,6 +73,12 @@ bool PsiTrayIcon::isAnimating() const
 	return icon_->isAnimated();
 }
 
+void PsiTrayIcon::showMessage(const QString &title, const QString &msg, QSystemTrayIcon::MessageIcon mi, int msecs)
+{
+	if(trayicon_)
+		trayicon_->showMessage(title, msg, mi, msecs);
+}
+
 void PsiTrayIcon::show()
 {
 	trayicon_->show();
