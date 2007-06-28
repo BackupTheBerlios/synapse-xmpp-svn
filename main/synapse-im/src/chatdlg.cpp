@@ -1319,7 +1319,7 @@ void ChatDlg::doSend()
 	m.setBody(ui_.mle->chatEdit()->text());
 // XHTML-IM
 	QDomDocument dom;
-	dom.setContent(ui_.mle->chatEdit()->toHtml());
+	dom.setContent(TextUtil::linkify(ui_.mle->chatEdit()->toHtml()));
 	bool found;
 	QDomElement e = findSubTag(dom.documentElement(), "body", &found);
 	HTMLElement html(e.cloneNode().toElement());

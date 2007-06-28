@@ -1553,7 +1553,7 @@ void EventDlg::doSend()
 	m.setUrlList(d->attachView->urlList());
 // XHTML-IM
 	QDomDocument dom;
-	dom.setContent(d->mle->toHtml());
+	dom.setContent(TextUtil::linkify(d->mle->toHtml()));
 	bool found;
 	QDomElement e = findSubTag(dom.documentElement(), "body", &found);
 	HTMLElement html(e);

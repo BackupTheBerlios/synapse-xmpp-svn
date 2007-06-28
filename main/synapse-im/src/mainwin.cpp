@@ -662,7 +662,6 @@ void MainWin::buildStatusMenu()
 	d->statusMenu->insertSeparator();
 
 	buildStatusLastMenu();
-	updateStatusLastMenu();
 
 	d->statusMenu->insertSeparator();
 	d->getAction("status_offline")->addTo(d->statusMenu);
