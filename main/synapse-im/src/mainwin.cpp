@@ -642,7 +642,6 @@ void MainWin::buildStatusLastMenu()
 		d->statusLastMapper->setMapping(d->statusLastAction[i], i);
 		connect (d->statusLastAction[i], SIGNAL(activated()), d->statusLastMapper, SLOT(map()));
 	}
-
 // 		IconAction *action = getAction( aName );
 
 // 		statusMapper->setMapping(action, statuslist[i].id);
@@ -663,6 +662,7 @@ void MainWin::buildStatusMenu()
 	d->statusMenu->insertSeparator();
 
 	buildStatusLastMenu();
+	updateStatusLastMenu();
 
 	d->statusMenu->insertSeparator();
 	d->getAction("status_offline")->addTo(d->statusMenu);
@@ -1113,7 +1113,7 @@ void MainWin::trayClicked(const QPoint &, int button)
 	if(option.dockDCstyle)
 		return;
 
-	if(button == Qt::MidButton) {
+	if(button == Qt::MidButton || d->nextAmount > 0) {
 		doRecvNextEvent();
 		return;
 	}
