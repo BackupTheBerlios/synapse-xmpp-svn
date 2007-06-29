@@ -252,6 +252,14 @@ void GMailNotify::setCvi(ContactViewItem *i)
 	cvi_ = i;
 }
 
+void GMailNotify::setPsiCon(PsiCon *psi)
+{
+}
+
+void GMailNotify::process(const XMPP::Jid& j, const QString& s)
+{
+}
+
 QString GMailNotify::name()
 {
 	return QString("Google Mail Notification");

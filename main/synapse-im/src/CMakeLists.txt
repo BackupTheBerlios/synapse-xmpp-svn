@@ -97,11 +97,11 @@ set(synapse-im_noMOC_SRCS
 	accountregdlg.cpp
 	accountscombobox.cpp
 	adduserdlg.cpp
-	ahcexecutetask.cpp
-	ahcformdlg.cpp
-	ahcommand.cpp
- 	ahcommanddlg.cpp
-	ahcommandserver.cpp
+#	ahcexecutetask.cpp
+#	ahcformdlg.cpp
+#	ahcommand.cpp
+ #	ahcommanddlg.cpp
+#	ahcommandserver.cpp
 	alertable.cpp
 	antievil.cpp
 	applicationinfo.cpp
@@ -162,7 +162,7 @@ set(synapse-im_noMOC_SRCS
 	psitoolbar.cpp
 	psitrayicon.cpp
 	pubsubsubscription.cpp
-	rc.cpp
+#	rc.cpp
 	resourcemenu.cpp
 	rosteritemexchangetask.cpp
 	rtparse.cpp
@@ -202,7 +202,7 @@ set(synapse-im_SRCS
 	groupchatdlg.cpp
 	registrationdlg.cpp
 #	qwextend.cpp
- 	ahcservermanager.cpp
+ #	ahcservermanager.cpp
 	discodlg.cpp
 	alerticon.cpp
 	psipopup.cpp
@@ -229,8 +229,8 @@ set(synapse-im_H
 	accountregdlg.h
 	accountscombobox.h
 	adduserdlg.h
-	ahcformdlg.h
-	ahcommanddlg.h
+#	ahcformdlg.h
+#	ahcommanddlg.h
 	alertable.h
 	alerticon.h
 	antievil.h
@@ -373,6 +373,7 @@ INCLUDE_DIRECTORIES(
 	plugins/core
 	plugins/core/gmail
 	plugins/core/garchive
+	plugins/core/ahc
 )
 
 add_subdirectory(plugins)

@@ -1355,7 +1355,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 #endif
 		
 		// TODO: Add executeCommand() thing
-		if(!isPrivate) {
+		if(!isPrivate && option.useRC) {
 			pm.insertItem(tr("E&xecute command"), rc2m, 25);
 			pm.setItemEnabled(25, !rl.isEmpty());
 		}

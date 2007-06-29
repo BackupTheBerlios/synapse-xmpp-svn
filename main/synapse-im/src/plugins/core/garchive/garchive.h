@@ -10,6 +10,7 @@
 class PsiAccount;
 class JT_GArchive;
 class ContactViewItem;
+class PsiCon;
 
 class GArchive : public CoreInterface
 {
@@ -35,6 +36,9 @@ public:
 
 	ContactViewItem *cvi();
 	void setCvi(ContactViewItem *i);
+
+	void setPsiCon(PsiCon *);
+	void process(const XMPP::Jid&, const QString&);
 
 public slots:
 	void otrChanged(const XMPP::Jid& _jid);

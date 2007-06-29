@@ -32,7 +32,7 @@ public:
 	virtual QString node() const 
 		{ return QString("http://jabber.org/protocol/rc#") + rcNode(); }
 	virtual QString rcNode() const = 0;
-	virtual bool isAllowed(const Jid&) const;
+	virtual bool isAllowed(const XMPP::Jid&) const;
 
 };
 
@@ -42,7 +42,7 @@ public:
 	RCSetStatusServer(AHCServerManager* m) : RCCommandServer(m) { }
 	virtual QString name() const { return "Set Status"; }
 	virtual QString rcNode() const { return "set-status"; }
-	virtual AHCommand execute(const AHCommand&, const Jid&);
+	virtual AHCommand execute(const AHCommand&, const XMPP::Jid&);
 };
 
 class RCForwardServer : public RCCommandServer
@@ -51,7 +51,7 @@ public:
 	RCForwardServer(AHCServerManager* m) : RCCommandServer(m) { }
 	virtual QString name() const { return "Forward Messages"; }
 	virtual QString rcNode() const { return "forward"; }
-	virtual AHCommand execute(const AHCommand& c, const Jid&);
+	virtual AHCommand execute(const AHCommand& c, const XMPP::Jid&);
 };
 
 class RCSetOptionsServer : public RCCommandServer
@@ -60,7 +60,7 @@ public:
 	RCSetOptionsServer(AHCServerManager* m, PsiCon* c) : RCCommandServer(m), psiCon_(c) { }
 	virtual QString name() const { return "Set Options"; }
 	virtual QString rcNode() const { return "set-options"; }
-	virtual AHCommand execute(const AHCommand& c, const Jid&);
+	virtual AHCommand execute(const AHCommand& c, const XMPP::Jid&);
 
 private:
 	PsiCon* psiCon_;

@@ -8,6 +8,7 @@
 class PsiAccount;
 class JT_GMailNotify;
 class ContactViewItem;
+class PsiCon;
 
 class GMailNotify : public CoreInterface
 {
@@ -33,7 +34,10 @@ public:
 
 	ContactViewItem *cvi();
 	void setCvi(ContactViewItem *i);
-	
+
+	void setPsiCon(PsiCon* psi);
+	void process(const XMPP::Jid&, const QString&);
+
 public slots:
 	void done();
 	

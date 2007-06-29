@@ -323,6 +323,14 @@ void GArchive::setCvi(ContactViewItem *i)
 {
 }
 
+void GArchive::setPsiCon(PsiCon *psi)
+{
+}
+
+void GArchive::process(const XMPP::Jid& j, const QString& s)
+{
+}
+
 Q_EXPORT_PLUGIN2(google_archive, GArchive);
 
 #include "garchive.moc"

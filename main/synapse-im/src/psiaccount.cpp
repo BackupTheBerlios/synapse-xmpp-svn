@@ -106,9 +106,8 @@
 #include "filetransdlg.h"
 #include "systeminfo.h"
 #include "avatars.h"
-#include "ahcommanddlg.h"
+#include "ahc_plugin.h"
 #include "mucjoindlg.h"
-#include "ahcservermanager.h"
 #include "garchive.h"
 #include "rc.h"
 #include "tabdlg.h"
@@ -282,10 +281,7 @@ public:
 	GArchive *ga;
 
 	// Ad-hoc commands
-	AHCServerManager* ahcManager;
-	RCSetStatusServer* rcSetStatusServer;
-	RCSetOptionsServer* rcSetOptionsServer;
-	RCForwardServer* rcForwardServer;
+	AHCBox *ahc;
 
 	// Avatars
 	AvatarFactory* avatarFactory;
@@ -641,11 +637,7 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	new TimeServer(d->client->rootTask());
 
 	// Initialize Adhoc Commands server
-	d->ahcManager = new AHCServerManager(this);
-	d->rcSetStatusServer = 0;
-	d->rcSetOptionsServer = 0;
-	d->rcForwardServer = 0;
-	setRCEnabled(option.useRC);
+	d->ahc = 0;
 
 	// Plugins
 #ifdef PSI_PLUGINS
@@ -764,7 +756,7 @@ PsiAccount::~PsiAccount()
 	if (d->jingleSessionManager)
 		delete d->jingleSessionManager;
 #endif	
-	delete d->ahcManager;
+	delete d->ahc;
 	delete d->cp;
 	delete d->privacyManager; //!!
 	delete d->capsManager;
@@ -3135,13 +3127,8 @@ void PsiAccount::actionExecuteCommand(const Jid& j, const QString& node)
 
 void PsiAccount::actionExecuteCommandSpecific(const Jid& j, const QString& node)
 {
-	if (node.isEmpty()) {
-		AHCommandDlg *w = new AHCommandDlg(this,j);
-		w->show();
-	}
-	else {
-		AHCommandDlg::executeCommand(d->client,j,node);
-	}
+	if(d->ahc)
+		d->ahc->process(j,node);
 }
 
 void PsiAccount::actionSetMood()
@@ -4775,19 +4762,16 @@ void PsiAccount::optionsUpdate()
 
 void PsiAccount::setRCEnabled(bool b)
 {
-	if (b && !d->rcSetStatusServer) {
-		d->rcSetStatusServer = new RCSetStatusServer(d->ahcManager);
-		d->rcForwardServer = new RCForwardServer(d->ahcManager);
-		d->rcSetOptionsServer = new RCSetOptionsServer(d->ahcManager, d->psi);
+	if(b && !d->ahc) {
+		CoreInterface *ci = d->psi->loadCorePlugin("libahc");
+		if(ci != NULL) {
+			d->ahc = (AHCBox*)ci;
+			d->ahc->setPsiCon(d->psi);
+			d->ahc->init();
+		}
 	}
-	else if (!b && d->rcSetStatusServer) {
-		delete d->rcSetStatusServer;
-		d->rcSetStatusServer = 0;
-		delete d->rcForwardServer;
-		d->rcForwardServer = 0;
-		delete d->rcSetOptionsServer;
-		d->rcSetOptionsServer = 0;
-	}
+	if(d->ahc)
+		d->ahc->setEnabled(b);
 }
 
 void PsiAccount::setSendChatState(bool b)

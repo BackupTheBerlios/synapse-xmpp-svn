@@ -1,0 +1,32 @@
+# GMailPLugin - CoreInterface
+
+ADD_DEFINITIONS(-DQT_PLUGIN)
+ADD_DEFINITIONS(-DQT3_SUPPORT)
+ADD_DEFINITIONS(-DQT_NO_DEBUG)
+ADD_DEFINITIONS(-DQT_SHARED)
+
+INCLUDE_DIRECTORIES(
+	../
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_BINARY_DIR}
+)
+
+SET(AHC_SRCS 
+#	adhoc_fileserver.cpp
+	ahcexecutetask.cpp
+	ahcformdlg.cpp
+	ahcommand.cpp
+ 	ahcommandserver.cpp
+	ahc_plugin.cpp
+	ahcservermanager.cpp
+	rc.cpp
+)
+
+MY_AUTOMOC( AHC_PLUGIN_SRCS )
+
+ADD_LIBRARY(ahc SHARED ${AHC_SRCS})
+
+TARGET_LINK_LIBRARIES(ahc ${QT_QTCORE_LIBRARY})
+TARGET_LINK_LIBRARIES(ahc iris)
+
+INSTALL(TARGETS ahc DESTINATION ${QT_PLUGINS_DIR}/synapse-im)

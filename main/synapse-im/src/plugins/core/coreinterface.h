@@ -2,6 +2,7 @@
 #include <QObject>
 class PsiAccount;
 class ContactViewItem;
+class PsiCon;
 #ifndef COREINTERFACE_H
 #define COREINTERFACE_H
 
@@ -28,7 +29,8 @@ public:
 	virtual ContactViewItem *cvi() = 0;
 	virtual void setCvi(ContactViewItem *i) = 0;
 
-
+	virtual void setPsiCon(PsiCon *psi) = 0;
+	virtual void process(const XMPP::Jid&, const QString&) = 0;
 };
 
 #endif
