@@ -275,8 +275,6 @@ public:
 	// Tune
 	Tune lastTune;
 
-	// Google Mail Notification
-//	GMailNotify *gmn;
 	// Google Archive
 	GArchive *ga;
 
@@ -289,10 +287,6 @@ public:
 	// Voice Call
 	VoiceCaller* voiceCaller;
 
-//#ifdef GOOGLE_FT
-	// Google file transfer manager
-//	GoogleFTManager* googleFTManager;
-//#endif
 #ifdef HAVE_JINGLE
 	JingleSessionManager *jingleSessionManager;
 #endif
@@ -618,20 +612,9 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	connect(d->psi->tuneController(), SIGNAL(stopped()), SLOT(tuneStopped()));
 	connect(d->psi->tuneController(), SIGNAL(playing(const Tune&)),SLOT(tunePlaying(const Tune&)));
 
-#ifdef Q_WS_X11
-	// Amarok timer
-	amarok_timer = new QTimer(this, "amarok_timer");
-	connect(amarok_timer, SIGNAL(timeout()), this, SLOT(doAmarok()));
-	amarok_timer->start(3000);
-#endif
 	// HttpAuth
 	d->httpAuthManager = new HttpAuthManager(d->client->rootTask());
 	connect(d->httpAuthManager, SIGNAL(confirmationRequest(const PsiHttpAuthRequest &)), SLOT(incomingHttpAuthRequest(const PsiHttpAuthRequest &)));
-
-	// File status timer
-	file_timer = new QTimer(this, "file_timer");
-	connect(file_timer, SIGNAL(timeout()), this, SLOT(doFile()));
-	file_timer->start(3000);
 
 	// Time server
 	new TimeServer(d->client->rootTask());
@@ -671,33 +654,20 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 
 	d->psi->setToggles(d->acc.tog_offline, d->acc.tog_away, d->acc.tog_agents, d->acc.tog_hidden,d->acc.tog_self);
 
-	// GMailNotify
-//	GMailNotify *gmn = new GMailNotify(this,jid(),d->serverInfoManager->hasGoogleMailNotify());
-//	gmn->init();
-//	d->self.setGMailNotify(gmn);
-
 	d->setEnabled(d->acc.opt_enabled);
 
 	// Listen to the capabilities manager
 	connect(capsManager(),SIGNAL(capsChanged(const Jid&)),SLOT(capsChanged(const Jid&)));
 
-	// Google Archive
-//	d->ga = new GArchive(this, jid(), d->serverInfoManager->hasGoogleArchive());
-	
 	//printf("PsiAccount: [%s] loaded\n", name().latin1());
 	d->xmlConsole = new XmlConsole(this);
 	if(option.xmlConsoleOnLogin && d->acc.opt_enabled) {
 		this->showXmlConsole();
 		d->xmlConsole->enable();
 	}
-	
-	// Voice Calling
-//#ifdef HAVE_JINGLE
-//	d->voiceCaller = new JingleVoiceCaller(this);
-//#endif
+
 
 #ifdef HAVE_JINGLE
-//	d->jingleSessionManager = new JingleSessionManager(client()->rootTask(),jid());
 	d->jingleSessionManager = new JingleSessionManager(this, client()->rootTask());
 #ifdef jingle_voice
 	d->client->addExtension("voice-v1", Features(QString("http://www.google.com/xmpp/protocol/voice/v1")));
@@ -708,16 +678,6 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 //	connect(d->jingleSessionManager,SIGNAL(incomingFileTransfer(JingleFileTransfer*)),SLOT(incomingJingleFileTransfer(JingleFileTransfer*)));
 #endif
 #endif
-//	if (d->voiceCaller) {
-//		d->client->addExtension("voice-v1", Features(QString("http://www.google.com/xmpp/protocol/voice/v1")));
-//		connect(d->voiceCaller,SIGNAL(incoming(const Jid&)),SLOT(incomingVoiceCall(const Jid&)));
-//	}
-
-//#ifdef GOOGLE_FT
-//	d->googleFTManager = new GoogleFTManager(client());
-//	d->client->addExtension("share-v1", Features(QString("http://www.google.com/xmpp/protocol/share/v1")));
-//	connect(d->googleFTManager,SIGNAL(incomingFileTransfer(GoogleFileTransfer*)),SLOT(incomingGoogleFileTransfer(GoogleFileTransfer*)));
-//#endif
 
 	// Extended presence
 	if (d->options->getOption("options.extended-presence.notify").toBool()) {
@@ -2231,7 +2191,7 @@ void PsiAccount::setStatus(const Status &_s,  bool withPriority, bool withPlayin
 	{
 	    d->loginStatus = s;
 	    sound_status_old = s.status();
-	    sound_status = "";
+//	    sound_status = "";
 	}
 	d->loginWithPriority = withPriority;
 
@@ -2354,49 +2314,6 @@ int PsiAccount::priority()
 	return d->acc.priority;
 }
 
-void PsiAccount::doFile()
-{
-	if (loggedIn() && d->options->getOption("options.file.status").toBool() && d->options->getOption("options.extended-presence.tune.publish").toBool()) {
-		QFile f(QDir::homeDirPath() + "/signature");
-		if(!f.open(QIODevice::ReadOnly))
-			return;
-		QTextStream t;
-		t.setDevice(&f);
-		QString title = t.readAll();
-		f.close();
-		if(title.isEmpty()) {
-			//Off
-			if (d->options->getOption("options.file.status").toBool() && (sound_status.compare("")!=0)){
-				Status s = status();
-				s.setStatus(sound_status_old);
-				setStatus(s, false, true);
-				sound_status = "";
-			}
-			return;
-		}
-		//On
-		if(title.compare(sound_status))
-		{
-			Status s = status();
-			QString text = sound_status_old;
-			if(!text.isEmpty())
-				text = text + QString("\n --- \n");
-			text = text + title;
-			sound_status = title;
-			s.setStatus(text);
-			if (d->options->getOption("options.file.status").toBool()){
-		    		setStatus(s, false, true);
-			}
-		}
-	}
-	if (loggedIn() && d->options->getOption("options.file.status").toBool() && !d->options->getOption("options.extended-presence.tune.publish").toBool() && (sound_status.compare("")!=0)) {
-		Status s = status();
-		s.setStatus(sound_status_old);
-		setStatus(s, false, true);
-		sound_status = "";
-	}
-}
-
 void PsiAccount::capsChanged(const Jid& j)
 {
 	if (!loggedIn())
@@ -2413,56 +2330,6 @@ void PsiAccount::capsChanged(const Jid& j)
 		(*rit).setClient(name,version,"");
 		cpUpdate(*u);
 	}
-}
-
-void PsiAccount::doAmarok() {
-#ifdef Q_WS_X11
-	if (loggedIn() && d->options->getOption("options.amarok.use").toBool() && d->options->getOption("options.extended-presence.tune.publish").toBool()) {
-		QFile f(QDir::homeDirPath() + "/.playing_now");
-		if(!f.open(QIODevice::ReadOnly))
-			return;
-		QTextStream t;
-		t.setDevice(&f);
-		QString title = t.readLine(255);
-		f.close();
-		if(title.compare("Nothing much")==0) {
-			//Off
-			if (sound_status.compare("")!=0)
-			{
-				tuneStopped();
-				Status s = status();
-				s.setStatus(sound_status_old);
-				sound_status = "";
-				if (d->options->getOption("options.amarok.status").toBool())
-					setStatus(s, false, true);
-			}
-			return;
-		}
-		//On
-		if(title.compare(sound_status))
-		{
-			Tune tune;
-			tune.setName(title);
-			tunePlaying(tune);
-			Status s = status();
-			QString text = sound_status_old;
-			if(!text.isEmpty())
-				text = text + QString("\n --- \n");
-			text = text + title;
-			sound_status = title;
-			s.setStatus(text);
-			if (d->options->getOption("options.amarok.status").toBool()){
-		    		setStatus(s, false, true);
-			}
-		}
-	}
-	if (loggedIn() && d->options->getOption("options.amarok.use").toBool() && !d->options->getOption("options.extended-presence.tune.publish").toBool() && (sound_status.compare("")!=0)) {
-		Status s = status();
-		s.setStatus(sound_status_old);
-		setStatus(s, false, true);
-		sound_status = "";
-	}
-#endif
 }
 
 void PsiAccount::tuneStopped()
@@ -2497,6 +2364,22 @@ void PsiAccount::publishTune(const Tune& tune)
 
 	d->lastTune = tune;
 	d->pepManager->publish("http://jabber.org/protocol/tune",PubSubItem("current",t));
+
+	if (d->options->getOption("options.extended-presence.tune.status").toBool())
+	{
+		Status s = status();
+		if(tune.isNull())
+		{
+			s.setStatus(sound_status_old);
+		} else {
+			QString text = sound_status_old;
+			if(!text.isEmpty())
+				text = text + QString("\n --- \n");
+			text = text + tune.name() + " - " + tune.artist();
+			s.setStatus(text);
+		}
+		setStatus(s, false, true);
+	}
 }
 
 void PsiAccount::secondsIdle(int x)

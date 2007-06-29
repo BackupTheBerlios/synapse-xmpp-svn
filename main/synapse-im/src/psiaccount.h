@@ -213,8 +213,6 @@ public slots:
 	void capsChanged(const Jid&);
 	void tuneStopped();
 	void tunePlaying(const Tune&);
-	void doAmarok();
-	void doFile();
 
 	void incomingVoiceCall(const Jid&, QString sid);
 	
@@ -404,9 +402,6 @@ private:
 	QWidget* findDialog(const QMetaObject& mo, const Jid& jid, bool compareResource) const;
 	void findDialogs(const QMetaObject& mo, const Jid& jid, bool compareResource, QList<void*>* list) const;
 
-	QTimer *amarok_timer;
-	QTimer *file_timer;
-	QString sound_status;
 	QString sound_status_old;
 
 	friend class Private;

@@ -64,5 +64,6 @@ Tune FileTuneController::currentTune()
 		tune.setTrack(stream.readLine());
 		tune.setTime(stream.readLine().toUInt());
 	}
+	
 	return tune;
 }

@@ -112,15 +112,11 @@ void OptionsTabAdvanced::applyOptions(Options *opt)
 	opt->incomingAs = d->cb_incomingAs->currentItem();
 	opt->showSubjects = d->ck_showSubjects->isChecked();
 	opt->showCounter = d->ck_showCounter->isChecked();
-	PsiOptions::instance()->setOption("options.file.status",d->ck_fileSupportStatus->isChecked());	
+	PsiOptions::instance()->setOption("options.extended-presence.tune.publish",d->ck_tuneStatus->isChecked());	
 	opt->autoVCardOnLogin = d->ck_autoVCardOnLogin->isChecked();
 	opt->rosterAnim = d->ck_rosterAnim->isChecked();
 	opt->scrollTo = d->ck_scrollTo->isChecked();
 	opt->ignoreHeadline = d->ck_ignoreHeadline->isChecked();
-#ifdef Q_WS_X11
-	PsiOptions::instance()->setOption("options.amarok.use",d->ck_amarokSupport->isChecked());	
-	PsiOptions::instance()->setOption("options.amarok.status",d->ck_amarokSupportStatus->isChecked());	
-#endif
 }
 
 void OptionsTabAdvanced::restoreOptions(const Options *opt)
@@ -146,14 +142,8 @@ void OptionsTabAdvanced::restoreOptions(const Options *opt)
 	d->ck_showSubjects->setChecked( opt->showSubjects );
 	d->ck_showCounter->setChecked( opt->showCounter );
 	d->ck_autoVCardOnLogin->setChecked( opt->autoVCardOnLogin );
-	d->ck_fileSupportStatus->setChecked(PsiOptions::instance()->getOption("options.file.status").toBool());	
+	d->ck_tuneStatus->setChecked(PsiOptions::instance()->getOption("options.extended-presence.tune.publish").toBool());	
 	d->ck_rosterAnim->setChecked( opt->rosterAnim );
 	d->ck_scrollTo->setChecked( opt->scrollTo );
 	d->ck_ignoreHeadline->setChecked( opt->ignoreHeadline );
-#ifdef Q_WS_X11
-	d->ck_amarokSupport->setChecked(PsiOptions::instance()->getOption("options.amarok.use").toBool());	
-	d->ck_amarokSupportStatus->setCheckable(d->ck_amarokSupport->isChecked());
-	d->ck_amarokSupportStatus->setChecked(PsiOptions::instance()->getOption("options.amarok.status").toBool());	
-#endif
-	
 }

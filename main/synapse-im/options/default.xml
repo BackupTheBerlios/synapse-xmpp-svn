@@ -27,6 +27,7 @@
 			<notify comment="Get notified of extended presence changes" type="bool">true</notify>
 			<tune comment="Tune options">
 				<publish comment="Publish user tune information" type="bool">false</publish>
+				<status comment="Publish user tune information in status" tupe="bool">false</publish>
 			</tune>
 		</extended-presence>
 		<muc comment="Multi-User Chat options">

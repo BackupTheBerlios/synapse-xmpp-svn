@@ -33,5 +33,5 @@
  */
 PsiFileController::PsiFileController() : FileTuneController(ApplicationInfo::homeDir()  + "/tune")
 {
-	setInterval(10000);
+	setInterval(5000);
 }
