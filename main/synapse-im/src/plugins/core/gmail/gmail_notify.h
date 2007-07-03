@@ -39,8 +39,12 @@ public:
 	void process(const XMPP::Jid&, const QString&);
 
 public slots:
+	void updated(const XMPP::Jid& _jid);
+	void change(const XMPP::Jid& _jid);
+	void set(bool state);
+
 	void done();
-	
+
 private:
 	JT_GMailNotify *task_;
 	PsiAccount *pa_;

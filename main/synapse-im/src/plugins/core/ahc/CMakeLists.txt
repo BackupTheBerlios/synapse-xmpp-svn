@@ -1,4 +1,4 @@
-# GMailPLugin - CoreInterface
+# Ad-hoc Commands && Remote Control PLugin - CoreInterface
 
 ADD_DEFINITIONS(-DQT_PLUGIN)
 ADD_DEFINITIONS(-DQT3_SUPPORT)
@@ -12,19 +12,20 @@ INCLUDE_DIRECTORIES(
 )
 
 SET(AHC_SRCS 
-#	adhoc_fileserver.cpp
+	ahcservermanager.cpp
+)
+
+SET(AHC_NOMOC_SRCS
 	ahcexecutetask.cpp
 	ahcformdlg.cpp
 	ahcommand.cpp
  	ahcommandserver.cpp
 	ahc_plugin.cpp
-	ahcservermanager.cpp
 	rc.cpp
 )
+MY_AUTOMOC( AHC_SRCS )
 
-MY_AUTOMOC( AHC_PLUGIN_SRCS )
-
-ADD_LIBRARY(ahc SHARED ${AHC_SRCS})
+ADD_LIBRARY(ahc SHARED ${AHC_SRCS} ${AHC_NOMOC_SRCS})
 
 TARGET_LINK_LIBRARIES(ahc ${QT_QTCORE_LIBRARY})
 TARGET_LINK_LIBRARIES(ahc iris)

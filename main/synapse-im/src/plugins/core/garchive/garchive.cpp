@@ -236,8 +236,8 @@ void GArchive::setEnabled(bool en)
 	if(task_ == NULL && en)
 	{
 		task_ = new JT_GArchive(pa_->client()->rootTask(),receiver_);
-		connect(task_,SIGNAL(otrChanged(const XMPP::Jid&)),SLOT(otrChanged(const XMPP::Jid&)));
-		connect(task_,SIGNAL(saveChanged(bool)),SLOT(setSave(bool)));
+		connect(task_,SIGNAL(otrChanged(const XMPP::Jid&)),SLOT(updated(const XMPP::Jid&)));
+		connect(task_,SIGNAL(saveChanged(bool)),SLOT(set(bool)));
 		reset();
 	}
 }
@@ -267,7 +267,7 @@ int GArchive::countEvents()
 }
 
 
-void GArchive::otrChanged(const XMPP::Jid& jid)
+void GArchive::updated(const XMPP::Jid& jid)
 {
 	ChatDlg *t = pa_->psi()->getChatInTabs(jid.bare()+"/"+(*pa_->find(jid)->priority()).name());
 	if(t != NULL)
@@ -280,13 +280,13 @@ void GArchive::changed()
 		task_->setSave(!(isEnabled()));
 }
 
-void GArchive::changeOtr(const XMPP::Jid& jid)
+void GArchive::change(const XMPP::Jid& jid)
 {
 	if(task_ != NULL)
 		task_->changeOtr(jid);
 }
 
-void GArchive::setSave(bool state)
+void GArchive::set(bool state)
 {
 	if(save_ != state)
 	{

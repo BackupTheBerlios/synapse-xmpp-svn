@@ -31,6 +31,11 @@ public:
 
 	virtual void setPsiCon(PsiCon *psi) = 0;
 	virtual void process(const XMPP::Jid&, const QString&) = 0;
+
+public slots:
+	virtual void updated(const XMPP::Jid& _jid) = 0;
+	virtual void change(const XMPP::Jid& _jid) = 0;
+	virtual void set(bool state) = 0;
 };
 
 #endif

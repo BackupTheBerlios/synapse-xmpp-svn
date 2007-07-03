@@ -1352,12 +1352,16 @@ CoreInterface *PsiCon::loadCorePlugin(QString name)
 #else
 		QDir pluginDirectory(libPaths.at(i) + "/synapse-im/");
 #endif
-		QString fileName = pluginDirectory.entryList(QStringList() << name).first();
+		QString fn = QString("lib")+name+"*";
+		if(!pluginDirectory.entryList(QStringList() << fn).isEmpty())
+		{
+			QString fileName = pluginDirectory.entryList(QStringList() << fn).first();
 
-		QPluginLoader pluginLoader(pluginDirectory.absoluteFilePath(fileName));
-		QObject *plugin = pluginLoader.instance();
-		if (plugin)
-			return qobject_cast<CoreInterface *>(plugin);
+			QPluginLoader pluginLoader(pluginDirectory.absoluteFilePath(fileName));
+			QObject *plugin = pluginLoader.instance();
+			if (plugin)
+				return qobject_cast<CoreInterface *>(plugin);
+		}
 	}
 	return NULL;
 }

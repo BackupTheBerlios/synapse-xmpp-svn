@@ -1560,7 +1560,7 @@ void PsiAccount::serverFeaturesChanged()
 //	if(d->serverInfoManager->hasGoogleArchive())
 //		d->ga->enable();
 	if(d->serverInfoManager->hasGoogleMailNotify() && d->self.gMailNotify() == NULL) {
-		CoreInterface *ci = d->psi->loadCorePlugin("libgoogle_notify");
+		CoreInterface *ci = d->psi->loadCorePlugin("google_notify");
 		if(ci != NULL) {
 			GMailNotify *gmn = (GMailNotify*)ci;
 			if(gmn) {
@@ -1575,7 +1575,7 @@ void PsiAccount::serverFeaturesChanged()
 		d->self.gMailNotify()->setEnabled(true);
 
 	if(d->serverInfoManager->hasGoogleArchive() && d->ga == NULL) {
-		CoreInterface *ci = d->psi->loadCorePlugin("libgoogle_archive");
+		CoreInterface *ci = d->psi->loadCorePlugin("google_archive");
 		if(ci != NULL) {
 			d->ga = (GArchive*)ci;
 			d->ga->setup(this,jid(),true);
@@ -2365,7 +2365,7 @@ void PsiAccount::publishTune(const Tune& tune)
 	d->lastTune = tune;
 	d->pepManager->publish("http://jabber.org/protocol/tune",PubSubItem("current",t));
 
-	if (d->options->getOption("options.extended-presence.tune.status").toBool())
+	if (loggedIn() && d->options->getOption("options.extended-presence.tune.status").toBool())
 	{
 		Status s = status();
 		if(tune.isNull())
@@ -4646,7 +4646,7 @@ void PsiAccount::optionsUpdate()
 void PsiAccount::setRCEnabled(bool b)
 {
 	if(b && !d->ahc) {
-		CoreInterface *ci = d->psi->loadCorePlugin("libahc");
+		CoreInterface *ci = d->psi->loadCorePlugin("ahc");
 		if(ci != NULL) {
 			d->ahc = (AHCBox*)ci;
 			d->ahc->setPsiCon(d->psi);

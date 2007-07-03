@@ -36,6 +36,8 @@ class TuneController : public QObject
 public:
 	virtual Tune currentTune() = 0;
 	
+	void stop() { emit stopped(); }
+
 signals:
 	/**
 	 * This signal is emitted when the media player started playing a tune.

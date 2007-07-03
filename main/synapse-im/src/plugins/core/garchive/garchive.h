@@ -41,9 +41,9 @@ public:
 	void process(const XMPP::Jid&, const QString&);
 
 public slots:
-	void otrChanged(const XMPP::Jid& _jid);
-	void changeOtr(const XMPP::Jid& _jid);
-	void setSave(bool state);
+	void updated(const XMPP::Jid& _jid);
+	void change(const XMPP::Jid& _jid);
+	void set(bool state);
 
 private:
 	PsiAccount *pa_;

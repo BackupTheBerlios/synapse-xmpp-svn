@@ -52,7 +52,7 @@ public:
 	 * \brief Checks whether this is a null tune.
 	 */
 	bool isNull() const {
-		return name_.isEmpty() && artist_.isEmpty() && album_.isEmpty() && track_.isEmpty() && time_ == 0; 
+		return (name_.isEmpty() || (name_.compare("Nothing much") == 0) ) && artist_.isEmpty() && album_.isEmpty() && track_.isEmpty() && time_ == 0; 
 	}
 
 	/**

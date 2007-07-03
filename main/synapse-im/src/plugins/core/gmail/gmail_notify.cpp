@@ -260,6 +260,18 @@ void GMailNotify::process(const XMPP::Jid& j, const QString& s)
 {
 }
 
+void GMailNotify::updated(const XMPP::Jid& jid)
+{
+}
+
+void GMailNotify::change(const XMPP::Jid& jid)
+{
+}
+
+void GMailNotify::set(bool state)
+{
+}
+
 QString GMailNotify::name()
 {
 	return QString("Google Mail Notification");

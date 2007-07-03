@@ -905,7 +905,7 @@ void Client::metacontactsRequest()
 	connect(mc, SIGNAL(recivedMeta(Jid, QString, int)), SIGNAL(updateMeta(Jid, QString, int)));
 	connect(this, SIGNAL(cs_addMetacontact(const Jid&, const QString&, int)), mc, SLOT(addMetacontact(const Jid&, const QString&, int)));
 	connect(this, SIGNAL(cs_delMetacontact(const Jid&, const QString&)), mc, SLOT(delMetacontact(const Jid&, const QString&)));
-	mc->go(false);	
+	mc->go(true);	
 }
 
 void Client::importRoster(const Roster &r)

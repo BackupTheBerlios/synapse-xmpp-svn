@@ -57,6 +57,7 @@
 #include "psipopup.h"
 #include "psioptions.h"
 #include "tipdlg.h"
+#include "tunecontroller.h"
 #include "mucjoindlg.h"
 #include "psicontactlist.h"
 
@@ -887,6 +888,8 @@ void MainWin::actPlaySoundsActivated (bool state)
 
 void MainWin::actPublishTuneActivated (bool state)
 {
+	if(!state)
+		d->psi->tuneController()->stop();
 	PsiOptions::instance()->setOption("options.extended-presence.tune.publish",state);
 }
 

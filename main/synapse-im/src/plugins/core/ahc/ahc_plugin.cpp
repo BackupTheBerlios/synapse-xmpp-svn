@@ -92,6 +92,18 @@ void AHCBox::process(const XMPP::Jid& j, const QString& s)
 	}
 }
 
+void AHCBox::updated(const XMPP::Jid& jid)
+{
+}
+
+void AHCBox::change(const XMPP::Jid& jid)
+{
+}
+
+void AHCBox::set(bool state)
+{
+}
+
 QString AHCBox::name()
 {
 	return QString("Ad-hoc Commands");
