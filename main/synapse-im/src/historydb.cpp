@@ -4,7 +4,7 @@
 // Description: Class to access history database.
 //
 //
-// Author: Andrzej Wójcik <andrzej@hi-low.eu>, (C) 2007
+// Author: Andrzej Wï¿½cik <andrzej@hi-low.eu>, (C) 2007
 //
 // Copyright: See COPYING file that comes with this distribution
 //
@@ -138,7 +138,7 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 		const Message &m = me->message();
 		QString html("");
 		if (m.containsHTML())
-			html = m.html().toString();
+			html = m.htmlString();
 		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" + html + "')");
 	} 
 	else if(e->type() == PsiEvent::Auth) 
