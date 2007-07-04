@@ -28,6 +28,7 @@ set(tunecontroller_noMOC_SRCS ${tunecontroller_noMOC_SRCS}
 )
 set(tunecontroller_H ${tunecontroller_H}
 	tools/tunecontroller/plugins/winamp/winampcontroller.h 
+	tools/tunecontroller/plugins/winamp/winampplugin.h 
 )
 else (WIN32)
 add_definitions(-DTC_PSIFILE)
@@ -37,5 +38,6 @@ set(tunecontroller_SRCS ${tunecontroller_SRCS}
 )
 set(tunecontroller_H ${tunecontroller_H}
 	tools/tunecontroller/plugins/psifile/psifilecontroller.h
+	tools/tunecontroller/plugins/psifile/psifileplugin.h
 )
 endif (WIN32)

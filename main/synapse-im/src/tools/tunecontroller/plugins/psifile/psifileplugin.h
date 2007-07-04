@@ -1,6 +1,6 @@
 /*
- * systemwatch.h - Detect changes in the system state.
- * Copyright (C) 2005  Remko Troncon
+ * psifileplugin.h
+ * Copyright (C) 2006  Remko Troncon
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,34 +18,34 @@
  *
  */
 
-#include "systemwatch.h"
-#if defined(Q_OS_MAC)
-	#include "systemwatch_mac.h"
-#elif defined(Q_OS_WIN32)
-	#include "systemwatch_win.h"
-#else
-	#include "systemwatch_unix.h"
+#ifndef PSIFILEPLUGIN_H
+#define PSIFILEPLUGIN_H
+
+#ifndef QT_STATICPLUGIN
+#define QT_STATICPLUGIN
 #endif
 
-#include <QApplication>
+#include <QtCore>
+#include <QObject>
+#include <QString>
 
-SystemWatch::SystemWatch() : QObject(qApp)
-{
-}
+#include "tunecontrollerplugin.h"
+#include "psifilecontroller.h"
 
-SystemWatch* SystemWatch::instance()
+
+
+
+/**
+ * \brief A TuneController plugin for the Psi file controller.
+ */
+class PsiFilePlugin : public QObject, public TuneControllerPlugin
 {
-	if (!instance_) {
-#if defined(Q_WS_MAC)
-		instance_ = new MacSystemWatch();
-#elif defined(Q_WS_WIN)
-		instance_ = new WinSystemWatch();
-#else
-		instance_ = new UnixSystemWatch();
+	Q_OBJECT
+	Q_INTERFACES(TuneControllerPlugin)
+
+public:
+	virtual QString name();
+	virtual TuneController* createController();
+};
+
 #endif
-	}
-	return instance_;
-}
-
-
-SystemWatch* SystemWatch::instance_ = 0;

@@ -18,28 +18,8 @@
  *
  */
 
-#ifndef QT_STATICPLUGIN
-#define QT_STATICPLUGIN
-#endif
+#include "winampplugin.h"
 
-#include <QtCore>
-#include <QObject>
-#include <QString>
-
-#include "tunecontrollerplugin.h"
-#include "winampcontroller.h"
-
-class WinAmpPlugin : public QObject, public TuneControllerPlugin
-{
-	Q_OBJECT
-	Q_INTERFACES(TuneControllerPlugin)
-
-public:
-	virtual QString name();
-	virtual TuneController* createController();
-};
-
-Q_EXPORT_PLUGIN2(winampplugin, WinAmpPlugin);
 
 QString WinAmpPlugin::name()
 {
@@ -51,4 +31,5 @@ TuneController* WinAmpPlugin::createController()
 	return new WinAmpController();
 }
 
-#include "winampplugin.moc"
+Q_EXPORT_PLUGIN2(winampplugin, WinAmpPlugin);
+
