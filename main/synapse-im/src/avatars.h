@@ -52,7 +52,7 @@ class AvatarFactory : public QObject
 public:
 	AvatarFactory(PsiAccount* pa);
 
-	QPixmap getAvatar(const Jid& jid);
+	QPixmap getAvatar(const Jid& jid, bool greyscale = false, int size = 0);
 	PsiAccount* account() const;
 	void setSelfAvatar(const QString& fileName);
 
@@ -98,8 +98,7 @@ class Avatar : public QObject
 public:
 	Avatar(AvatarFactory* factory);
 	virtual ~Avatar();
-	virtual QPixmap getPixmap()
-		{ return pixmap(); }
+	virtual QPixmap getPixmap(bool grey = false);
 	virtual bool isEmpty()
 		{ return getPixmap().isNull(); }
 

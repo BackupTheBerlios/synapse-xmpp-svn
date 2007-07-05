@@ -350,15 +350,15 @@ public:
 protected:
 	virtual void paintCell( QPainter * p, const QColorGroup & cg, int column
 , int width, int align );
-	void scaleAvatar();
-	void greyscaleAvatar();
+
 private:
 	int v_widthUsed;
 	bool v_selected, v_active;
 	bool v_rich;
 	QTextDocument* v_rt;
-	int v_status;
+	int v_status; // to samo c d->status w CVI
 	int v_avatarSize;
+	int v_avatarHeight;
 	Jid v_jid;
 	AvatarFactory *v_avatarFactory;
 	QPixmap *avatar;

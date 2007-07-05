@@ -78,6 +78,20 @@ static QByteArray scaleAvatar(const QByteArray& b)
 	}
 }
 
+static QPixmap greyscale(QPixmap px)
+{
+	QImage result(px.toImage());
+	for (int y = 0; y < result.height(); ++y) {
+		for (int x = 0; x < result.width(); ++x) {
+			int pixel = result.pixel(x, y);
+			int gray = qGray(pixel);
+			int alpha = qAlpha(pixel);
+			result.setPixel(x, y, qRgba(gray, gray, gray, alpha));
+		}
+	}
+	return QPixmap(QPixmap::fromImage(result));
+}
+
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -89,9 +103,16 @@ Avatar::Avatar(AvatarFactory* factory)
 {
 }
 
-
 Avatar::~Avatar()
 {
+}
+
+
+QPixmap Avatar::getPixmap(bool grey)
+{
+	if(!grey)
+		return pixmap();
+	return greyscale(pixmap());
 }
 
 void Avatar::setImage(const QImage& i)
@@ -356,7 +377,7 @@ public:
 	void import(const QString& file);
 	void removeFromDisk();
 	bool exists();
-	QPixmap getPixmap();
+	QPixmap getPixmap(bool grey = false);
 	const Jid& getJid() const
 		{ return jid_; }
 
@@ -402,10 +423,12 @@ bool FileAvatar::exists()
 	return QFileInfo(getFileName()).exists();
 }
 
-QPixmap FileAvatar::getPixmap()
+QPixmap FileAvatar::getPixmap(bool grey)
 {
 	refresh();
-	return pixmap();
+	if(!grey)
+		return pixmap();
+	return greyscale(pixmap());
 }
 
 void FileAvatar::refresh()
@@ -476,7 +499,7 @@ inline static QPixmap ensureSquareAvatar(const QPixmap& original)
 	return square;
 }
 
-QPixmap AvatarFactory::getAvatar(const Jid& jid)
+QPixmap AvatarFactory::getAvatar(const Jid& jid, bool grey, int size)
 {
 	// Compute the avatar of the user
 	Avatar* av = retrieveAvatar(jid);
@@ -488,13 +511,19 @@ QPixmap AvatarFactory::getAvatar(const Jid& jid)
 		emit avatarChanged(jid);
 	}
 
-	QPixmap pm = (av ? av->getPixmap() : QPixmap());
+	QPixmap pm = (av ? av->getPixmap(grey) : QPixmap());
 	pm = ensureSquareAvatar(pm);
-
-	// Update iconset
-	PsiIcon icon;
-	icon.setImpix(pm);
-	iconset_.setIcon(QString("avatars/%1").arg(jid.bare()),icon);
+	if (!grey) {
+		// Update iconset
+		PsiIcon icon;
+		icon.setImpix(pm);
+		iconset_.setIcon(QString("avatars/%1").arg(jid.bare()),icon);
+	}
+	if (size != 0 && !pm.isNull()) {
+		QImage b(pm.toImage());
+		b = b.scaled(size, size);
+		pm = pm.fromImage(b);
+	}
 
 	return pm;
 }
