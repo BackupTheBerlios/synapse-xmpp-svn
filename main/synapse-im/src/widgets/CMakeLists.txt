@@ -3,7 +3,6 @@ include_directories(widgets )
 #/*ADD_DEFINITIONS("-DWIDGET_PLUGIN")*/
 
 set(widgets_SRCS
-	widgets/busywidget.cpp
 	widgets/fancylabel.cpp
 	widgets/iconselect.cpp
 	widgets/iconwidget.cpp 
@@ -15,6 +14,7 @@ set(widgets_SRCS
 )
 
 set(widgets_noMOC_SRCS
+	widgets/busywidget.cpp
 	widgets/fancypopup.cpp
 	widgets/psirichlabel.cpp
 	widgets/psitabbar.cpp

@@ -99,12 +99,13 @@ void FancyPopup::paintEvent(QPaintEvent *pe)
 	p.fillRect( rect, backgroundColor() );
 
 	p.save();
-	p.setBrush(Qt::white);
+	p.setBrush(QBrush(QColor(193,193,193,127)));
+//	p.setBrush(Qt::white);
 	p.drawRoundRect(rect, xround, yround);
 	p.restore();
 
 	rect.adjust(2,2,-2,-2);
-	p.setBrush(backgroundColor());
+	p.setBrush(QBrush(QColor(193,193,193,127)));
 	p.drawRoundRect(rect, xround, yround);
 
 	p.setPen( backgroundColor().dark() );
@@ -119,7 +120,7 @@ void FancyPopup::paintEvent(QPaintEvent *pe)
 
 /// Paint reason
 	p.translate(m_logo.width() + METRIC, 0);
-	p.setPen( foregroundColor() );
+	p.setPen( QPen(Qt::black) );
 	p.setFont( font() );
 	p.drawText( QRect(0,0,m_titleSize.width(), m_titleSize.height()), Qt::AlignTop| Qt::WordBreak, m_title );
 

@@ -22,12 +22,9 @@
 #ifndef BUSYWIDGET_H
 #define BUSYWIDGET_H
 
-#include <QWidget>
+#include <QProgressBar>
 
-class CColor;
-class CPanel;
-
-class BusyWidget : public QWidget
+class BusyWidget : public QProgressBar
 {
 	Q_OBJECT
 	Q_PROPERTY( bool active READ isActive WRITE setActive )
@@ -48,13 +45,6 @@ public slots:
 	void start();
 	void stop();
 	void setActive(bool);
-
-protected:
-	void paintEvent(QPaintEvent *);
-	void resizeEvent(QResizeEvent *);
-
-private slots:
-	void animate();
 
 public:
 	class Private;
