@@ -26,15 +26,15 @@
 // Should also be overridable through an optional file.
 
 #define PROG_NAME "Synapse IM"
-#define PROG_VERSION "0.4 \"alfa 2\"" " (" __DATE__ ")"; //CVS Builds are dated
+#define PROG_VERSION "0.5 \"tiny\"" " (" __DATE__ ")"; //CVS Builds are dated
 //#define PROG_VERSION "0.11-beta5";
 #define PROG_CAPS_NODE "http://psi-im.org/caps";
-#define PROG_CAPS_VERSION "0.4-dev-rev1";
+#define PROG_CAPS_VERSION "0.5-dev-rev1";
 #define PROG_OPTIONS_NS "http://psi-im.org/options";
 #define PROG_STORAGE_NS "http://psi-im.org/storage";
 
-#if defined(Q_WS_X11) && !defined(PSI_DATADIR)
-#define PSI_DATADIR "/usr/local/share/synapse-im"
+#if defined(Q_WS_X11) && !defined(SYNAPSE_IM_DATADIR)
+#define SYNAPSE_IM_DATADIR "/usr/local/share/synapse-im"
 #endif
 
 
@@ -72,7 +72,7 @@ QString ApplicationInfo::storageNS()
 QString ApplicationInfo::resourcesDir()
 {
 #if defined(Q_WS_X11)
-	return PSI_DATADIR;
+	return QString(SYNAPSE_IM_DATADIR);
 #elif defined(Q_WS_WIN)
 	return qApp->applicationDirPath();
 #elif defined(Q_WS_MAC)

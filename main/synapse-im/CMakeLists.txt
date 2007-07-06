@@ -3,9 +3,9 @@
 #set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
-set(CMAKE_CXX_FLAGS "-Os -pipe -w -s")
-
-set(CMAKE_INSTALL_PREFIX "/usr")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -pipe -w -g0 -fomit-frame-pointer")
+#TEMPORARY
+#set(CMAKE_INSTALL_PREFIX "/usr")
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
@@ -69,6 +69,10 @@ if(ASPELL_FOUND)
 else(ASPELL_FOUND)
     MESSAGE(STATUS "ASpell not found -> disabling Spellchecking support")
 endif(ASPELL_FOUND)
+#TEMPORARY
+if(!WIN32)
+    ADD_DEFINITIONS("-DSYNAPSE_IM_DATADIR=\\\"${CMAKE_INSTALL_PREFIX}/share/synapse-im\\\"")
+endif(!WIN32)
 
 add_subdirectory(third-party/qca)
 
