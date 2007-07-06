@@ -147,14 +147,16 @@ PsiOptions::PsiOptions()
 {
 	setParent(QCoreApplication::instance());
 	autoSave(false);
-	if (!load(":/options/default.xml"))
+//	if (!load(":/options/default.xml"))
+	if (!load(ApplicationInfo::resourcesDir() + "/options/default.xml"))
 		qWarning("ERROR: Failed to load default options");
 #ifdef Q_WS_MAC
 	if (!load(":/options/macosx.xml"))
 		qWarning("ERROR: Failed to load Mac OS X-specific options");
 #endif
 #ifdef Q_WS_WIN
-	if (!load(":/options/windows.xml"))
+//	if (!load(":/options/windows.xml"))
+	if (!load(ApplicationInfo::resourcesDir() + "/options/windows.xml"))
 		qWarning("ERROR: Failed to load Windows-specific options");
 #endif
 }

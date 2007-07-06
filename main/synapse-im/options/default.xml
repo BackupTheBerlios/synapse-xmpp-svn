@@ -27,7 +27,7 @@
 			<notify comment="Get notified of extended presence changes" type="bool">true</notify>
 			<tune comment="Tune options">
 				<publish comment="Publish user tune information" type="bool">false</publish>
-				<status comment="Publish user tune information in status" tupe="bool">false</publish>
+				<status comment="Publish user tune information in status" tupe="bool">false</status>
 			</tune>
 		</extended-presence>
 		<muc comment="Multi-User Chat options">
@@ -104,7 +104,7 @@
 				<status-messages comment="Status messages for contacts">
 					<single-line comment="Show status messages on the same line as the nickname" type="bool">false</single-line>
 					<show comment="Show status messages" type="bool">true</show>
-					<show-offline-without-status-message" type="bool">true</show>
+					<show-offline-without-status-message type="bool">true</show-offline-without-status-message>
 				</status-messages>
 				<tooltip comment="Display options for the contact list tooltips">
 					<avatar comment="Display avatar" type="bool">true</avatar>

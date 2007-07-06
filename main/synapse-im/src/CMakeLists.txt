@@ -49,6 +49,10 @@ include(options/CMakeLists.txt)
 
 include(../iris/CMakeLinks.txt)
 
+if(NOT WIN32)
+add_definitions(-DSYNAPSE_IM_DATADIR=\\\"${CMAKE_INSTALL_PREFIX}/share/synapse-im\\\")
+endif(NOT WIN32)
+
 #DBus
 if(QT_QTDBUS_FOUND)
 ADD_DEFINITIONS(-DHAVE_DBUS)
@@ -319,6 +323,9 @@ MY_AUTOMOC(synapse-im_SRCS)
 QT4_WRAP_CPP(synapse-im_moc_SRCS ${synapse-im_H})
 
 QT4_ADD_RESOURCES(res_SRCS ${res_RC})
+
+set(res_SRCS ${res_SRCS} ../options/default.xml)
+
 
 set(synapse-im_UIS
 	profileopen.ui

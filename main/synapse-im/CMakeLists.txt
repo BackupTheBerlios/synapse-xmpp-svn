@@ -71,7 +71,7 @@ else(ASPELL_FOUND)
 endif(ASPELL_FOUND)
 #TEMPORARY
 if(!WIN32)
-    ADD_DEFINITIONS("-DSYNAPSE_IM_DATADIR=\\\"${CMAKE_INSTALL_PREFIX}/share/synapse-im\\\"")
+    ADD_DEFINITIONS("-DSYNAPSE_IM_DATADIR=\\\"${CMAKE_INSTALL_PREFIX}/share/synapse-im/\\\"")
 endif(!WIN32)
 
 add_subdirectory(third-party/qca)
@@ -88,6 +88,7 @@ set(data_SRCS
     certs
     iconsets
     sound
+    options
 )
 
 INSTALL(DIRECTORY ${data_SRCS}  DESTINATION share/synapse-im
