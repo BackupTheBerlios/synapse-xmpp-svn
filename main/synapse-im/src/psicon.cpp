@@ -484,7 +484,8 @@ bool PsiCon::init()
 	if ( PsiOptions::instance()->getOption("options.ui.tip.show").toBool() )
 		TipDlg::show(this);
 
-	printf("done\n");
+//	printf("done\n");
+	d->mainwin->updateStatusLastMenu();
 	return true;
 }
 
