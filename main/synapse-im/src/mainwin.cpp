@@ -594,10 +594,12 @@ void MainWin::searchRoster2()
 
 void MainWin::updateStatusLastMenu()
 {
-	LastStatus *ls;
+	LastStatus *ls = NULL;
 	for(int i=0; i<5; i++)
 	{
 		ls = getLastStatus(i);
+		if(ls == NULL)
+			return;
 		QString t;
 		switch(ls->type) {
 			case STATUS_OFFLINE:
@@ -663,6 +665,7 @@ void MainWin::buildStatusMenu()
 	d->statusMenu->insertSeparator();
 
 	buildStatusLastMenu();
+	updateStatusLastMenu();
 
 	d->statusMenu->insertSeparator();
 	d->getAction("status_offline")->addTo(d->statusMenu);
