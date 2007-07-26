@@ -127,6 +127,8 @@ public:
 	PsiAccount *pa;
 	bool v_enabled;
 
+	QString searchText;
+
 public slots:
 	/*
 	 * \brief This slot is toggled when number of active accounts is changed
@@ -146,6 +148,7 @@ ContactProfile::ContactProfile(PsiAccount *pa, const QString &name, ContactView 
 	d->v_enabled = d->pa->enabled();
 	d->name = name;
 	d->cv = cv;
+	d->searchText = "";
 	d->cv->link(this);
 	d->t = new QTimer;
 	connect(d->t, SIGNAL(timeout()), SLOT(updateGroups()));
@@ -451,7 +454,10 @@ void ContactProfile::updateEntry(const UserListItem &u)
 		}
 
 		deferredUpdateGroups();
-		addNeededContactItems(e);
+		if(!d->searchText.isEmpty())
+			setSearch(d->searchText,e);
+		else
+			addNeededContactItems(e);
 	}
 }
 
@@ -669,8 +675,11 @@ void ContactProfile::clearContactItems(Entry *e)
 		removeContactItem(e, i);
 }
 
-void ContactProfile::setSearch(const QString &text)
-{
+void ContactProfile::setSearch(const QString &text, Entry *e)
+{	
+	d->searchText = text;
+	if(text.isEmpty())
+		return;
 	if(text.contains(" "))
 	{
 		if(text.contains("-"))
@@ -678,10 +687,15 @@ void ContactProfile::setSearch(const QString &text)
 			int x = text.indexOf("-");
 			QString ntext = text.right(text.length() - (x+1));
 			QString htext = text.left(x-1);
-			printf("x: %d\nntext: %s\nhtext: %s\n", x, ntext.ascii(), htext.ascii());
+			if(e) {
+				if(e->u.name().contains(htext, Qt::CaseSensitive) && !e->u.name().contains(ntext, Qt::CaseSensitive))
+					addNeededContactItems(e);
+				else
+					clearContactItems(e);
+				return;
+			}
 			Q3PtrListIterator<Entry> it(d->roster);
 			for(Entry *e; (e = it.current()); ++it)
-//				if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
 				if(e->u.name().contains(htext, Qt::CaseSensitive) && !e->u.name().contains(ntext, Qt::CaseSensitive))
 					addNeededContactItems(e);
 				else
@@ -690,15 +704,28 @@ void ContactProfile::setSearch(const QString &text)
 			int x = text.indexOf("st:");
 			QString htext = text.left(x-1);
 			QString stext = text.right(x+3);
+			if(e) {
+				if(e->u.name().contains(htext, Qt::CaseSensitive) && ((e->u.isAvailable() && stext.contains("Avail")) || (e->u.isAway() && stext.contains("Away")) || (!e->u.isAvailable() && stext.contains("Off"))) )
+					addNeededContactItems(e);
+				else
+					clearContactItems(e);
+				return;
+			}
 			Q3PtrListIterator<Entry> it(d->roster);
 			for(Entry *e; (e = it.current()); ++it)
-//				if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
 				if(e->u.name().contains(htext, Qt::CaseSensitive) && ((e->u.isAvailable() && stext.contains("Avail")) || (e->u.isAway() && stext.contains("Away")) || (!e->u.isAvailable() && stext.contains("Off"))) )
 					addNeededContactItems(e);
 				else
 					clearContactItems(e);
 		}
 	} else {
+		if(e) {
+			if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
+				addNeededContactItems(e);
+			else
+				clearContactItems(e);
+			return;
+		}
 		Q3PtrListIterator<Entry> it(d->roster);
 		for(Entry *e; (e = it.current()); ++it)
 			if(e->u.name().contains(text, Qt::CaseSensitive) || e->u.jid().bare().contains(text, Qt::CaseSensitive))
@@ -2495,7 +2522,6 @@ void ContactView::keyPressEvent(QKeyEvent *e)
 
 void ContactView::setSearch(const QString &text)
 {
-	v_showSearch = !text.isEmpty();
 	Q3PtrListIterator<ContactProfile> it(d->profiles);
 	for(ContactProfile *cp; (cp = it.current()); ++it) {
 		if(v_showSearch)
@@ -2505,6 +2531,7 @@ void ContactView::setSearch(const QString &text)
 			cp->addAllNeededContactItems();
 		}
 	}
+	v_showSearch = !text.isEmpty();
 }
 
 void ContactView::setShowOffline(bool x)

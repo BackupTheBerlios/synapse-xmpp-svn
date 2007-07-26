@@ -1700,8 +1700,6 @@ void PsiAccount::client_rosterItemAdded(const RosterItem &r)
 
 void PsiAccount::client_rosterItemUpdated(const RosterItem &r)
 {
-	if(d->acc.name.compare("Link-Local") == 0)
-		printf("client_rosterItemUpdated\n");
 	// see if the item added is already in our local list
 	UserListItem *u = d->userList.find(r.jid());
 	if(u) {

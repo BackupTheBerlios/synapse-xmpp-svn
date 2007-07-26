@@ -163,7 +163,7 @@ private:
 	ContactViewItem *addContactItem(Entry *e, ContactViewItem *group_item);
 	ContactViewItem *ensureContactItem(Entry *e, ContactViewItem *group_item);
 
-	void setSearch(const QString &text);
+	void setSearch(const QString &text, Entry *e = NULL);
 
 	void removeContactItem(Entry *e, ContactViewItem *i);
 	void addNeededContactItems(Entry *e);
