@@ -206,6 +206,7 @@ UserAccountList PsiContactList::getUserAccountList() const
 {
 	UserAccountList acc;
 	foreach(PsiAccount* account, accounts_)
+//		if(account->name().compare("Link-Local")!=0)
 		acc += account->userAccount();
 
 	return acc;

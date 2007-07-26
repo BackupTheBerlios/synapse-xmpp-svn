@@ -257,11 +257,11 @@ namespace XMPP
 
 		void reset();
 
-		void startClientOut(const Jid &jid, bool oldOnly, bool tlsActive, bool doAuth, bool doCompression);
+		void startClientOut(const Jid &jid, bool oldOnly, bool tlsActive, bool doAuth, bool doCompression, bool c2c = false);
 		void startServerOut(const QString &to);
 		void startDialbackOut(const QString &to, const QString &from);
 		void startDialbackVerifyOut(const QString &to, const QString &from, const QString &id, const QString &key);
-		void startClientIn(const QString &id);
+		void startClientIn(const QString &id, bool c2c = false);
 		void startServerIn(const QString &id);
 
 		void setLang(const QString &s);
@@ -315,7 +315,8 @@ namespace XMPP
 			HandleAuthGet,      // send old-protocol auth-get
 			GetAuthGetResponse, // read auth-get response
 			HandleAuthSet,      // send old-protocol auth-set
-			GetAuthSetResponse  // read auth-set response
+			GetAuthSetResponse,  // read auth-set response
+			C2CPreDone	    // set Done after that
 		};
 
 		QList<DBItem> dbrequests, dbpending, dbvalidated;

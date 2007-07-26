@@ -474,6 +474,25 @@ bool PsiCon::init()
 
 	// load accounts
 	d->contactList->loadAccounts(d->pro.acc);
+#ifdef LINKLOCAL
+	{
+		bool found = false;
+		foreach(UserAccount ua, d->pro.acc) {
+			if(ua.name.compare("Link-Local") == 0) {
+				found = true;
+				break;
+			}
+		}
+		if(!found) {
+			printf("linklocal not found!\n");
+			UserAccount u_tmp;
+			u_tmp.name = "Link-Local";
+			u_tmp.opt_enabled = false;
+			u_tmp.jid = "user@local";
+			d->contactList->createAccount(u_tmp);
+		}
+	}
+#endif
 	checkAccountsEmpty();
 	// try autologin if needed
 	foreach(PsiAccount* account, d->contactList->accounts()) {
@@ -485,7 +504,8 @@ bool PsiCon::init()
 		TipDlg::show(this);
 
 //	printf("done\n");
-	d->mainwin->updateStatusLastMenu();
+// --- Windows breaks on this 
+//	d->mainwin->updateStatusLastMenu();
 	return true;
 }
 
@@ -893,6 +913,8 @@ void PsiCon::setGlobalStatus(const Status &s,  bool withPriority)
 	foreach(PsiAccount* account, d->contactList->enabledAccounts())
 		if (allOffline || account->isActive())
 			account->setStatus(s, withPriority);
+//	LinkLocal ll;
+//	ll.setName("hantu");
 }
 
 void PsiCon::setLastStatusGlobal(int i)

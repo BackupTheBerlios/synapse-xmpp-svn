@@ -167,6 +167,11 @@ QDomElement UserAccount::toXml(QDomDocument &doc, const QString &tagName)
 	a.appendChild(textTag(doc, "name", name));
 	a.appendChild(textTag(doc, "jid", jid));
 	
+#ifdef LINKLOCAL
+	if(name=="Link-Local")
+		return a;
+#endif
+
 	QDomElement customauth = doc.createElement("custom-auth");
 	setBoolAttribute(customauth, "use", customAuth);
 	QDomElement ac = textTag(doc, "authid", authid);
@@ -302,7 +307,11 @@ void UserAccount::fromXml(const QDomElement &a)
 	else {
 		opt_automatic_resource = false;
 	}
-	
+
+#ifdef LINKLOCAL
+	if(name!="Link-Local")
+#endif
+	{
 	// Will be overwritten if there is a new option
 	bool opt_plain = false;
 	readBoolAttribute(a, "plain", &opt_plain);
@@ -319,6 +328,7 @@ void UserAccount::fromXml(const QDomElement &a)
 	readNumEntry(a, "ssl", (int*) &ssl);
 	readEntry(a, "host", &host);
 	readNumEntry(a, "port", &port);
+	}
 
 	// 0.8.6 and >= 0.9
 	QDomElement j = findSubTag(a, "jid", &found);
@@ -343,6 +353,10 @@ void UserAccount::fromXml(const QDomElement &a)
 		}
 		jid = user + '@' + vhost;
 	}
+#ifdef LINKLOCAL
+	if(name=="Link-Local")
+		return;
+#endif
 
 	readBoolEntry(a, "useHost", &opt_host);
 

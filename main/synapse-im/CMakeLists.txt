@@ -3,7 +3,7 @@
 #set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -pipe -w -g0 -fomit-frame-pointer")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0 -pipe -w -fomit-frame-pointer")
 #TEMPORARY
 #set(CMAKE_INSTALL_PREFIX "/usr")
 
@@ -73,6 +73,15 @@ endif(ASPELL_FOUND)
 if(!WIN32)
     ADD_DEFINITIONS("-DSYNAPSE_IM_DATADIR=\\\"${CMAKE_INSTALL_PREFIX}/share/synapse-im/\\\"")
 endif(!WIN32)
+
+find_package(Avahi)
+if(QT_QTDBUS_FOUND)
+    if(AVAHI_FOUND)
+	MESSAGE(STATUS "Found Avahi -> enabling Link-Local support")
+    else(AVAHI_FOUND)
+	MESSAGE(STATUS "Avahi not found -> disabling Link-Local support")
+    endif(AVAHI_FOUND)
+endif(QT_QTDBUS_FOUND)
 
 add_subdirectory(third-party/qca)
 

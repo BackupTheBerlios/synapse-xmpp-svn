@@ -25,6 +25,7 @@
 
 #include "xmpp_jid.h"
 #include "xmpp_status.h"
+#include "xmpp_stanza.h"
 #include "xmpp_discoitem.h"
 
 class QString;
@@ -55,7 +56,7 @@ namespace XMPP
 		Q_OBJECT
 
 	public:
-		Client(QObject *parent=0);
+		Client(bool linklocal = false, QObject *parent=0);
 		~Client();
 
 		bool isActive() const;
@@ -166,6 +167,7 @@ namespace XMPP
 		//void streamCloseFinished();
 		void streamError(int);
 		void streamReadyRead();
+		void streamReadyRead(Stanza);
 		void streamIncomingXml(const QString &);
 		void streamOutgoingXml(const QString &);
 

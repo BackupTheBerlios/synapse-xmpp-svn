@@ -130,6 +130,7 @@
 #endif
 
 #include "bsocket.h"
+
 /*#ifdef Q_WS_WIN
 #include <windows.h>
 typedef int socklen_t;
@@ -284,6 +285,11 @@ public:
 	// Avatars
 	AvatarFactory* avatarFactory;
 
+#ifdef LINKLOCAL
+	// Link-Local
+	bool linkLocal;
+#endif
+
 	// Voice Call
 	VoiceCaller* voiceCaller;
 
@@ -436,6 +442,9 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	d->psi = parent->psi();
 	d->options = PsiOptions::instance();
 	d->client = 0;
+#ifdef LINKLOCAL
+	d->linkLocal = false;
+#endif
 	d->cp = 0;
 	d->ga = NULL;
 	d->userCounter = 0;
@@ -476,8 +485,19 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	d->stream = 0;
 	d->usingSSL = false;
 
+#ifdef LINKLOCAL
+	if(acc.name.compare("Link-Local") == 0)
+	{
+		d->linkLocal = true;
+	} else {
+		d->linkLocal = false;
+	}
+	// create Jabber::Client
+	d->client = new Client(d->linkLocal);
+#else
 	// create Jabber::Client
 	d->client = new Client;
+#endif
 	d->client->setOSName(SystemInfo::instance()->os());
 	d->client->setTimeZone(SystemInfo::instance()->timezoneString(), SystemInfo::instance()->timezoneOffset());
 	d->client->setClientName(ApplicationInfo::name());
@@ -501,7 +521,6 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	d->client->setFeatures(Features(features));
 
 	d->client->setFileTransferEnabled(true);
-	
 	setSendChatState(option.messageEvents);
 
 	//connect(d->client, SIGNAL(connected()), SLOT(client_connected()));
@@ -600,14 +619,13 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	 // Initialize Whiteboard manager
 	d->wbManager = new WbManager(d->client, this);
 #endif
-
 	// Avatars
 	d->avatarFactory = new AvatarFactory(this);
 	d->self.setAvatarFactory(avatarFactory());
-	
+
 	// Bookmarks
 	d->bookmarkManager = new BookmarkManager(d->client);
-	
+
 	// Tune Controller
 	connect(d->psi->tuneController(), SIGNAL(stopped()), SLOT(tuneStopped()));
 	connect(d->psi->tuneController(), SIGNAL(playing(const Tune&)),SLOT(tunePlaying(const Tune&)));
@@ -665,7 +683,6 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 		this->showXmlConsole();
 		d->xmlConsole->enable();
 	}
-
 
 #ifdef HAVE_JINGLE
 	d->jingleSessionManager = new JingleSessionManager(this, client()->rootTask());
@@ -787,11 +804,19 @@ void PsiAccount::setEnabled(bool e)
 
 bool PsiAccount::isActive() const
 {
+#ifdef LINKLOCAL
+	if(d->linkLocal)
+		return d->client->isActive();
+#endif
 	return v_isActive;
 }
 
 bool PsiAccount::isConnected() const
 {
+#ifdef LINKLOCAL
+ 	if(d->linkLocal)
+		return d->client->isActive();//(d->linkLocal->isConnected());
+#endif
 	return (d->stream && d->stream->isAuthenticated());
 }
 
@@ -981,7 +1006,9 @@ QString PsiAccount::nameWithJid() const
 void PsiAccount::autoLogin()
 {
 	// auto-login ?
-	if(d->acc.opt_auto && d->acc.opt_enabled)
+#ifdef LINKLOCAL
+	if(d->acc.opt_auto && (d->acc.opt_enabled || d->linkLocal))
+#endif
 		if(!d->acc.opt_login_as)
 			setStatus(Status("", "", d->acc.priority));
 		else
@@ -993,22 +1020,40 @@ void PsiAccount::login()
 {
 	if(isActive() && !doReconnect)
 		return;
-
+#ifdef LINKLOCAL
+	if(!d->linkLocal) {
+#endif
 	if((d->acc.ssl == UserAccount::SSL_Yes || d->acc.ssl == UserAccount::SSL_Legacy) && !QCA::isSupported("tls")) {
 		QMessageBox::information(0, (d->psi->contactList()->enabledAccounts().count() > 1 ? QString("%1: ").arg(name()) : "") + tr("SSL Error"), tr("Cannot login: SSL is enabled but no SSL/TLS (plugin) support is available."));
 		return;
 	}
+#ifdef LINKLOCAL
+	}
+#endif
 
 	d->jid = d->nextJid;
 
 	v_isActive = true;
 	isDisconnecting = false;
-	notifyOnlineOk = false;
-	rosterDone = false;
-	presenceSent = false;
+#ifdef LINKLOCAL
+	if(!d->linkLocal) {
+#endif
+		notifyOnlineOk = false;
+		rosterDone = false;
+		presenceSent = false;
+#ifdef LINKLOCAL
+	} else {
+		notifyOnlineOk = true;
+		rosterDone = true;
+		presenceSent = false;
+	}
+#endif
 
 	stateChanged();
 
+#ifdef LINKLOCAL
+	if(!d->linkLocal) {
+#endif
 	bool useHost = false;
 	QString host;
 	int port = -1;
@@ -1083,6 +1128,9 @@ void PsiAccount::login()
 
 	Jid j = d->jid.withResource((d->acc.opt_automatic_resource ? localHostName() : d->acc.resource ));
 	d->client->connectToServer(d->stream, j);
+#ifdef LINKLOCAL
+	}
+#endif
 }
 
 // disconnect or stop reconnecting
@@ -1652,6 +1700,8 @@ void PsiAccount::client_rosterItemAdded(const RosterItem &r)
 
 void PsiAccount::client_rosterItemUpdated(const RosterItem &r)
 {
+	if(d->acc.name.compare("Link-Local") == 0)
+		printf("client_rosterItemUpdated\n");
 	// see if the item added is already in our local list
 	UserListItem *u = d->userList.find(r.jid());
 	if(u) {
@@ -2200,12 +2250,20 @@ void PsiAccount::setStatus(const Status &_s,  bool withPriority, bool withPlayin
 		if(!isActive()) {
 			Jid j = d->jid;
 
+#ifdef LINKLOCAL
+			if(!j.isValid() && !d->linkLocal) {
+#else
 			if(!j.isValid()) {
+#endif
 				QMessageBox::information(0, CAP(tr("Error")), tr("Unable to login.  Ensure your account information is filled out."));
 				modify();
 				return;
 			}
+#ifdef LINKLOCAL
+			if(!d->acc.opt_pass && !d->linkLocal) {
+#else
 			if(!d->acc.opt_pass) {
+#endif
 				bool ok = false;
 				QString text = QInputDialog::getText(
 					tr("Need Password"),
@@ -2220,6 +2278,10 @@ void PsiAccount::setStatus(const Status &_s,  bool withPriority, bool withPlayin
 			}
 
 			login();
+#ifdef LINKLOCAL
+			if(d->linkLocal)
+				setStatusDirect(s, withPriority);
+#endif
 		}
 		// change status
 		else {
@@ -2283,7 +2345,19 @@ void PsiAccount::setStatusActual(const Status &_s)
 
 	// Set the status
 	d->loginStatus = s;
+#ifdef LINKLOCAL
+	if (d->linkLocal) {
+		if(!isConnected())
+			d->client->start("",d->jid.user(),"","Local");
+		d->client->setPresence(s);
+		presenceSent = true;
+		stateChanged();
+		QTimer::singleShot(15000, this, SLOT(enableNotifyOnline()));
+		return;
+	}
+#endif
 	d->client->setPresence(s);
+	
 	if(presenceSent) {
 		stateChanged();
 	}

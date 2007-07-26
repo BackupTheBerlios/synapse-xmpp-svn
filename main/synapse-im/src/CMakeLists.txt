@@ -62,6 +62,9 @@ set(dbus_SRCS
 set(dbus_H
 	dbus.h
 )
+if(AVAHI_FOUND)
+    ADD_DEFINITIONS(-DLINKLOCAL)
+endif(AVAHI_FOUND)
 endif(QT_QTDBUS_FOUND)
 
 #Whiteboarding

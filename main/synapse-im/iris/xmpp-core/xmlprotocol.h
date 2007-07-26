@@ -69,6 +69,7 @@ namespace XMPP
 
 		// set these before returning from a step
 		int need, event, errorCode, notify;
+		bool c2c_local, c2c_remote;
 
 		inline bool isIncoming() const { return incoming; }
 		QString xmlEncoding() const;

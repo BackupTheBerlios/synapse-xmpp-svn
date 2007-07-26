@@ -21,6 +21,10 @@
 #include "im.h"
 #include "safedelete.h"
 
+#ifdef LINKLOCAL
+#include "linklocal.h"
+#endif
+
 //! \class XMPP::Client client.h
 //! \brief Communicates with the Jabber network.  Start here.
 //!
@@ -134,6 +138,9 @@ public:
 	QMap<QString,Features> extension_features;
 	int tzoffset;
 	bool active;
+#ifdef LINKLOCAL
+	LinkLocal *linklocal;
+#endif
 
 	LiveRoster roster;
 	ResourceList resourceList;
@@ -145,7 +152,7 @@ public:
 };
 
 
-Client::Client(QObject *par)
+Client::Client(bool ll, QObject *par)
 :QObject(par)
 {
 	d = new ClientPrivate;
@@ -157,7 +164,6 @@ Client::Client(QObject *par)
 	d->capsNode = "";
 	d->capsVersion = "";
 	d->capsExt = "";
-
 	d->id_seed = 0xaaaa;
 	d->root = new Task(this, true);
 
@@ -170,6 +176,17 @@ Client::Client(QObject *par)
 	connect(d->ibbman, SIGNAL(incomingReady()), SLOT(ibb_incomingReady()));
 
 	d->ftman = 0;
+#ifdef LINKLOCAL
+	qDBusRegisterMetaType<QList<QByteArray> >();
+	if(ll) {
+		d->linklocal = new LinkLocal;
+		connect(d->linklocal, SIGNAL(rosterItemUpdated(const RosterItem &)), SIGNAL(rosterItemUpdated(const RosterItem &)));
+		connect(d->linklocal, SIGNAL(presence(const Jid &, const Status &)), SLOT(ppPresence(const Jid &, const Status &)));
+		connect(d->linklocal, SIGNAL(readyRead(Stanza)), SLOT(streamReadyRead(Stanza)));
+		d->linklocal->reset();
+	} else
+		d->linklocal = NULL;
+#endif
 }
 
 Client::~Client()
@@ -196,7 +213,9 @@ void Client::connectToServer(ClientStream *s, const Jid &j, bool auth)
 	connect(d->stream, SIGNAL(incomingXml(const QString &)), SLOT(streamIncomingXml(const QString &)));
 	connect(d->stream, SIGNAL(outgoingXml(const QString &)), SLOT(streamOutgoingXml(const QString &)));
 
+//	if(d->stream->type() != Stream::LinkLocal)
 	d->stream->connectToServer(j, auth);
+	//else
 }
 
 void Client::start(const QString &host, const QString &user, const QString &pass, const QString &_resource)
@@ -207,23 +226,32 @@ void Client::start(const QString &host, const QString &user, const QString &pass
 	d->pass = pass;
 	d->resource = _resource;
 
+#ifdef LINKLOCAL
+	if(d->linklocal != 0) {
+		d->host = d->linklocal->getHostname();
+		d->linklocal->jid_ = Jid(d->user+"@"+d->host);
+	} else {
+#endif
+		JT_PushPresence *pp = new JT_PushPresence(rootTask());
+		connect(pp, SIGNAL(subscription(const Jid &, const QString &, const QString&)), SLOT(ppSubscription(const Jid &, const QString &, const QString&)));
+		connect(pp, SIGNAL(presence(const Jid &, const Status &)), SLOT(ppPresence(const Jid &, const Status &)));
+
+		JT_PushRoster *pr = new JT_PushRoster(rootTask());
+		connect(pr, SIGNAL(roster(const Roster &)), SLOT(prRoster(const Roster &)));
+
+		new JT_ServInfo(rootTask());
+
+		d->active = true;
+#ifdef LINKLOCAL
+	}
+#endif
+
 	Status stat;
 	stat.setIsAvailable(false);
 	d->resourceList += Resource(resource(), stat);
 
-	JT_PushPresence *pp = new JT_PushPresence(rootTask());
-	connect(pp, SIGNAL(subscription(const Jid &, const QString &, const QString&)), SLOT(ppSubscription(const Jid &, const QString &, const QString&)));
-	connect(pp, SIGNAL(presence(const Jid &, const Status &)), SLOT(ppPresence(const Jid &, const Status &)));
-
 	JT_PushMessage *pm = new JT_PushMessage(rootTask());
 	connect(pm, SIGNAL(message(const Message &)), SLOT(pmMessage(const Message &)));
-
-	JT_PushRoster *pr = new JT_PushRoster(rootTask());
-	connect(pr, SIGNAL(roster(const Roster &)), SLOT(prRoster(const Roster &)));
-
-	new JT_ServInfo(rootTask());
-
-	d->active = true;
 }
 
 void Client::setFileTransferEnabled(bool b)
@@ -257,6 +285,10 @@ IBBManager *Client::ibbManager() const
 
 bool Client::isActive() const
 {
+#ifdef LINKLOCAL
+	if(d->linklocal != 0)
+		return d->linklocal->isConnected();
+#endif
 	return d->active;
 }
 
@@ -504,6 +536,12 @@ void Client::streamReadyRead()
 	}
 }
 
+void Client::streamReadyRead(Stanza s)
+{
+	QDomElement x = oldStyleNS(s.element());
+	distribute(x);
+}
+
 void Client::streamIncomingXml(const QString &s)
 {
 	QString str = s;
@@ -579,6 +617,21 @@ void Client::distribute(const QDomElement &x)
 
 void Client::send(const QDomElement &x)
 {
+#ifdef LINKLOCAL
+	if(d->linklocal != 0) {
+		Jid j(x.attribute("to"));
+		LinkLocal::Stream *stream = d->linklocal->ensureStream(j);
+		if(stream == NULL)
+			return;
+		QDomElement e = addCorrectNS(x);
+		Stanza s = stream->createStanza(e);
+		s.setFrom(Jid(d->user+"@"+d->host));
+		if(s.isNull())
+			return;
+		stream->write(s);
+		return;
+	}
+#endif
 	if(!d->stream)
 		return;
 
@@ -601,7 +654,7 @@ void Client::send(const QDomElement &x)
 	debug(QString("Client: outgoing: [\n%1]\n").arg(out));
 	xmlOutgoing(out);
 
-	//printf("x[%s] x2[%s] s[%s]\n", Stream::xmlToString(x).latin1(), Stream::xmlToString(e).latin1(), s.toString().latin1());
+	//("x[%s] x2[%s] s[%s]\n", Stream::xmlToString(x).latin1(), Stream::xmlToString(e).latin1(), s.toString().latin1());
 	d->stream->write(s);
 }
 
@@ -617,11 +670,19 @@ void Client::send(const QString &str)
 
 Stream & Client::stream()
 {
+#ifdef LINKLOCAL
+	if(d->linklocal != 0)
+		return *d->linklocal->stream(); // !!!!!!!!!!!!!
+#endif
 	return *d->stream;
 }
 
 QString Client::streamBaseNS() const
 {
+#ifdef LINKLOCAL
+	if(d->linklocal != 0)
+		return d->linklocal->stream()->baseNS();
+#endif
 	return d->stream->baseNS();
 }
 
@@ -728,7 +789,11 @@ void Client::ppPresence(const Jid &j, const Status &s)
 	}
 
 	// is it me?
+#ifdef LINKLOCAL
+	if(j.compare(jid(), false) || d->linklocal != 0) {
+#else
 	if(j.compare(jid(), false)) {
+#endif
 		updateSelfPresence(j, s);
 	}
 	else {
@@ -985,6 +1050,10 @@ void Client::sendSubscription(const Jid &jid, const QString &type, const QString
 
 void Client::setPresence(const Status &s)
 {
+#ifdef LINKLOCAL
+	if(d->linklocal != 0) 
+		return d->linklocal->setPresence(s);
+#endif
 	JT_Presence *j = new JT_Presence(rootTask());
 	j->pres(s);
 	j->go(true);

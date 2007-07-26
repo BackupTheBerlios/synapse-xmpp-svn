@@ -641,7 +641,7 @@ void CoreProtocol::reset()
 	init();
 }
 
-void CoreProtocol::startClientOut(const Jid &_jid, bool _oldOnly, bool tlsActive, bool _doAuth, bool _doCompress)
+void CoreProtocol::startClientOut(const Jid &_jid, bool _oldOnly, bool tlsActive, bool _doAuth, bool _doCompress, bool _c2c)
 {
 	jid_ = _jid;
 	to = _jid.domain();
@@ -649,6 +649,8 @@ void CoreProtocol::startClientOut(const Jid &_jid, bool _oldOnly, bool tlsActive
 	doAuth = _doAuth;
 	doCompress = _doCompress;
 	tls_started = tlsActive;
+	c2c_local = _c2c;
+	c2c_remote = !_c2c;
 
 	if(oldOnly)
 		version = Version(0,0);
@@ -683,9 +685,11 @@ void CoreProtocol::startDialbackVerifyOut(const QString &_to, const QString &_fr
 	startConnect();
 }
 
-void CoreProtocol::startClientIn(const QString &_id)
+void CoreProtocol::startClientIn(const QString &_id, bool _c2c)
 {
 	id = _id;
+	c2c_local = !_c2c;
+	c2c_remote = _c2c;
 	startAccept();
 }
 
@@ -1053,6 +1057,9 @@ bool CoreProtocol::normalStep(const QDomElement &e)
 		}
 	}
 	else if(step == HandleFeatures) {
+		if(c2c_local) {
+			step = SendFeatures;
+		} else {
 		// deal with TLS?
 		if(doTLS && !tls_started && !sasl_authed && features.tls_supported) {
 			QDomElement e = doc.createElementNS(NS_TLS, "starttls");
@@ -1136,6 +1143,7 @@ bool CoreProtocol::normalStep(const QDomElement &e)
 		event = ESend;
 		step = GetBindResponse;
 		return true;
+		}
 	}
 	else if(step == GetSASLFirst) {
 		QDomElement e = doc.createElementNS(NS_SASL, "auth");
@@ -1270,7 +1278,10 @@ bool CoreProtocol::normalStep(const QDomElement &e)
 
 		writeElement(f, TypeElement, false);
 		event = ESend;
-		step = GetRequest;
+		if(c2c_local)
+			step = C2CPreDone;
+		else
+			step = GetRequest;
 		return true;
 	}
 	// server
@@ -1585,6 +1596,11 @@ bool CoreProtocol::normalStep(const QDomElement &e)
 	}
 	// server
 	else if(step == GetRequest) {
+		if (c2c_remote) {
+			event = EFeatures;
+			step = C2CPreDone;
+			return true;
+		} else {
 		printf("get request: [%s], %s\n", e.namespaceURI().latin1(), e.tagName().latin1());
 		if(e.namespaceURI() == NS_TLS && e.localName() == "starttls") {
 			// TODO: don't let this be done twice
@@ -1642,6 +1658,7 @@ bool CoreProtocol::normalStep(const QDomElement &e)
 				// TODO
 			}
 		}
+		}
 	}
 	else if(step == GetSASLResponse) {
 		if(e.namespaceURI() == NS_SASL && e.localName() == "response") {
@@ -1650,6 +1667,9 @@ bool CoreProtocol::normalStep(const QDomElement &e)
 			step = GetSASLNext;
 			return false;
 		}
+	}
+	else if(step == C2CPreDone) {
+		return loginComplete();
 	}
 
 	if(isReady()) {

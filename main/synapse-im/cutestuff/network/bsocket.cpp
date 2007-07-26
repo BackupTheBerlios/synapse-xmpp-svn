@@ -195,8 +195,14 @@ void BSocket::connectToHost(const QString &host, quint16 port)
 	d->state = Connecting;
 	do_connect();
 #else
-	d->state = HostLookup;
-	d->ndns.resolve(d->host);
+	QHostAddress addr;
+	if(addr.setAddress(host)) {
+		d->state = Connecting;
+		do_connect();
+	} else {
+		d->state = HostLookup;
+		d->ndns.resolve(d->host);
+	}
 #endif
 }
 
