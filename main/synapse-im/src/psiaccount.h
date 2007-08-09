@@ -78,6 +78,7 @@ class AvatarFactory;
 class PEPManager;
 class ServerInfoManager;
 class GArchive;
+class SIMContactListAccount;
 //#ifdef GOOGLE_FT
 //class GoogleFileTransfer;
 //#endif
@@ -95,6 +96,8 @@ public:
 	PsiAccount(const UserAccount &acc, PsiContactList *parent);
 	~PsiAccount();
 
+	void init();
+
 	bool enabled() const;
 	void setEnabled(bool e = TRUE);
 
@@ -102,13 +105,18 @@ public:
 	bool isConnected() const;
 	const QString &name() const;
 
+	bool isGroupOpen(QString) const;
+	void setGroupOpen(QString, bool);
+
+	void setContactListAccount(SIMContactListAccount *);
 	const UserAccount & userAccount() const;
 	void setUserAccount(const UserAccount &);
 	const Jid & jid() const;
 	QString nameWithJid() const;
 
 	XMPP::Client *client() const;
-	ContactProfile *contactProfile() const;
+//	ContactProfile *contactProfile() const;
+	SIMContactListAccount *contactListAccount() const;
 	EventQueue *eventQueue() const;
 //	EDB *edb() const;
 	PsiCon *psi() const;

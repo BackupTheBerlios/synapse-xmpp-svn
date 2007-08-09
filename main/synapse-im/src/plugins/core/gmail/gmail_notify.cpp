@@ -6,9 +6,11 @@
 #include <QObject>
 #include <QTimer>
 #include <QtGui>
-#include "contactview.h"
+//#include "contactview.h"
 #include "psicon.h"
 #include "mainwin.h"
+#include "xmpp_message.h"
+#include "xmpp_client.h"
 
 class testb : public QObject
 {
@@ -213,7 +215,7 @@ void GMailNotify::done()
 	// jest nowa poczta
 	pa_->processIncomingMessage(*task_->newMailInfo());
 	}
-	cvi_->repaint();
+//	cvi_->repaint();
 }
 
 bool GMailNotify::isEvent(const XMPP::Jid &reciver)

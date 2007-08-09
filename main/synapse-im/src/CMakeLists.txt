@@ -41,6 +41,8 @@ INCLUDE_DIRECTORIES(
 
 add_definitions(-DUSE_PEP)
 
+include(SIMContactList/CMakeLists.txt)
+
 include(tools/CMakeLists.txt)
 
 include(widgets/CMakeLists.txt)
@@ -200,7 +202,7 @@ set(synapse-im_SRCS
 	${dbus_SRCS}
 	${wb_SRCS}
 	pixmaputil.cpp
-	contactview.cpp
+#	contactview.cpp
 	mainwin_p.cpp
 	accountmanagedlg.cpp
 	eventdlg.cpp
@@ -249,7 +251,7 @@ set(synapse-im_H
 	chatdlg.h
 	chateditproxy.h
 	chatsplitter.h
-	contactview.h
+#	contactview.h
 	discodlg.h
 	eventdlg.h
 #	entitytimetask.h
@@ -395,6 +397,7 @@ add_executable(synapse-im
 	${widgets_SRCS}
 	${options_SRCS}
 	${options_noMOC_SRCS}
+	${simcontactlist_SRCS}
 #	${jingle_SRCS}
 	${synapse-im_UIS_H}
 	${options_UIS_H}

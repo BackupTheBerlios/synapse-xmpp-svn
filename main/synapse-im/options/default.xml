@@ -98,7 +98,7 @@
 				<auto-delete-unlisted comment="Automatically remove an unlisted contact from the contact list if it does not have any pending messages anymore" type="bool">false</auto-delete-unlisted>
 				<opacity comment="Opacity percentage of the contact list" type="int">100</opacity>
 				<avatar comment="Avatars in contactlist">
-					<show comment="Show contacts avatars on roster" type="bool">false</show>
+					<show comment="Show contacts avatars on roster" type="int">2</show>
 					<size comment="Size of avatars" type="int">48</size>
 				</avatar>
 				<status-messages comment="Status messages for contacts">

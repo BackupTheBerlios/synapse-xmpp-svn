@@ -38,7 +38,8 @@
 #include "psiaccount.h"
 #include "accountadddlg.h"
 #include "psiiconset.h"
-#include "contactview.h"
+//#include "contactview.h"
+#include "SIMContactListView.h"
 #include "psievent.h"
 #include "passphrasedlg.h"
 #include "common.h"
@@ -241,6 +242,8 @@ public:
 	//GlobalAccelManager *globalAccelManager;
 	TuneController* tuneController;
 	QMenuBar* defaultMenuBar;
+
+	SIMContactList *simContactList;
 };
 
 //----------------------------------------------------------------------------
@@ -296,6 +299,7 @@ bool PsiCon::init()
 	connect(d->contactList, SIGNAL(accountCountChanged()), SIGNAL(accountCountChanged()));
 	connect(d->contactList, SIGNAL(accountActivityChanged()), SIGNAL(accountActivityChanged()));
 	connect(d->contactList, SIGNAL(saveAccounts()), SLOT(saveAccounts()));
+	connect(this, SIGNAL(emitOptionsUpdate()), ((SIMContactList*)d->contactList), SLOT(dataChanged()));
 
 	// To allow us to upgrade from old hardcoded options gracefully, be careful about the order here
 	PsiOptions *options=PsiOptions::instance();
@@ -311,6 +315,8 @@ bool PsiCon::init()
 	// load the old profile
 	d->pro.reset();
 	d->pro.fromFile(pathToProfileConfig(activeProfile));
+
+	d->contactList->groupStates = d->pro.groupStates;
 	
 	//load the new profile
 	QString optionsFile=pathToProfile( activeProfile );
@@ -517,6 +523,7 @@ void PsiCon::deinit()
 	d->idle.stop();
 
 	// shut down all accounts
+	d->pro.groupStates = d->contactList->groupStates;
 	UserAccountList acc = d->contactList->getUserAccountList();
 	delete d->contactList;
 
@@ -564,7 +571,7 @@ void PsiCon::setShortcuts()
 
 }
 
-ContactView *PsiCon::contactView() const
+SIMContactListView *PsiCon::contactView() const
 {
 	if(d->mainwin)
 		return d->mainwin->cvlist;
@@ -979,20 +986,20 @@ void PsiCon::setToggles(bool tog_offline, bool tog_away, bool tog_agents, bool t
 	if(d->contactList->enabledAccounts().count() > 1)
 		return;
 
-	d->mainwin->cvlist->setShowOffline(tog_offline);
-	d->mainwin->cvlist->setShowAway(tog_away);
-	d->mainwin->cvlist->setShowAgents(tog_agents);
-	d->mainwin->cvlist->setShowHidden(tog_hidden);
-	d->mainwin->cvlist->setShowSelf(tog_self);
+	((SIMContactList*)d->contactList)->setShowOffline(tog_offline);
+	((SIMContactList*)d->contactList)->setShowAway(tog_away);
+	((SIMContactList*)d->contactList)->setShowAgents(tog_agents);
+//	d->mainwin->cvlist->setShowHidden(tog_hidden);
+	((SIMContactList*)d->contactList)->setShowSelf(tog_self);
 }
 
 void PsiCon::getToggles(bool *tog_offline, bool *tog_away, bool *tog_agents, bool *tog_hidden, bool *tog_self)
 {
-	*tog_offline = d->mainwin->cvlist->isShowOffline();
-	*tog_away = d->mainwin->cvlist->isShowAway();
-	*tog_agents = d->mainwin->cvlist->isShowAgents();
-	*tog_hidden = d->mainwin->cvlist->isShowHidden();
-	*tog_self = d->mainwin->cvlist->isShowSelf();
+	*tog_offline = ((SIMContactList*)d->contactList)->showOffline();
+	*tog_away = ((SIMContactList*)d->contactList)->showAway();
+	*tog_agents = ((SIMContactList*)d->contactList)->showAgents();
+	//*tog_hidden = d->mainwin->cvlist->showHidden();
+	*tog_self = ((SIMContactList*)d->contactList)->showSelf();
 }
 
 void PsiCon::doOptions()
@@ -1088,6 +1095,8 @@ void PsiCon::slotApplyOptions(const Options &opt)
 		alertIconUpdateAlertStyle();
 
 	d->mainwin->buildToolbars();
+
+	d->contactList->contactListView()->updateOptions();
 
 	/*// change pgp engine
 	if(option.pgp != oldpgp) {

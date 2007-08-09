@@ -31,7 +31,7 @@ using namespace XMPP;
 class PsiCon;
 class PsiAccount;
 class PsiEvent;
-class ContactView;
+class SIMContactListView;
 class EventDlg;
 class UserListItem;
 class EDB;
@@ -70,7 +70,7 @@ public:
 	void deinit();
 
 	PsiContactList* contactList() const;
-	ContactView *contactView() const;
+	SIMContactListView *contactView() const;
 	MainWin *mainWin();
 //	EDB *edb() const;
 	TuneController* tuneController() const;

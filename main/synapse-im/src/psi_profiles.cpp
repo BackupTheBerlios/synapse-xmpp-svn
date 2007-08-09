@@ -1310,6 +1310,21 @@ bool UserProfile::toFile(const QString &fname)
 		stick.appendChild( textTag(doc, "stickToWindows", GAdvancedWidget::stickToWindows()) );
 	}
 
+
+	{
+		// all groups
+		QDomElement groups = doc.createElement("groups");
+		QMap<QString,bool>::iterator it = groupStates.begin();
+		while(it !=groupStates.end()) {
+			QDomElement group = doc.createElement("group");
+			group.setAttribute("name", it.key());
+			group.setAttribute("open", it.value() ? "true" : "false");
+			groups.appendChild(group);
+			++it;
+		}
+		base.appendChild(groups);
+	}
+
 	QFile f(fname);
 	if(!f.open(QIODevice::WriteOnly))
 		return FALSE;
@@ -1925,6 +1940,22 @@ bool UserProfile::fromFile(const QString &fname)
 				GAdvancedWidget::setStickEnabled( enabled );
 				GAdvancedWidget::setStickAt( offs );
 				GAdvancedWidget::setStickToWindows( toWindows );
+			}
+		}
+
+		QDomElement groups = findSubTag(base, "groups", &found);
+		printf("looking.......\n");
+		if(found) {
+			printf("found\n");
+			for (QDomNode n = groups.firstChild(); !n.isNull(); n = n.nextSibling()) {
+				QDomElement i = n.toElement();
+
+				if(i.isNull())
+					continue;
+				if(i.tagName() == "group") {
+					groupStates.insert(i.attribute("name"), i.attribute("open") == "true");
+					printf(" %s : %s\n",i.attribute("name").ascii(), i.attribute("open").ascii());
+				}
 			}
 		}
 	}

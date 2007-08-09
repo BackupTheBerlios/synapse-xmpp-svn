@@ -28,7 +28,7 @@
 /**
  * Constructs new PsiContactList. \param psi will not be PsiContactList's parent though.
  */
-PsiContactList::PsiContactList(PsiCon* psi) : ContactList(), psi_(psi)
+PsiContactList::PsiContactList(PsiCon* psi) : SIMContactList(psi), psi_(psi)
 {
 }
 
@@ -186,6 +186,8 @@ PsiAccount *PsiContactList::loadAccount(const UserAccount& acc)
 {
 	PsiAccount *pa = psi_->createAccount(acc);
 	connect(pa, SIGNAL(enabledChanged()), SIGNAL(accountCountChanged()));
+	addAccount(pa);
+	pa->init();
 	emit accountAdded(pa);
 	return pa;
 }

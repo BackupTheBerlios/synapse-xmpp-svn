@@ -126,6 +126,9 @@ void PsiActionList::Private::createMainWin()
 		IconAction *showAgents = new IconAction (tr("Show Agents/Transports"), "psi/disco", tr("Show Agents/Transports"), 0, viewGroups, 0, true);
 		showAgents->setWhatsThis (tr("Toggles visibility of agents/transports in roster"));
 
+		IconAction *showGroups = new IconAction (tr("Show Groups"), "synapse-im/groupOpen", tr("Show Groups"), 0, viewGroups, 0, true);
+		showGroups->setWhatsThis (tr("Toggles visibility of groups in roster"));
+
 		IconAction *showSelf = new IconAction (tr("Show Self Contact"), "psi/show_self", tr("Show Self Contact"), 0, viewGroups, 0, true);
 		showSelf->setWhatsThis (tr("Toggles visibility of self contact in roster"));
 
@@ -141,6 +144,7 @@ void PsiActionList::Private::createMainWin()
 			{ "show_away",    showAway    },
 			{ "show_hidden",  showHidden  },
 			{ "show_agents",  showAgents  },
+			{ "show_groups",  showGroups  },
 			{ "show_self",    showSelf    },
 			{ "show_statusmsg", showStatusMsg },
 			{ "show_no_offline_status_msg", showNoOfflineStatusMsg },

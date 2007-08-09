@@ -18,7 +18,7 @@
  *
  */
 
-#include "contactview.h"
+//#include "contactview.h"
 
 #include <QFileDialog>
 #include <qapplication.h>

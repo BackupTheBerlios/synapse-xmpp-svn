@@ -41,7 +41,6 @@
 #include "statuspreset.h"
 #include "shortcutmanager.h"
 
-
 //----------------------------------------------------------------------------
 // StatusShowDlg
 // FIXME: Will no longer be needed once it is out of the groupchat contactview

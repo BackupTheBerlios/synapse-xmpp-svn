@@ -13,11 +13,20 @@
    <string>OptAppearanceMiscUI</string>
   </property>
   <layout class="QVBoxLayout" >
-   <property name="margin" >
-    <number>9</number>
-   </property>
    <property name="spacing" >
     <number>6</number>
+   </property>
+   <property name="leftMargin" >
+    <number>9</number>
+   </property>
+   <property name="topMargin" >
+    <number>9</number>
+   </property>
+   <property name="rightMargin" >
+    <number>9</number>
+   </property>
+   <property name="bottomMargin" >
+    <number>9</number>
    </property>
    <item>
     <widget class="QGroupBox" name="groupBox4" >
@@ -25,10 +34,22 @@
       <string>Headings</string>
      </property>
      <layout class="QGridLayout" >
-      <property name="margin" >
+      <property name="leftMargin" >
        <number>8</number>
       </property>
-      <property name="spacing" >
+      <property name="topMargin" >
+       <number>8</number>
+      </property>
+      <property name="rightMargin" >
+       <number>8</number>
+      </property>
+      <property name="bottomMargin" >
+       <number>8</number>
+      </property>
+      <property name="horizontalSpacing" >
+       <number>6</number>
+      </property>
+      <property name="verticalSpacing" >
        <number>6</number>
       </property>
       <item row="0" column="0" >
@@ -61,10 +82,22 @@
       <string>Opacity</string>
      </property>
      <layout class="QGridLayout" >
-      <property name="margin" >
+      <property name="leftMargin" >
        <number>8</number>
       </property>
-      <property name="spacing" >
+      <property name="topMargin" >
+       <number>8</number>
+      </property>
+      <property name="rightMargin" >
+       <number>8</number>
+      </property>
+      <property name="bottomMargin" >
+       <number>8</number>
+      </property>
+      <property name="horizontalSpacing" >
+       <number>6</number>
+      </property>
+      <property name="verticalSpacing" >
        <number>6</number>
       </property>
       <item row="1" column="1" >
@@ -148,19 +181,24 @@
       <string>Avatar</string>
      </property>
      <layout class="QGridLayout" >
-      <property name="margin" >
+      <property name="leftMargin" >
        <number>8</number>
       </property>
-      <property name="spacing" >
+      <property name="topMargin" >
+       <number>8</number>
+      </property>
+      <property name="rightMargin" >
+       <number>8</number>
+      </property>
+      <property name="bottomMargin" >
+       <number>8</number>
+      </property>
+      <property name="horizontalSpacing" >
        <number>6</number>
       </property>
-      <item row="0" column="0" >
-       <widget class="QCheckBox" name="cb_avatar" >
-        <property name="text" >
-         <string>Show avatars on roster</string>
-        </property>
-       </widget>
-      </item>
+      <property name="verticalSpacing" >
+       <number>6</number>
+      </property>
       <item row="1" column="0" >
        <widget class="QLabel" name="lb_avatarSize" >
         <property name="text" >
@@ -197,6 +235,16 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="1" >
+       <widget class="QComboBox" name="cb_avatar" />
+      </item>
+      <item row="0" column="0" >
+       <widget class="QLabel" name="lbAvatarShow" >
+        <property name="text" >
+         <string>Show</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -206,10 +254,22 @@
       <string>Styles</string>
      </property>
      <layout class="QGridLayout" >
-      <property name="margin" >
+      <property name="leftMargin" >
        <number>8</number>
       </property>
-      <property name="spacing" >
+      <property name="topMargin" >
+       <number>8</number>
+      </property>
+      <property name="rightMargin" >
+       <number>8</number>
+      </property>
+      <property name="bottomMargin" >
+       <number>8</number>
+      </property>
+      <property name="horizontalSpacing" >
+       <number>6</number>
+      </property>
+      <property name="verticalSpacing" >
        <number>6</number>
       </property>
       <item row="0" column="0" >
@@ -241,7 +301,6 @@
   <tabstop>ck_newHeadings</tabstop>
   <tabstop>sl_rosterop</tabstop>
   <tabstop>sl_chatdlgop</tabstop>
-  <tabstop>cb_avatar</tabstop>
   <tabstop>sb_avatarSize</tabstop>
  </tabstops>
  <resources/>

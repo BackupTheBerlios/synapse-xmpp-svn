@@ -124,7 +124,7 @@ void OptionsTabAppearanceMisc::applyOptions(Options *opt)
 	opt->outlineHeadings = d->ck_outlineHeadings->isChecked();	
 	PsiOptions::instance()->setOption("options.ui.contactlist.opacity", d->sl_rosterop->value());
 	PsiOptions::instance()->setOption("options.ui.chat.opacity", d->sl_chatdlgop->value());
-	PsiOptions::instance()->setOption("options.ui.contactlist.avatar.show", d->cb_avatar->isChecked());
+	PsiOptions::instance()->setOption("options.ui.contactlist.avatar.show", d->cb_avatar->currentIndex());
 	PsiOptions::instance()->setOption("options.ui.contactlist.avatar.size", d->sb_avatarSize->value());
 	
 	PsiOptions::instance()->setOption("options.ui.style.name", d->cb_style->currentText());
@@ -144,7 +144,12 @@ void OptionsTabAppearanceMisc::restoreOptions(const Options *opt)
 	
 	d->sl_rosterop->setValue( PsiOptions::instance()->getOption("options.ui.contactlist.opacity").toInt() );
 	d->sl_chatdlgop->setValue( PsiOptions::instance()->getOption("options.ui.chat.opacity").toInt() );
-	d->cb_avatar->setChecked( PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toBool() );
+
+	d->cb_avatar->addItem(tr("Icons Only"));
+	d->cb_avatar->addItem(tr("Icons and Avatars"));
+	d->cb_avatar->addItem(tr("Icons on Avatars"));
+	d->cb_avatar->setCurrentIndex(PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toInt());
+//	d->cb_avatar->setChecked( PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toInt() );
 	d->sb_avatarSize->setValue( PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt() );
 	
 	d->cb_style->clear();

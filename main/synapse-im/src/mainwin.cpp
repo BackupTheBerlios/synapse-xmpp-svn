@@ -45,7 +45,7 @@
 #include "common.h"
 #include "showtextdlg.h"
 #include "psicon.h"
-#include "contactview.h"
+//#include "contactview.h"
 #include "psiiconset.h"
 #include "serverinfomanager.h"
 #include "applicationinfo.h"
@@ -60,6 +60,10 @@
 #include "tunecontroller.h"
 #include "mucjoindlg.h"
 #include "psicontactlist.h"
+
+#include "SIMContactListModel.h"
+#include "SIMContactListView.h"
+#include "SIMContactDelegate.h"
 
 #include "mainwin_p.h"
 
@@ -274,9 +278,15 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	setCentralWidget ( center );
 
 	d->vb_main = new QVBoxLayout(center);
-	cvlist = new ContactView(center);
+//	cvlist = new ContactView(center);
+	cvlist = new SIMContactListView(center);
+	cvlist->setItemDelegate(new SIMContactDelegate);
+	((SIMContactList *)d->psi->contactList())->setContactListView(cvlist);
+	SIMContactListModel *model = new SIMContactListModel(d->psi->contactList());
+	cvlist->setModel(model);
+//	cvlist->indentation();
 
-	int layoutMargin = 2;
+	int layoutMargin = 0; // 2 ------- zmiana
 #ifdef Q_WS_MAC
 	layoutMargin = 0;
 	cvlist->setFrameShape(QFrame::NoFrame);
@@ -419,14 +429,16 @@ void MainWin::registerAction( IconAction *action )
 		const char *signal;
 		QObject *receiver;
 		const char *slot;
+	
 	} actionlist[] = {
-		{ "show_offline", toggled, cvlist, SLOT( setShowOffline(bool) ) },
-		{ "show_away",    toggled, cvlist, SLOT( setShowAway(bool) ) },
-		{ "show_hidden",  toggled, cvlist, SLOT( setShowHidden(bool) ) },
-		{ "show_agents",  toggled, cvlist, SLOT( setShowAgents(bool) ) },
-		{ "show_self",    toggled, cvlist, SLOT( setShowSelf(bool) ) },
-		{ "show_statusmsg", toggled, cvlist, SLOT( setShowStatusMsg(bool) ) },
-		{ "show_no_offline_status_msg", toggled, cvlist, SLOT( setShowOfflineWithoutStatusMessage(bool) ) },
+		{ "show_offline", toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowOffline(bool) ) },
+		{ "show_away",    toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowAway(bool) ) },
+		{ "show_groups", toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowGroups(bool) ) },
+//		{ "show_hidden",  toggled, cvlist, SLOT( setShowHidden(bool) ) },
+		{ "show_agents",  toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowAgents(bool) ) },
+		{ "show_self",    toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowSelf(bool) ) },
+//		{ "show_statusmsg", toggled, cvlist, SLOT( setShowStatusMsg(bool) ) },
+//		{ "show_no_offline_status_msg", toggled, cvlist, SLOT( setShowOfflineWithoutStatusMessage(bool) ) },
 
 		{ "button_options", activated, this, SIGNAL( doOptions() ) },
 
@@ -486,13 +498,14 @@ void MainWin::registerAction( IconAction *action )
 		const char *signal;
 		const char *slot;
 	} reverseactionlist[] = {
-		{ "show_away",    cvlist, SIGNAL( showAway(bool) ), setChecked },
-		{ "show_hidden",  cvlist, SIGNAL( showHidden(bool) ), setChecked },
-		{ "show_offline", cvlist, SIGNAL( showOffline(bool) ), setChecked },
-		{ "show_self",    cvlist, SIGNAL( showSelf(bool) ), setChecked },
-		{ "show_agents",  cvlist, SIGNAL( showAgents(bool) ), setChecked },
-		{ "show_statusmsg", cvlist, SIGNAL( showStatusMsg(bool) ), setChecked },
-		{ "show_no_offline_status_msg", cvlist, SIGNAL( showOfflineWithoutStatusMessage(bool) ), setChecked },
+		{ "show_away",    ((SIMContactList*)d->psi->contactList()), SIGNAL( showAway(bool) ), setChecked },
+//		{ "show_hidden",  cvlist, SIGNAL( showHidden(bool) ), setChecked },
+		{ "show_offline", ((SIMContactList*)d->psi->contactList()), SIGNAL( showOffline(bool) ), setChecked },
+		{ "show_groups",  ((SIMContactList*)d->psi->contactList()), SIGNAL( showGroups(bool) ), setChecked },
+		{ "show_self",    ((SIMContactList*)d->psi->contactList()), SIGNAL( showSelf(bool) ), setChecked },
+		{ "show_agents",  ((SIMContactList*)d->psi->contactList()), SIGNAL( showAgents(bool) ), setChecked },
+//		{ "show_statusmsg", cvlist, SIGNAL( showStatusMsg(bool) ), setChecked },
+//		{ "show_no_offline_status_msg", cvlist, SIGNAL( showOfflineWithoutStatusMessage(bool) ), setChecked },
 		{ "", 0, 0, 0 }
 	};
 
@@ -572,24 +585,25 @@ void MainWin::setUseDock(bool use)
 
 void MainWin::searchRoster(const QString &text)
 {
-	d->searchString = text;
+/*	d->searchString = text;
 	QTimer::singleShot(800, this, SLOT(searchRoster2()));
 	if(!d->blockString)
 	{
 		d->blockString = true;
 		d->searchString2 = d->searchString;
-	}
+	}*/
+	d->psi->contactList()->setSearch(text);
 }
 
 void MainWin::searchRoster2()
 {
-	if(d->searchString2 != d->searchString)
+/*	if(d->searchString2 != d->searchString)
 		d->searchString2 = d->searchString;
 	else {
 		d->blockString = false;
-		d->searchString2 = d->searchString;
-		cvlist->setSearch(d->searchString2);
-	}
+		d->searchString2 = d->searchString;*/
+//		cvlist->setSearch(d->searchString2);
+//	}
 }
 
 void MainWin::updateStatusLastMenu()

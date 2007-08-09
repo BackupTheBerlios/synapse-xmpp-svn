@@ -107,6 +107,7 @@ public:
 	QStringList recentBrowseList;
 	QString lastStatusString;
 	LastStatus lastStatusStrings[5];
+	QMap<QString,bool> groupStates;
 	bool useSound;
 
 	ProxyItemList proxyList;

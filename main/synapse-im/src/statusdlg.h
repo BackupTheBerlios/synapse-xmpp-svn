@@ -24,7 +24,8 @@
 #include <QDialog>
 #include <QList>
 #include "xmpp_jid.h"
-#include "contactview.h"
+#include "xmpp_status.h"
+//#include "contactview.h"
 
 class PsiCon;
 class PsiAccount;

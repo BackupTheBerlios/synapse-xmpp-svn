@@ -66,7 +66,7 @@
 #include "privacymanager.h"
 #include "rosteritemexchangetask.h"
 #include "chatdlg.h"
-#include "contactview.h"
+//#include "contactview.h"
 #include "mood.h"
 #include "tunecontroller.h"
 #include "groupchatdlg.h"
@@ -248,11 +248,12 @@ public:
 	}
 
 	PsiContactList* contactList;
+	SIMContactListAccount *contactListAccount;
 	PsiCon *psi;
 	PsiAccount *account;
 	PsiOptions *options;
 	Client *client;
-	ContactProfile *cp;
+//	ContactProfile *cp;
 	UserAccount acc, accnext;
 	Jid jid, nextJid;
 	Status loginStatus;
@@ -352,7 +353,7 @@ public slots:
 	void setEnabled( bool e )
 	{
 		acc.opt_enabled = e;
-		cp->setEnabled(e);
+//		cp->setEnabled(e);
 		account->cpUpdate(self);
 
 		// signals
@@ -445,7 +446,8 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 #ifdef LINKLOCAL
 	d->linkLocal = false;
 #endif
-	d->cp = 0;
+//	d->cp = 0;
+	d->contactListAccount = 0;
 	d->ga = NULL;
 	d->userCounter = 0;
 	d->avatarFactory = 0;
@@ -564,7 +566,7 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	connect(d->rosterItemExchangeTask,SIGNAL(rosterItemExchange(const Jid&, const RosterExchangeItems&)),SLOT(actionRecvRosterExchange(const Jid&,const RosterExchangeItems&)));
 
 	// contactprofile context
-	d->cp = new ContactProfile(this, acc.name, d->psi->contactView());
+/*	d->cp = new ContactProfile(this, acc.name, d->psi->contactView());
 	connect(d->cp, SIGNAL(actionDefault(const Jid &)),SLOT(actionDefault(const Jid &)));
 	connect(d->cp, SIGNAL(actionRecvEvent(const Jid &)),SLOT(actionRecvEvent(const Jid &)));
 	connect(d->cp, SIGNAL(actionSendMessage(const Jid &)),SLOT(actionSendMessage(const Jid &)));
@@ -601,7 +603,7 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	connect(d->cp, SIGNAL(actionDisco(const Jid &, const QString &)),SLOT(actionDisco(const Jid &, const QString &)));
 	connect(d->cp, SIGNAL(actionInvite(const Jid &, const QString &)),SLOT(actionInvite(const Jid &, const QString &)));
 	connect(d->cp, SIGNAL(actionAssignKey(const Jid &)),SLOT(actionAssignKey(const Jid &)));
-	connect(d->cp, SIGNAL(actionUnassignKey(const Jid &)),SLOT(actionUnassignKey(const Jid &)));
+	connect(d->cp, SIGNAL(actionUnassignKey(const Jid &)),SLOT(actionUnassignKey(const Jid &)));*/
 
 	// Initialize server info stuff
 	d->serverInfoManager = new ServerInfoManager(d->client);
@@ -649,20 +651,6 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	if(PsiOptions::instance()->getOption("options.html.chat.render").toBool())
 		d->client->addExtension("html",Features("http://jabber.org/protocol/xhtml-im"));
 	
-	// restore cached roster
-	for(Roster::ConstIterator it = acc.roster.begin(); it != acc.roster.end(); ++it)
-		client_rosterItemUpdated(*it);
-
-	// restore pgp key bindings
-	for(VarList::ConstIterator kit = acc.keybind.begin(); kit != acc.keybind.end(); ++kit) {
-		const VarListItem &i = *kit;
-		UserListItem *u = find(Jid(i.key()));
-		if(u) {
-			u->setPublicKeyID(i.data());
-			cpUpdate(*u);
-		}
-	}
-
 	setUserAccount(acc);
 
 	d->contactList->link(this);
@@ -734,7 +722,7 @@ PsiAccount::~PsiAccount()
 		delete d->jingleSessionManager;
 #endif	
 	delete d->ahc;
-	delete d->cp;
+//	delete d->cp;
 	delete d->privacyManager; //!!
 	delete d->capsManager;
 	delete d->pepManager;
@@ -755,6 +743,27 @@ PsiAccount::~PsiAccount()
 	delete d;
 
 	//printf("PsiAccount: [%s] unloaded\n", str.latin1());
+}
+
+void PsiAccount::init()
+{
+//	d->setEnabled(d->acc.opt_enabled);
+	// restore cached roster
+	if(d->contactListAccount)
+		d->contactListAccount->updateEntry(d->self);
+
+	for(Roster::ConstIterator it = d->acc.roster.begin(); it != d->acc.roster.end(); ++it)
+		client_rosterItemUpdated(*it);
+
+	// restore pgp key bindings
+	for(VarList::ConstIterator kit = d->acc.keybind.begin(); kit != d->acc.keybind.end(); ++kit) {
+		const VarListItem &i = *kit;
+		UserListItem *u = find(Jid(i.key()));
+		if(u) {
+			u->setPublicKeyID(i.data());
+			cpUpdate(*u);
+		}
+	}
 }
 
 void PsiAccount::cleanupStream()
@@ -825,6 +834,11 @@ const QString & PsiAccount::name() const
 	return d->acc.name;
 }
 
+void PsiAccount::setContactListAccount(SIMContactListAccount * cla)
+{
+	d->contactListAccount = cla;
+}
+
 const UserAccount & PsiAccount::userAccount() const
 {
 	d->psi->getToggles(&d->acc.tog_offline, &d->acc.tog_away, &d->acc.tog_agents, &d->acc.tog_hidden,&d->acc.tog_self);
@@ -854,9 +868,9 @@ Client *PsiAccount::client() const
 	return d->client;
 }
 
-ContactProfile *PsiAccount::contactProfile() const
+SIMContactListAccount *PsiAccount::contactListAccount() const
 {
-	return d->cp;
+	return d->contactListAccount;
 }
 
 EventQueue *PsiAccount::eventQueue() const
@@ -954,14 +968,15 @@ void PsiAccount::setUserAccount(const UserAccount &acc)
 			d->stream->setNoopTime(0);
 	}
 
-	d->cp->setName(d->acc.name);
+//	d->contactListAccount->setName(d->acc.name);
 
 	Jid j = acc.jid;
 	d->nextJid = j;
 	if(!isActive()) {
 		d->jid = j;
 		d->self.setJid(j);
-		d->cp->updateEntry(d->self);
+		if(d->contactListAccount)
+			d->contactListAccount->updateEntry(d->self);
 	}
 	if(!d->nickFromVCard)
 		setNick(j.user());
@@ -1556,7 +1571,7 @@ void PsiAccount::client_rosterRequestFinished(bool success, int, const QString &
 				d->eventQueue->clear(u->jid());
 				updateReadNext(u->jid());
 
-				d->cp->removeEntry(u->jid());
+				d->contactListAccount->removeEntry(u->jid());
 				d->userList.removeRef(u);
 			}
 			else
@@ -1715,7 +1730,7 @@ void PsiAccount::client_rosterItemUpdated(const RosterItem &r)
 	}
 	u->setInList(true);
 
-	d->cp->updateEntry(*u);
+	d->contactListAccount->updateEntry(*u);
 }
 
 void PsiAccount::client_rosterItemRemoved(const RosterItem &r)
@@ -1729,11 +1744,11 @@ void PsiAccount::client_rosterItemRemoved(const RosterItem &r)
 	// if the item has messages queued, then move them to 'not in list'
 	if(d->eventQueue->count(r.jid()) > 0) {
 		u->setInList(false);
-		d->cp->updateEntry(*u);
+		d->contactListAccount->updateEntry(*u);
 	}
 	// else remove them for good!
 	else {
-		d->cp->removeEntry(u->jid());
+		d->contactListAccount->removeEntry(u->jid());
 		d->userList.removeRef(u);
 	}
 }
@@ -1816,8 +1831,8 @@ void PsiAccount::client_resourceAvailable(const Jid &j, const Resource &r)
 		u->setPresenceError("");
 		cpUpdate(*u, r.name(), true);
 
-		if(doAnim && option.rosterAnim)
-			d->cp->animateNick(u->jid());
+//		if(doAnim && option.rosterAnim)
+//			d->cp->animateNick(u->jid());
 	}
 	
 	if(doSound)
@@ -2715,7 +2730,16 @@ void PsiAccount::actionJoin(const Jid &j, const QString& password)
 
 void PsiAccount::stateChanged()
 {
-	if(loggedIn())
+	if(loggedIn())	
+		d->contactListAccount->setState(makeSTATUS(status()));
+	else {
+		if(isActive()) {
+			d->contactListAccount->setState(-1);
+		} else {
+			d->contactListAccount->setState(STATUS_OFFLINE);
+		}
+	}
+/*	if(loggedIn())
 		d->cp->setState(makeSTATUS(status()));
 	else {
 		if(isActive()) {
@@ -2730,7 +2754,7 @@ void PsiAccount::stateChanged()
 			d->cp->setUsingSSL(false);
 		}
 	}
-
+*/
 	updatedActivity();
 }
 
@@ -2891,13 +2915,14 @@ void PsiAccount::cpUpdate(const UserListItem &u, const QString &rname, bool from
 {
 	PsiEvent *e = d->eventQueue->peek(u.jid());
 
-	d->cp->updateEntry(u);
+	if( !u.isSelf() || d->contactListAccount )
+		d->contactListAccount->updateEntry(u);
 
-	if(e) {
+/*	if(e) {
 		d->cp->setAlert(u.jid(), PsiIconset::instance()->event2icon(e));
 	}
 	else
-		d->cp->clearAlert(u.jid());
+		d->cp->clearAlert(u.jid());*/
 
 	updateContact(u);
 	Jid j = u.jid();
@@ -4688,7 +4713,7 @@ void PsiAccount::processEncryptedMessageDone()
 
 void PsiAccount::optionsUpdate()
 {
-	d->cp->updateEntry(d->self);
+	d->contactListAccount->updateEntry(d->self);
 
 	// Tune
 	bool publish = d->options->getOption("options.extended-presence.tune.publish").toBool();

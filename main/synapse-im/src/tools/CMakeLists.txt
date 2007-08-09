@@ -6,7 +6,7 @@ include(tools/optionstree/CMakeLists.txt)
 include(tools/globalshortcut/CMakeLists.txt)
 include(tools/spellchecker/CMakeLists.txt)
 include(tools/advwidget/CMakeLists.txt)
-include(tools/contactlist/CMakeLists.txt)
+#include(tools/contactlist/CMakeLists.txt)
 include(tools/grepshortcutkeydlg/CMakeLists.txt)
 include(tools/tunecontroller/CMakeLists.txt)
 

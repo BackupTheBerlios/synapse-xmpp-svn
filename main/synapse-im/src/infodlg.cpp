@@ -42,7 +42,8 @@
 #include "entitytimetask.h"
 #include "vcardfactory.h"
 #include "iconwidget.h"
-#include "contactview.h"
+//#include "contactview.h"
+#include "SIMContactListAccount.h"
 #include "psirichtext.h"
 
 
@@ -612,7 +613,7 @@ void InfoDlg::clientVersionFinished()
 				continue;
 
 			(*rit).setClient(j->name(),j->version(),j->os());
-			d->pa->contactProfile()->updateEntry(*u);
+			d->pa->contactListAccount()->updateEntry(*u);
 			updateStatus();
 		}
 	}
@@ -629,7 +630,7 @@ void InfoDlg::entityTimeFinished()
 				continue;
 
 			(*rit).setTimezone(j->timezoneOffset());
-			d->pa->contactProfile()->updateEntry(*u);
+			d->pa->contactListAccount()->updateEntry(*u);
 			updateStatus();
 		}
 	}
@@ -649,7 +650,7 @@ void InfoDlg::requestLastActivityFinished()
 		foreach(UserListItem* u, d->pa->findRelevant(d->jid)) {
 			u->setLastUnavailableStatus(makeStatus(STATUS_OFFLINE,j->status()));
 			u->setLastAvailable(j->time());
-			d->pa->contactProfile()->updateEntry(*u);
+			d->pa->contactListAccount()->updateEntry(*u);
 			updateStatus();
 		}
 	}
