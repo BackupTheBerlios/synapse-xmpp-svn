@@ -84,6 +84,8 @@ HistoryDlg::HistoryDlg(const XMPP::Jid& j, PsiAccount* pa)
 	EventsTree->setHeaderLabels(headers);
 	EventsTree->sortItems(1,Qt::AscendingOrder);
 	EventsTree->setSortingEnabled(true);
+	EventsTree->setWordWrap(true);
+	EventsTree->hideColumn(2);
 
 	connect(EventsTree, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), SLOT(actionOpenEvent(QTreeWidgetItem *, int)));
 	connect(EventsTree, SIGNAL(customContextMenuRequested(const QPoint &)), SLOT(doEventContextMenu(const QPoint &)));
@@ -96,10 +98,6 @@ HistoryDlg::HistoryDlg(const XMPP::Jid& j, PsiAccount* pa)
 
 	jid_ = j.bare();
 	doLatest();
-
-	EventsTree->resizeColumnToContents(0);
-	EventsTree->resizeColumnToContents(1);
-	EventsTree->resizeColumnToContents(2);
 
 	X11WM_CLASS("history");
 }
@@ -114,6 +112,11 @@ void HistoryDlg::loadPage(QDate date,QString searchFor)
 	EventsTree->clear();
 	HistoryDB *h = HistoryDB::instance();
 	h->getEvents(EventsTree,jid_,date,searchFor);
+
+	EventsTree->resizeColumnToContents(0);
+	EventsTree->resizeColumnToContents(1);
+	EventsTree->resizeColumnToContents(2);
+	EventsTree->resizeColumnToContents(3);
 }
 
 void HistoryDlg::dateSelected(QTreeWidgetItem *item, int column)

@@ -51,7 +51,8 @@ public:
 	virtual ~PsiEvent() = 0;
 
 	enum {
-		Message,
+		None = 0,
+		Message = 1,
 		Auth,
 		PGP,
 		File,

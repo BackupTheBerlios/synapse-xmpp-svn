@@ -1,6 +1,7 @@
 #include "SIMContactListItem.h"
 #include "SIMContactName.h"
 #include "userlist.h"
+#include "iconset.h"
 
 #ifndef SIMCONTACTLISTCONTACT_H
 #define SIMCONTACTLISTCONTACT_H
@@ -19,6 +20,8 @@ public:
 	const SIMContactName &contactName();
 	const QColor &textColor();
 
+	bool alerting();
+	void setAlertIcon(PsiIcon *icon);
 
 	void setUserListItem(const UserListItem &_u);
 	UserListItem *u();
@@ -33,6 +36,7 @@ public:
 private:
 	UserListItem u_;
 	SIMContactName contactName_;
+	PsiIcon *alertIcon_;
 };
 
 #endif

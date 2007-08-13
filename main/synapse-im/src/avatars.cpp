@@ -78,7 +78,7 @@ static QByteArray scaleAvatar(const QByteArray& b)
 	}
 }
 
-static QPixmap greyscale(QPixmap px)
+static QPixmap greyscale(const QPixmap &px)
 {
 	QImage result(px.toImage());
 	for (int y = 0; y < result.height(); ++y) {

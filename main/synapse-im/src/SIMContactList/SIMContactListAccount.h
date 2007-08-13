@@ -1,5 +1,6 @@
 #include "SIMContactListItem.h"
 #include "userlist.h"
+#include "iconset.h"
 
 #ifndef SIMCONTACTLISTACCOUNT_H
 #define SIMCONTACTLISTACCOUNT_H
@@ -18,9 +19,10 @@ public:
 
 	void setState(int _state);
 
-
 	void showContextMenu(const QPoint&);
 	QString toolTip();
+
+	void setAlert(const XMPP::Jid &j, PsiIcon *icon);
 
 	void updateEntry(const UserListItem &u);
 	void removeEntry(const XMPP::Jid &j);

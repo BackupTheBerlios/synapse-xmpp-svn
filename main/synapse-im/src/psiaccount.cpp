@@ -2915,14 +2915,16 @@ void PsiAccount::cpUpdate(const UserListItem &u, const QString &rname, bool from
 {
 	PsiEvent *e = d->eventQueue->peek(u.jid());
 
-	if( !u.isSelf() || d->contactListAccount )
+	if( !u.isSelf() || d->contactListAccount ) {
 		d->contactListAccount->updateEntry(u);
 
-/*	if(e) {
-		d->cp->setAlert(u.jid(), PsiIconset::instance()->event2icon(e));
+	if(e) {
+		d->contactListAccount->setAlert(u.jid(), PsiIconset::instance()->event2icon(e));
 	}
 	else
-		d->cp->clearAlert(u.jid());*/
+		d->contactListAccount->setAlert(u.jid(), NULL);
+
+	}
 
 	updateContact(u);
 	Jid j = u.jid();

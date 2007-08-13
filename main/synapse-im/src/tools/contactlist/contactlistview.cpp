@@ -13,6 +13,7 @@ ContactListView::ContactListView(QWidget* parent) : QTreeView(parent)
 	setLargeIcons(false);
 	setShowIcons(true);
 	setRootIsDecorated(false);
+	setItemsExpandable(true);
 	setEditTriggers(QAbstractItemView::EditKeyPressed|QAbstractItemView::AnyKeyPressed);
 	setIndentation(5);
 	header()->hide();

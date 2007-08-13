@@ -1316,7 +1316,7 @@ void PsiCon::processEvent(PsiEvent *e)
 		FileTransfer *ft = fe->takeFileTransfer();
 		e->account()->eventQueue()->dequeue(e);
 		e->account()->queueChanged();
-		e->account()->cpUpdate(*u);
+ 		e->account()->cpUpdate(*u);
 		if(ft) {
 			FileRequestDlg *w = new FileRequestDlg(fe->timeStamp(), ft, e->account());
 			bringToFront(w);

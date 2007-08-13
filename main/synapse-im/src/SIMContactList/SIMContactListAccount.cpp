@@ -59,6 +59,21 @@ SIMContactListGroup *SIMContactListAccount::ensureGroup(const QString &group_nam
 	return group;
 }
 
+void SIMContactListAccount::setAlert(const Jid &j, PsiIcon *icon)
+{
+	SIMContactListContact *clc = contactList()->findEntry(j.bare(), false);
+	if (clc) {
+		clc->setAlertIcon(icon);
+		SIMContactListItem *parent = clc->parent();
+		clc->updateParents();
+		if(clc->parent() != parent) {
+			parent->updateParent();
+			parent = clc->parent();
+			parent->updateParent();
+		}
+	}
+}
+
 void SIMContactListAccount::updateEntry(const UserListItem &u)
 {
 	if(!account()->enabled())
@@ -122,10 +137,12 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 		QString group_name;
 		if(!groups.isEmpty())
 			group_name = groups.takeFirst();
-		else if(!u.isTransport())
+		else if (u.isTransport())
+			group_name = QObject::tr("Agents/Transports");
+		else if (u.inList())
 			group_name = QObject::tr("General");
 		else
-			group_name = QObject::tr("Agents/Transports");
+			group_name = QObject::tr("Not in list");
 		SIMContactListGroup *group = ensureGroup(group_name);
 		clc = new SIMContactListContact(u, account(), contactList(), group);
 		group->appendChild(clc);
@@ -140,11 +157,13 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 
 void SIMContactListAccount::removeEntry(const Jid &j)
 {
-	SIMContactListContact *clc = findEntry(j.bare());
-	SIMContactListItem *group = clc->parent();
-	group->removeChild(clc);
-	delete clc;
-	contactList()->dataChanged();
+	SIMContactListContact *clc = contactList()->findEntry(j.bare());
+	if(clc) {
+		SIMContactListItem *group = clc->parent();
+		group->removeChild(clc);
+		delete clc;
+		contactList()->dataChanged();
+	}
 }
 
 void SIMContactListAccount::showContextMenu(const QPoint& p)

@@ -23,7 +23,7 @@
 #include <QPainter>
 
 SIMContactListContact::SIMContactListContact(const UserListItem &_u, PsiAccount *_pa, SIMContactList *cl, SIMContactListItem *parent)
-:SIMContactListItem(SIMContactListItem::Contact, _pa, cl, parent)
+:SIMContactListItem(SIMContactListItem::Contact, _pa, cl, parent), alertIcon_(NULL)
 {
 	setUserListItem(_u);
 }
@@ -44,13 +44,16 @@ XMPP::Jid SIMContactListContact::jid()
 
 QPixmap SIMContactListContact::state()
 {
-	 return PsiIconset::instance()->statusPtr(&u_)->pixmap();
+	if(alertIcon_) {
+		return alertIcon_->pixmap();
+	}
+	return PsiIconset::instance()->statusPtr(&u_)->pixmap();
 }
 
 QPixmap SIMContactListContact::pixmap()
 {
 	bool grey = !u_.isAvailable();
-	QPixmap ps = PsiIconset::instance()->statusPtr(&u_)->pixmap();
+	QPixmap ps = state();
 	QPixmap px;
 	if(account()->avatarFactory() && (contactList()->avatarSize() > 0)) {
 		px = QPixmap(account()->avatarFactory()->getAvatar(u_.jid().bare(), grey, contactList()->avatarSize()));
@@ -96,6 +99,16 @@ const QColor &SIMContactListContact::textColor()
 		return option.color[cOnline];
 	}
 
+}
+
+bool SIMContactListContact::alerting()
+{
+	return (alertIcon_ != NULL);
+}
+
+void SIMContactListContact::setAlertIcon(PsiIcon *icon)
+{
+	alertIcon_ = icon;
 }
 
 void SIMContactListContact::setUserListItem(const UserListItem &_u)
@@ -462,7 +475,7 @@ SIMContactListItem *SIMContactListContact::updateParent(SIMContactListContact *i
 			newParent = contactList->searchGroup();
 		}
 	}
- 	else if (!contactList->showOffline() && item->status().type() == Status::Offline) {
+ 	else if (!contactList->showOffline() && item->status().type() == Status::Offline && !item->alerting()) {
 		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
 		newParent = contactList->invisibleGroup();
 	}

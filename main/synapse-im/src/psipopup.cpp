@@ -329,7 +329,7 @@ void PsiPopup::setData(const PsiIcon *icon, QString text,const Jid& j) //sets la
 void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, const PsiEvent *event)
 {
 	d->jid    = j;
-	d->name_ = (u->name().isEmpty()) ? j.bare() : u->name();
+	d->name_ = (u && !u->name().isEmpty()) ? u->name() : j.bare();
 	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
 
 	if ( !d->popup ) {
