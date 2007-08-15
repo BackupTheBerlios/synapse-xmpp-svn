@@ -47,6 +47,8 @@ class SecureMessageSystem;
    \class SecureMessageKey qca_securemessage.h QtCrypto
 
    Key for SecureMessage system
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT SecureMessageKey
 {
@@ -137,6 +139,11 @@ public:
 	void setX509PrivateKey(const PrivateKey &k);
 
 	/**
+	   Set the public and private part of this X.509 key with KeyBundle.
+	*/
+	void setX509KeyBundle(const KeyBundle &kb);
+
+	/**
 	   Test if this key contains a private key part
 	*/
 	bool havePrivate() const;
@@ -164,6 +171,8 @@ typedef QList<SecureMessageKey> SecureMessageKeyList;
    \class SecureMessageSignature qca_securemessage.h QtCrypto
 
    SecureMessage signature
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT SecureMessageSignature
 {
@@ -235,6 +244,7 @@ private:
 */
 typedef QList<SecureMessageSignature> SecureMessageSignatureList;
 
+
 /**
    \class SecureMessage qca_securemessage.h QtCrypto
 
@@ -286,6 +296,8 @@ else
    \sa SecureMessageSignature
    \sa OpenPGP
    \sa CMS
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT SecureMessage : public QObject, public Algorithm
 {
@@ -724,6 +736,12 @@ Q_SIGNALS:
 	void readyRead();
 
 	/**
+	   This signal is emitted when data has been accepted
+	   by the message processor.
+	*/
+	void bytesWritten(int bytes);
+
+	/**
 	   This signal is emitted when the message is fully
 	   processed.
 	*/
@@ -744,6 +762,8 @@ private:
 
    \sa SecureMessage
    \sa SecureMessageKey
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT SecureMessageSystem : public QObject, public Algorithm
 {
@@ -778,6 +798,9 @@ private:
 
    \sa SecureMessage
    \sa SecureMessageKey
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT OpenPGP : public SecureMessageSystem
 {
@@ -821,6 +844,9 @@ private:
 
    \sa SecureMessage
    \sa SecureMessageKey
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT CMS : public SecureMessageSystem
 {

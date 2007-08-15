@@ -33,6 +33,7 @@ class QDateTime;
 namespace XMPP {
 	class Jid;
 	class PubSubItem;
+	class PubSubRetraction;
 	class HTMLElement;
 	class HttpAuthRequest;
 	class XData;
@@ -95,6 +96,7 @@ namespace XMPP {
 		// JEP-0060
 		const QString& pubsubNode() const;
 		const QList<PubSubItem>& pubsubItems() const;
+		const QList<PubSubRetraction>& pubsubRetractions() const;
 
 		// JEP-0091
 		QDateTime timeStamp() const;

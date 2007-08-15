@@ -20,14 +20,16 @@
 
 #include "qca_keystore.h"
 
-#include "qcaprovider.h"
-
 #include <QCoreApplication>
 #include <QAbstractEventDispatcher>
 #include <QPointer>
 #include <QSet>
 #include <QMutex>
 #include <QWaitCondition>
+
+#include <stdlib.h> // abort
+
+#include "qcaprovider.h"
 
 Q_DECLARE_METATYPE(QCA::KeyStoreEntry)
 Q_DECLARE_METATYPE(QList<QCA::KeyStoreEntry>)
@@ -112,6 +114,8 @@ public:
 	bool startedAll;
 	bool busy;
 
+	QMutex updateMutex;
+
 	KeyStoreTracker()
 	{
 		self = this;
@@ -120,7 +124,7 @@ public:
 		qRegisterMetaType< QList<QCA::KeyStoreEntry> >("QList<QCA::KeyStoreEntry>");
 		qRegisterMetaType< QList<QCA::KeyStoreEntry::Type> >("QList<QCA::KeyStoreEntry::Type>");
 
-		connect(this, SIGNAL(updated_p()), SIGNAL(updated()), Qt::QueuedConnection);
+		connect(this, SIGNAL(updated_p()), SLOT(updated_locked()), Qt::QueuedConnection);
 
 		startedAll = false;
 		busy = true; // we start out busy
@@ -163,6 +167,20 @@ public:
 	{
 		QMutexLocker locker(&m);
 		dtext.clear();
+	}
+
+	// thread-safe
+	void addTarget(QObject *ksm)
+	{
+		QMutexLocker locker(&updateMutex);
+		ksm->connect(this, SIGNAL(updated()), SLOT(tracker_updated()), Qt::DirectConnection);
+	}
+
+	// thread-safe
+	void removeTarget(QObject *ksm)
+	{
+		QMutexLocker locker(&updateMutex);
+		disconnect(ksm);
 	}
 
 public slots:
@@ -307,6 +325,13 @@ signals:
 	void updated();
 	void updated_p();
 
+private slots:
+	void updated_locked()
+	{
+		QMutexLocker locker(&updateMutex);
+		emit updated();
+	}
+
 private:
 	bool haveProviderSource(Provider *p) const
 	{
@@ -358,8 +383,10 @@ private:
 		// remove any contexts that are gone
 		for(int n = 0; n < items.count(); ++n)
 		{
-			if(!keyStores.contains(items[n].storeContextId))
+			if(items[n].owner == c && !keyStores.contains(items[n].storeContextId))
 			{
+				QCA_logTextMessage(QString("keystore: updateStores remove %1").arg(items[n].storeContextId), Logger::Information);
+
 				items.removeAt(n);
 				--n; // adjust position
 
@@ -374,7 +401,7 @@ private:
 			int at = -1;
 			for(int n = 0; n < items.count(); ++n)
 			{
-				if(items[n].storeContextId == id)
+				if(items[n].owner == c && items[n].storeContextId == id)
 				{
 					at = n;
 					break;
@@ -389,14 +416,18 @@ private:
 				QString name = c->name(id);
 				bool isReadOnly = c->isReadOnly(id);
 				if(i.name != name || i.isReadOnly != isReadOnly)
+				{
+					QCA_logTextMessage(QString("keystore: updateStores update %1").arg(id), Logger::Information);
+					i.name = name;
+					i.isReadOnly = isReadOnly;
 					changed = true;
-
-				i.name = name;
-				i.isReadOnly = isReadOnly;
+				}
 			}
 			// otherwise, add it
 			else
 			{
+				QCA_logTextMessage(QString("keystore: updateStores add %1").arg(id), Logger::Information);
+
 				Item i;
 				i.trackerId = tracker_id_at++;
 				i.updateCount = 0;
@@ -482,8 +513,9 @@ private slots:
 		QCA_logTextMessage(QString("keystore: ksl_storeUpdated %1 %2").arg(c->provider()->name(), QString::number(id)), Logger::Information);
 
 		QMutexLocker locker(&m);
-		foreach(Item i, items)
+		for(int n = 0; n < items.count(); ++n)
 		{
+			Item &i = items[n];
 			if(i.owner == c && i.storeContextId == id)
 			{
 				++i.updateCount;
@@ -508,6 +540,7 @@ class KeyStoreThread : public SyncThread
 	Q_OBJECT
 public:
 	KeyStoreTracker *tracker;
+	QMutex call_mutex;
 
 	KeyStoreThread(QObject *parent = 0) : SyncThread(parent)
 	{
@@ -555,12 +588,23 @@ public:
 	}
 };
 
+// this function is thread-safe
 static QVariant trackercall(const char *method, const QVariantList &args = QVariantList())
 {
 	QVariant ret;
 	bool ok;
+
+	g_ksm->thread->call_mutex.lock();
 	ret = g_ksm->thread->call(KeyStoreTracker::instance(), method, args, &ok);
+	g_ksm->thread->call_mutex.unlock();
+
 	Q_ASSERT(ok);
+	if(!ok)
+	{
+		fprintf(stderr, "QCA: KeyStoreTracker call [%s] failed.\n", method);
+		abort();
+		return QVariant();
+	}
 	return ret;
 }
 
@@ -935,6 +979,7 @@ public:
 	void invalidate()
 	{
 		trackerId = -1;
+		unreg();
 	}
 
 	bool have_entryList_op() const
@@ -1044,6 +1089,7 @@ KeyStore::KeyStore(const QString &id, KeyStoreManager *keyStoreManager)
 	{
 		d->trackerId = i->trackerId;
 		d->item = *i;
+		d->reg();
 	}
 	else
 		d->trackerId = -1;
@@ -1051,6 +1097,8 @@ KeyStore::KeyStore(const QString &id, KeyStoreManager *keyStoreManager)
 
 KeyStore::~KeyStore()
 {
+	if(d->trackerId != -1)
+		d->unreg();
 	delete d;
 }
 
@@ -1222,12 +1270,14 @@ void KeyStoreManager::start()
 {
 	ensure_init();
 	QMetaObject::invokeMethod(KeyStoreTracker::instance(), "start", Qt::QueuedConnection);
+	trackercall("spinEventLoop");
 }
 
 void KeyStoreManager::start(const QString &provider)
 {
 	ensure_init();
 	QMetaObject::invokeMethod(KeyStoreTracker::instance(), "start", Qt::QueuedConnection, Q_ARG(QString, provider));
+	trackercall("spinEventLoop");
 }
 
 QString KeyStoreManager::diagnosticText()
@@ -1283,6 +1333,20 @@ public:
 		waiting = false;
 	}
 
+	~KeyStoreManagerPrivate()
+	{
+		// invalidate registered keystores
+		QList<KeyStore*> list;
+		QHashIterator<KeyStore*,int> it(trackerIdForKeyStore);
+		while(it.hasNext())
+		{
+			it.next();
+			list += it.key();
+		}
+		foreach(KeyStore *ks, list)
+			ks->d->invalidate();
+	}
+
 	// for keystore
 	void reg(KeyStore *ks, int trackerId)
 	{
@@ -1326,7 +1390,9 @@ public:
 
 	void do_update()
 	{
-		QPointer<QObject> self(this); // for signal-safety
+		// ksm doesn't have reset or state changes so we can
+		//   use QPointer here for full SS.
+		QPointer<QObject> self(this);
 
 		bool newbusy = KeyStoreTracker::instance()->isBusy();
 		QList<KeyStoreTracker::Item> newitems = KeyStoreTracker::instance()->getItems();
@@ -1435,6 +1501,8 @@ public:
 public slots:
 	void tracker_updated()
 	{
+		QCA_logTextMessage(QString().sprintf("keystore: %p: tracker_updated start", q), Logger::Information);
+
 		QMutexLocker locker(&m);
 		if(!pending)
 		{
@@ -1447,6 +1515,8 @@ public slots:
 			items = KeyStoreTracker::instance()->getItems();
 			w.wakeOne();
 		}
+
+		QCA_logTextMessage(QString().sprintf("keystore: %p: tracker_updated end", q), Logger::Information);
 	}
 
 	void update()
@@ -1485,13 +1555,14 @@ KeyStoreManager::KeyStoreManager(QObject *parent)
 {
 	ensure_init();
 	d = new KeyStoreManagerPrivate(this);
-	d->connect(KeyStoreTracker::instance(), SIGNAL(updated()),
-		SLOT(tracker_updated()), Qt::DirectConnection);
+	KeyStoreTracker::instance()->addTarget(d);
 	sync();
 }
 
 KeyStoreManager::~KeyStoreManager()
 {
+	Q_ASSERT(KeyStoreTracker::instance());
+	KeyStoreTracker::instance()->removeTarget(d);
 	delete d;
 }
 

@@ -1010,6 +1010,7 @@ public:
 	QList<MsgEvent> eventList;
 	QString pubsubNode;
 	QList<PubSubItem> pubsubItems;
+	QList<PubSubRetraction> pubsubRetractions;
 	QString eventId;
 	QString xencrypted, invite;
 	ChatState chatState;
@@ -1260,6 +1261,11 @@ const QString& Message::pubsubNode() const
 const QList<PubSubItem>& Message::pubsubItems() const
 {
 	return d->pubsubItems;
+}
+
+const QList<PubSubRetraction>& Message::pubsubRetractions() const
+{
+	return d->pubsubRetractions;
 }
 
 QDateTime Message::timeStamp() const
@@ -1775,6 +1781,9 @@ bool Message::fromStanza(const Stanza &s, int timeZoneOffset)
 										d->pubsubItems += PubSubItem(o.attribute("id"),item);
 									}
 								}
+							}
+							if (o.tagName() == "retract") {
+								d->pubsubRetractions += PubSubRetraction(o.attribute("id"));
 							}
 						}
 					}
@@ -3086,6 +3095,20 @@ const QString& PubSubItem::id() const
 const QDomElement& PubSubItem::payload() const 
 { 
 	return payload_; 
+}
+
+
+PubSubRetraction::PubSubRetraction() 
+{
+}
+
+PubSubRetraction::PubSubRetraction(const QString& id) : id_(id) 
+{ 
+}
+
+const QString& PubSubRetraction::id() const 
+{ 
+	return id_; 
 }
 
 

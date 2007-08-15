@@ -47,6 +47,7 @@ class CRL;
 class CertificateCollection;
 class CertificateChain;
 
+
 /**
    Certificate Request Format
 */
@@ -81,6 +82,8 @@ enum CertificateInfoTypeKnown
 };
 
 /**
+   \class CertificateInfoType qca_cert.h QtCrypto
+
    Certificate information type
 
    This class represents a type of information being stored in
@@ -111,6 +114,8 @@ enum CertificateInfoTypeKnown
 
    \sa Certificate::subjectInfo() and Certificate::issuerInfo()
    \sa CRL::issuerInfo()
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateInfoType
 {
@@ -219,7 +224,11 @@ private:
 };
 
 /**
+   \class CertificateInfoPair qca_cert.h QtCrypto
+
    One entry in a certificate information list
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateInfoPair
 {
@@ -277,6 +286,7 @@ private:
 	QSharedDataPointer<Private> d;
 };
 
+
 /**
    Known types of certificate constraints
 
@@ -308,6 +318,8 @@ enum ConstraintTypeKnown
 };
 
 /**
+   \class ConstraintType qca_cert.h QtCrypto
+
    Certificate constraint
 
    X.509 certificates can be constrained in their application - that is, some
@@ -315,6 +327,8 @@ enum ConstraintTypeKnown
    identify an approved purpose for a certificate.
 
    \note It is common for a certificate to have more than one purpose.
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT ConstraintType
 {
@@ -452,7 +466,18 @@ enum Validity
 	ErrorPathLengthExceeded, ///< The path length from the root CA to this certificate is too long
 	ErrorExpired,            ///< The certificate has expired, or is not yet valid (e.g. current time is earlier than notBefore time)
 	ErrorExpiredCA,          ///< The Certificate Authority has expired
-	ErrorValidityUnknown     ///< Validity is unknown
+	ErrorValidityUnknown = 64  ///< Validity is unknown
+};
+
+/**
+   The conditions to validate for a certificate
+*/
+enum ValidateFlags
+{
+	ValidateAll     = 0x00,  // Verify all conditions
+	ValidateRevoked = 0x01,  // Verify the certificate was not revoked
+	ValidateExpired = 0x02,  // Verify the certificate has not expired
+	ValidatePolicy  = 0x04   // Verify the certificate can be used for a specified purpose
 };
 
 /**
@@ -469,10 +494,14 @@ enum Validity
 typedef QMultiMap<CertificateInfoType, QString> CertificateInfo;
 
 /**
+   \class CertificateInfoOrdered qca_cert.h QtCrypto
+
    Ordered certificate properties type
 
    This container stores the information in the same sequence as
    the certificate format itself.
+
+   \ingroup UserAPI
 */
 class CertificateInfoOrdered : public QList<CertificateInfoPair>
 {
@@ -526,6 +555,8 @@ QCA_EXPORT QStringList makeFriendlyNames(const QList<Certificate> &list);
    %Certificate options
 
    \note In SPKAC mode, all options are ignored except for challenge
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateOptions
 {
@@ -615,6 +646,22 @@ public:
 	QStringList crlLocations() const;
 
 	/**
+	   list of URI locations for issuer certificate files
+
+	   each URI refers to the same issuer file
+
+	   For Certificate creation only
+	*/
+	QStringList issuerLocations() const;
+
+	/**
+	   list of URI locations for OCSP services
+
+	   For Certificate creation only
+	*/
+	QStringList ocspLocations() const;
+
+	/**
 	   test if the certificate is a CA cert
 
 	   \sa setAsCA
@@ -702,6 +749,22 @@ public:
 	void setCRLLocations(const QStringList &locations);
 
 	/**
+	   set the issuer certificate locations of the certificate
+
+	   each location refers to the same issuer file.
+
+	   \param locations a list of URIs to issuer certificate files
+	*/
+	void setIssuerLocations(const QStringList &locations);
+
+	/**
+	   set the OCSP service locations of the certificate
+
+	   \param locations a list of URIs to OCSP services
+	*/
+	void setOCSPLocations(const QStringList &locations);
+
+	/**
 	   set the certificate to be a CA cert
 
 	   \param pathLimit the number of intermediate certificates allowable
@@ -739,6 +802,8 @@ private:
    Public Key (X.509) certificate
 
    This class contains one X.509 certificate
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT Certificate : public Algorithm
 {
@@ -876,6 +941,18 @@ CertificateInfoOrdered info = cert.subjectInfoOrdered();
 	QStringList crlLocations() const;
 
 	/**
+	   list of URI locations for issuer certificate files
+
+	   each URI refers to the same issuer file
+	*/
+	QStringList issuerLocations() const;
+
+	/**
+	   list of URI locations for OCSP services
+	*/
+	QStringList ocspLocations() const;
+
+	/**
 	   The common name of the subject of the certificate
 
 	   Common names are normally the name of a person, company or
@@ -943,8 +1020,11 @@ CertificateInfoOrdered info = cert.subjectInfoOrdered();
 	   \param untrusted a collection of additional certificates, not
 	   necessarily trusted
 	   \param u the use required for the certificate
+	   \param vf the conditions to validate
+
+	   \note This function may block
 	*/
-	Validity validate(const CertificateCollection &trusted, const CertificateCollection &untrusted, UsageMode u = UsageAny) const;
+	Validity validate(const CertificateCollection &trusted, const CertificateCollection &untrusted, UsageMode u = UsageAny, ValidateFlags vf = ValidateAll) const;
 
 	/**
 	   Export the Certificate into a DER format
@@ -1018,7 +1098,7 @@ CertificateInfoOrdered info = cert.subjectInfoOrdered();
 
 	   \param host the name of the host to compare to
 	*/
-	bool matchesHostname(const QString &host) const;
+	bool matchesHostName(const QString &host) const;
 
 	/**
 	   Test for equality of two certificates
@@ -1046,8 +1126,8 @@ private:
 	QSharedDataPointer<Private> d;
 
 	friend class CertificateChain;
-	Validity chain_validate(const CertificateChain &chain, const CertificateCollection &trusted, const QList<CRL> &untrusted_crls, UsageMode u) const;
-	CertificateChain chain_complete(const CertificateChain &chain, const QList<Certificate> &issuers) const;
+	Validity chain_validate(const CertificateChain &chain, const CertificateCollection &trusted, const QList<CRL> &untrusted_crls, UsageMode u, ValidateFlags vf) const;
+	CertificateChain chain_complete(const CertificateChain &chain, const QList<Certificate> &issuers, Validity *result) const;
 };
 
 /**
@@ -1069,6 +1149,8 @@ private:
 
    \sa QCA::CertificateCollection for an alternative way to represent a group
    of Certificates that do not necessarily have a chained relationship.
+
+   \ingroup UserAPI
 */
 class CertificateChain : public QList<Certificate>
 {
@@ -1098,10 +1180,13 @@ public:
 	   \param untrusted_crls a list of additional CRLs, not necessarily
 	   trusted
 	   \param u the use required for the primary certificate
+	   \param vf the conditions to validate
+
+	   \note This function may block
 
 	   \sa Certificate::validate()
 	*/
-	inline Validity validate(const CertificateCollection &trusted, const QList<CRL> &untrusted_crls = QList<CRL>(), UsageMode u = UsageAny) const;
+	inline Validity validate(const CertificateCollection &trusted, const QList<CRL> &untrusted_crls = QList<CRL>(), UsageMode u = UsageAny, ValidateFlags vf = ValidateAll) const;
 
 	/**
 	   Complete a certificate chain for the primary certificate, using the
@@ -1109,8 +1194,10 @@ public:
 	   \a issuers, as possible issuers in the chain.  If there are issuers
 	   missing, then the chain might be incomplete (at the worst case, if
 	   no issuers exist for the primary certificate, then the resulting
-	   chain will consist of just the primary certificate).  To ensure a
-	   CertificateChain is fully complete, you must use validate().
+	   chain will consist of just the primary certificate).  Use the
+	   \a result argument to find out if there was a problem during
+	   completion.  A result of ValidityGood means the chain was completed
+	   successfully.
 
 	   The newly constructed CertificateChain is returned.
 
@@ -1118,24 +1205,27 @@ public:
 	   CertificateChain object.
 
 	   \param issuers a pool of issuers to draw from as necessary
+	   \param result the result of the completion operation
+
+	   \note This function may block
 
 	   \sa validate
 	*/
-	inline CertificateChain complete(const QList<Certificate> &issuers) const;
+	inline CertificateChain complete(const QList<Certificate> &issuers = QList<Certificate>(), Validity *result = 0) const;
 };
 
-inline Validity CertificateChain::validate(const CertificateCollection &trusted, const QList<CRL> &untrusted_crls, UsageMode u) const
+inline Validity CertificateChain::validate(const CertificateCollection &trusted, const QList<CRL> &untrusted_crls, UsageMode u, ValidateFlags vf) const
 {
 	if(isEmpty())
 		return ErrorValidityUnknown;
-	return first().chain_validate(*this, trusted, untrusted_crls, u);
+	return first().chain_validate(*this, trusted, untrusted_crls, u, vf);
 }
 
-inline CertificateChain CertificateChain::complete(const QList<Certificate> &issuers) const
+inline CertificateChain CertificateChain::complete(const QList<Certificate> &issuers, Validity *result) const
 {
 	if(isEmpty())
 		return CertificateChain();
-	return first().chain_complete(*this, issuers);
+	return first().chain_complete(*this, issuers, result);
 }
 
 /**
@@ -1144,6 +1234,8 @@ inline CertificateChain CertificateChain::complete(const QList<Certificate> &iss
    %Certificate Request
 
    A CertificateRequest is a unsigned request for a Certificate
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateRequest : public Algorithm
 {
@@ -1403,6 +1495,8 @@ private:
    \class CRLEntry qca_cert.h QtCrypto
 
    Part of a CRL representing a single certificate
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT CRLEntry
 {
@@ -1534,6 +1628,8 @@ private:
    \sa CertificateCollection for a way to handle Certificates
    and CRLs as a single entity.
    \sa CRLEntry for the %CRL segment representing a single Certificate.
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT CRL : public Algorithm
 {
@@ -1710,6 +1806,8 @@ private:
 
    \sa QCA::CertificateChain for a representation of a chain of Certificates
    related by signatures.
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateCollection
 {
@@ -1855,6 +1953,8 @@ private:
 
    A %Certificate Authority is used to generate Certificates and
    %Certificate Revocation Lists (CRLs).
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateAuthority : public Algorithm
 {
@@ -1951,6 +2051,8 @@ private:
    For more information on PKCS12 "Personal Information
    Exchange Syntax Standard", see <a
    href="ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1.pdf">ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1.pdf</a>. 
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT KeyBundle
 {
@@ -2174,6 +2276,8 @@ private:
    Note that with the latter method, the key is of no use besides
    being informational.  The key must be in a keyring
    (that is, inKeyring() == true) to actually do crypto with it.
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT PGPKey : public Algorithm
 {
@@ -2339,6 +2443,8 @@ private:
 };
 
 /**
+   \class KeyLoader qca_cert.h QtCrypto
+
    Asynchronous private key loader
 
    GUI applications generally must use KeyLoader to load private keys.  This
@@ -2372,6 +2478,8 @@ private:
    QCA::PrivateKey::fromPEMFile(), QCA::PrivateKey::fromPEM() and
    QCA::PrivateKey::fromDER(). %QCA provides synchronous key bundle loading
    using QCA::KeyBundle::fromArray() and QCA::KeyBundle::fromFile().
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT KeyLoader : public QObject
 {

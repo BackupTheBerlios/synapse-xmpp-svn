@@ -114,6 +114,7 @@ void SecureMessageKey::setPGPPublicKey(const PGPKey &pub)
 void SecureMessageKey::setPGPSecretKey(const PGPKey &sec)
 {
 	d->ensureType(SecureMessageKey::PGP);
+	Q_ASSERT(sec.isSecret());
 	d->pgp_sec = sec;
 }
 
@@ -137,6 +138,12 @@ void SecureMessageKey::setX509PrivateKey(const PrivateKey &k)
 {
 	d->ensureType(SecureMessageKey::X509);
 	d->cert_sec = k;
+}
+
+void SecureMessageKey::setX509KeyBundle(const KeyBundle &kb)
+{
+	setX509CertificateChain(kb.certificateChain());
+	setX509PrivateKey(kb.privateKey());
 }
 
 bool SecureMessageKey::havePrivate() const
@@ -254,12 +261,24 @@ public:
 	QByteArray detachedSig;
 	QString hashName;
 	SecureMessageSignatureList signers;
+	QString dtext;
 
-	Private(SecureMessage *_q)
+	QList<int> bytesWrittenArgs;
+	QTimer readyReadTrigger, bytesWrittenTrigger, finishedTrigger;
+
+	Private(SecureMessage *_q) : readyReadTrigger(this), bytesWrittenTrigger(this), finishedTrigger(this)
 	{
 		q = _q;
 		c = 0;
 		system = 0;
+
+		readyReadTrigger.setSingleShot(true);
+		bytesWrittenTrigger.setSingleShot(true);
+		finishedTrigger.setSingleShot(true);
+		connect(&readyReadTrigger, SIGNAL(timeout()), SLOT(t_readyRead()));
+		connect(&bytesWrittenTrigger, SIGNAL(timeout()), SLOT(t_bytesWritten()));
+		connect(&finishedTrigger, SIGNAL(timeout()), SLOT(t_finished()));
+
 		reset(ResetAll);
 	}
 
@@ -272,6 +291,11 @@ public:
 	{
 		if(c)
 			c->reset();
+
+		bytesWrittenArgs.clear();
+		readyReadTrigger.stop();
+		bytesWrittenTrigger.stop();
+		finishedTrigger.stop();
 
 		if(mode >= ResetSessionAndData)
 		{
@@ -296,13 +320,22 @@ public slots:
 	void updated()
 	{
 		bool sig_read = false;
+		bool sig_written = false;
 		bool sig_done = false;
+		int written = 0;
 		{
 			QByteArray a = c->read();
 			if(!a.isEmpty())
 			{
 				sig_read = true;
 				in.append(a);
+			}
+
+			int x = c->written();
+			if(x > 0)
+			{
+				sig_written = true;
+				written = x;
 			}
 		}
 
@@ -312,6 +345,7 @@ public slots:
 
 			success = c->success();
 			errorCode = c->errorCode();
+			dtext = c->diagnosticText();
 			if(success)
 			{
 				detachedSig = c->signature();
@@ -322,9 +356,29 @@ public slots:
 		}
 
 		if(sig_read)
-			QTimer::singleShot(0, q, SIGNAL(readyRead()));
+			readyReadTrigger.start();
+		if(sig_written)
+		{
+			bytesWrittenArgs += written;
+			bytesWrittenTrigger.start();
+		}
 		if(sig_done)
-			QTimer::singleShot(0, q, SIGNAL(finished()));
+			finishedTrigger.start();
+	}
+
+	void t_readyRead()
+	{
+		emit q->readyRead();
+	}
+
+	void t_bytesWritten()
+	{
+		emit q->bytesWritten(bytesWrittenArgs.takeFirst());
+	}
+
+	void t_finished()
+	{
+		emit q->finished();
 	}
 };
 
@@ -547,8 +601,7 @@ SecureMessageSignatureList SecureMessage::signers() const
 
 QString SecureMessage::diagnosticText() const
 {
-	// TODO
-	return QString();
+	return d->dtext;
 }
 
 //----------------------------------------------------------------------------

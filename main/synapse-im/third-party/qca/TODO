@@ -55,7 +55,6 @@
   - CMS
   - TLS ?
   - SASL ?
-  - QPipe
   - FileWatch / DirWatch
   - Complete the pkits tests
 
@@ -72,6 +71,7 @@
   emsa3Encode: implement in provider instead of qca?
   OCSP
   tls ocsp stapling
+  tls: pgp, psk auth ?
   internally managed intermediate object storage
   securemessage: algorithm selection for cms/pgp (and use SecurityLevel?)
   tls: renegotiation

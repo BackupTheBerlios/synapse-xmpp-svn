@@ -1,6 +1,7 @@
 /*
  * qca-sasl.cpp - SASL plugin for QCA
- * Copyright (C) 2003-2006  Justin Karneges <justin@affinix.com>, Michail Pishchagin
+ * Copyright (C) 2003-2007  Justin Karneges <justin@affinix.com>
+ * Copyright (C) 2006  Michail Pishchagin <mblsha@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -271,7 +272,7 @@ private:
 
 		localAddr = "";
 		remoteAddr = "";
-		maxoutbuf = 0;
+		maxoutbuf = 128;
 		sc_username = "";
 		sc_authzid = "";
 
@@ -323,7 +324,7 @@ private:
 
 	void setAuthCondition(int r)
 	{
-            qDebug() << "authcondition: " << r;
+            //qDebug() << "authcondition: " << r;
 		SASL::AuthCondition x;
 		switch(r) {
 			// common
@@ -350,11 +351,13 @@ private:
 
 	void getssfparams()
 	{
-		const int *ssfp;
-		int r = sasl_getprop(con, SASL_SSF, (const void **)&ssfp);
-		if(r == SASL_OK)
-			result_ssf = *ssfp;
-		sasl_getprop(con, SASL_MAXOUTBUF, (const void **)&maxoutbuf);
+		const void *maybe_sff;
+		if( SASL_OK == sasl_getprop( con, SASL_SSF, &maybe_sff ) )
+			result_ssf = *(const int*)maybe_sff;
+
+		const void *maybe_maxoutbuf;
+		if (SASL_OK == sasl_getprop( con, SASL_MAXOUTBUF, &maybe_maxoutbuf ) )
+			maxoutbuf = *(const int*)maybe_maxoutbuf;
 	}
 
 	static int scb_checkauth(sasl_conn_t *, void *context, const char *requested_user, unsigned, const char *auth_identity, unsigned, const char *, unsigned, struct propctx *)
@@ -646,16 +649,22 @@ public:
 		int r = sasl_client_new(service.toLatin1().data(), host.toLatin1().data(), localAddr.isEmpty() ? 0 : localAddr.toLatin1().data(), remoteAddr.isEmpty() ? 0 : remoteAddr.toLatin1().data(), callbacks, 0, &con);
 		if(r != SASL_OK) {
 			setAuthCondition(r);
+			doResultsReady();
 			return;
 		}
 
 		if(!setsecprops())
+		{
+			doResultsReady();
 			return;
+		}
 
 		result_mechlist = mechlist;
 		servermode = false;
 		step = 0;
 		result_result = Success;
+		clientTryAgain();
+		doResultsReady();
 		return;
 	}
 
@@ -686,11 +695,15 @@ public:
 		int r = sasl_server_new(service.toLatin1().data(), host.toLatin1().data(), !realm.isEmpty() ? realm.toLatin1().data() : 0, localAddr.isEmpty() ? 0 : localAddr.toLatin1().data(), remoteAddr.isEmpty() ? 0 : remoteAddr.toLatin1().data(), callbacks, 0, &con);
 		if(r != SASL_OK) {
 			setAuthCondition(r);
+			doResultsReady();
 			return;
 		}
 
 		if(!setsecprops())
+		{
+			doResultsReady();
 			return;
+		}
 
 		const char *ml;
 		r = sasl_listmech(con, 0, 0, " ", 0, &ml, 0, 0);
@@ -703,6 +716,7 @@ public:
 		ca_done = false;
 		ca_skip = false;
 		result_result = Success;
+		doResultsReady();
 		return;
 	}
 
@@ -716,6 +730,7 @@ public:
 		else
 			in_useClientInit = false;
 		serverTryAgain();
+		doResultsReady();
 	}
 
 	virtual SASL::Params clientParams() const
@@ -758,6 +773,7 @@ public:
 			serverTryAgain();
 		else
 			clientTryAgain();
+		doResultsReady();
 	}
 
 	virtual QString mech() const
@@ -802,10 +818,11 @@ public:
 		ssf_max = maxSSF;
 	}
 
-	virtual void waitForResultsReady(int msecs)
+	virtual bool waitForResultsReady(int msecs)
 	{
 		// TODO: for now, all operations block anyway
 		Q_UNUSED(msecs);
+		return true;
 	}
 
 	virtual void update(const QByteArray &from_net, const QByteArray &from_app)

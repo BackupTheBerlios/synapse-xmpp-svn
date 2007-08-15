@@ -13,7 +13,7 @@ unix:{
 	include(conf.pri)
 
 	!isEmpty(QCA_NO_TESTS) {
-		SUBDIRS -= unittest examples
+		SUBDIRS -= sub_unittest sub_examples
 	}
 
 	# API documentation
@@ -22,6 +22,6 @@ unix:{
 	QMAKE_EXTRA_TARGETS += apidox
 
 	# unittest
-	check.commands += cd unittest && make check && cd ..
-	QMAKE_EXTRA_TARGETS += check
+	test.commands += cd unittest && make test && cd ..
+	QMAKE_EXTRA_TARGETS += test
 }

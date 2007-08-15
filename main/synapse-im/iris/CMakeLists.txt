@@ -29,7 +29,7 @@ include_directories(
 ../iris/xmpp-core
 ../iris/xmpp-im
 ../iris/jabber
-../iris/libidn
+../iris
 ${QT_INCLUDE_DIR}
 ${QT_CORE_INCLUDE_DIR}
 ${QT_QTNETWORK_INCLUDE_DIR}

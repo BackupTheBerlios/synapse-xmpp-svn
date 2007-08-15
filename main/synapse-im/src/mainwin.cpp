@@ -241,8 +241,10 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 //: Q3MainWindow(0,name,(_onTop ? Qt::WStyle_StaysOnTop : Qt::Widget) | (_asTool ? (Qt::WStyle_Tool |TOOLW_FLAGS) : Qt::Widget))
 {
 	setObjectName(name);
-  	if ( option.brushedMetal )
+	setAttribute(Qt::WA_AlwaysShowToolTips);
+  	if ( option.brushedMetal ) {
 		setAttribute(Qt::WA_MacMetalStyle);
+	}
 	d = new Private(psi, this);
 
 #ifdef HAVE_DBUS
@@ -312,16 +314,15 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	d->trayMenu = d->statusMenu;
 #else
 	d->trayMenu = new QMenu(this);
+	buildTrayMenu();
+	connect(d->trayMenu, SIGNAL(aboutToShow()), SLOT(buildTrayMenu()));
 #endif
 
 
 	buildStatusMenu();
-	buildTrayMenu();
 	buildOptionsMenu();
 	connect(d->optionsMenu, SIGNAL(aboutToShow()), SLOT(buildOptionsMenu()));
 
-	d->optionsButton->setMenu( d->optionsMenu );
-	d->statusButton->setMenu( d->statusMenu );
 
 	X11WM_CLASS("main");
 
@@ -331,7 +332,6 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	updateCaption();
 
 	d->registerActions();
-	buildToolbars();
 	
 	connect(d->psi->contactList(), SIGNAL(accountFeaturesChanged()), SLOT(accountFeaturesChanged()));
 	accountFeaturesChanged();
@@ -390,6 +390,10 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	//else 
 	//	mainMenuBar()->show();
 #endif
+	d->optionsButton->setMenu( d->optionsMenu );
+	d->statusButton->setMenu( d->statusMenu );
+	
+	buildToolbars();
 	
 	setWindowOpacity(double(qMax(MINIMUM_OPACITY,PsiOptions::instance()->getOption("options.ui.contactlist.opacity").toInt()))/100);
 
@@ -644,7 +648,7 @@ void MainWin::buildStatusMenu()
 	d->statusMenu->insertSeparator();
 
 	buildStatusLastMenu();
-	updateStatusLastMenu();
+//	updateStatusLastMenu();
 
 	d->statusMenu->insertSeparator();
 	d->getAction("status_offline")->addTo(d->statusMenu);

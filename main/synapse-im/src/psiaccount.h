@@ -40,6 +40,7 @@ namespace XMPP
 	class Stream;
 	class QCATLSHandler;
 	class PubSubItem;
+	class PubSubRetraction;
 	class RosterItem;
 	class Client;
 	//class StreamError;
@@ -345,6 +346,7 @@ private slots:
 	void enableNotifyOnline();
 	
 	void itemPublished(const Jid&, const QString&, const PubSubItem&);
+	void itemRetracted(const Jid&, const QString&, const PubSubRetraction&);
 	
 	void chatMessagesRead(const Jid &);
 

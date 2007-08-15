@@ -171,6 +171,29 @@ class SParams
 class SimpleSASLContext : public QCA::SASLContext
 {
 public:
+		class ParamsMutable
+		{
+		public:
+			/**
+			   User is held
+			*/
+			bool user;
+
+			/**
+			   Authorization ID is held
+			*/
+			bool authzid;
+
+			/**
+			   Password is held
+			*/
+			bool pass;
+
+			/**
+			   Realm is held
+			*/
+			bool realm;
+		};
 	// core props
 	QString service, host;
 
@@ -182,8 +205,8 @@ public:
 	QString mechanism_;
 	QString out_mech;
 
-	SParams need;
-	SParams have;
+	ParamsMutable need;
+	ParamsMutable have;
 	QString user, authz, realm;
 	QCA::SecureArray pass;
 	Result result_;
@@ -257,12 +280,13 @@ public:
 		}
 
 		if(!capable || mechanism_.isEmpty()) {
+ 			authCondition_ = QCA::SASL::NoMechanism;
 			result_ = Error;
-			authCondition_ = QCA::SASL::NoMechanism;
 			if (!capable)
 				qWarning("simplesasl.cpp: Not enough capabilities");
 			if (mechanism_.isEmpty()) 
 				qWarning("simplesasl.cpp: No mechanism available");
+ 			QMetaObject::invokeMethod(this, "resultsReady", Qt::QueuedConnection);
 			return;
 		}
 
@@ -277,25 +301,27 @@ public:
 	}
 
 	virtual void tryAgain() {
+ 		// All exits of the method must emit the ready signal
+ 		// so all exits go through a goto ready; 
 		if(step == 0) {
 			out_mech = mechanism_;
 			
 #ifdef SIMPLESASL_PLAIN
 			// PLAIN 
 			if (out_mech == "PLAIN") {
-				// Firnst, check if we have everything
+				// First, check if we have everything
 				if(need.user || need.pass) {
 					qWarning("simplesasl.cpp: Did not receive necessary auth parameters");
 					result_ = Error;
-					return;
+					goto ready;
 				}
 				if(!have.user)
 					need.user = true;
 				if(!have.pass)
 					need.pass = true;
 				if(need.user || need.pass) {
-					result_ = Params; //NeedParams
-					return;
+					result_ = Params;
+					goto ready;
 				}
 
 				// Continue with authentication
@@ -315,7 +341,7 @@ public:
 			if(need.user || need.authzid || need.pass || need.realm) {
 				qWarning("simplesasl.cpp: Did not receive necessary auth parameters");
 				result_ = Error;
-				return;
+				goto ready;
 			}
 			// see if some params are needed
 			if(!have.user)
@@ -325,8 +351,8 @@ public:
 			if(!have.pass)
 				need.pass = true;
 			if(need.user || need.authzid || need.pass) {
-				result_ = Params; //NeedParams;
-				return;
+				result_ = Params;
+				goto ready;
 			}
 
 			// get props
@@ -335,7 +361,7 @@ public:
 			if(!in.fromString(cs)) {
 				authCondition_ = QCA::SASL::BadProtocol;
 				result_ = Error;
-				return;
+				goto ready;
 			}
 			//qDebug() << (QString("simplesasl.cpp: IN: %1").arg(QString(in.toString())));
 
@@ -406,6 +432,8 @@ public:
 			out_buf.resize(0);
 			result_ = Success;
 		}
+ready:
+		QMetaObject::invokeMethod(this, "resultsReady", Qt::QueuedConnection);
 	}
 
 	virtual void update(const QByteArray &from_net, const QByteArray &from_app) {
@@ -416,10 +444,11 @@ public:
 		QMetaObject::invokeMethod(this, "resultsReady", Qt::QueuedConnection);
 	}
 
-	virtual void waitForResultsReady(int msecs) {
+	virtual bool waitForResultsReady(int msecs) {
 
 		// TODO: for now, all operations block anyway
 		Q_UNUSED(msecs);
+		return true;
 	}
 
 	virtual Result result() const {
@@ -489,7 +518,9 @@ public:
 		}
 	}
 
-	virtual QStringList realmlist() const {
+	virtual QStringList realmlist() const
+	{
+		// TODO
 		return QStringList();
 	}
 
@@ -507,8 +538,14 @@ public:
 		return s;
 	}
 	
-	virtual void startServer(const QString &, bool) {}
-	virtual void serverFirstStep(const QString &, const QByteArray *) { }
+	virtual void startServer(const QString &, bool) {
+		result_ =  QCA::SASLContext::Error;
+		QMetaObject::invokeMethod(this, "resultsReady", Qt::QueuedConnection);
+	}
+	virtual void serverFirstStep(const QString &, const QByteArray *) {
+		result_ =  QCA::SASLContext::Error;
+		QMetaObject::invokeMethod(this, "resultsReady", Qt::QueuedConnection);
+	}
 
 };
 

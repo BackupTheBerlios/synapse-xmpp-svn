@@ -331,6 +331,8 @@ void FileTransferHandler::ft_accepted()
 
 	if(d->sending)
 		accepted();
+	else
+		statusMessage(QString());
 }
 
 void FileTransferHandler::ft_connected()
@@ -885,7 +887,9 @@ void FileRequestDlg::ft_accepted()
 
 void FileRequestDlg::ft_statusMessage(const QString &s)
 {
-	lb_status->setText(s);
+	if(!s.isEmpty()) {
+		lb_status->setText(s);
+	}
 
 	// stop the timer at first activity
 	if(d->t.isActive())

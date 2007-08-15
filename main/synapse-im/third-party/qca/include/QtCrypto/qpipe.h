@@ -65,10 +65,13 @@ class QCA_EXPORT QPipeDevice : public QObject
 {
 	Q_OBJECT
 public:
+        /**
+	   The type of device
+	*/
 	enum Type
 	{
-		Read,
-		Write
+		Read, ///< The pipe end can be read from
+		Write ///< The pipe end can be written to
 	};
 
 	QPipeDevice(QObject *parent = 0);
@@ -101,62 +104,245 @@ private:
 	Private *d;
 };
 
-// buffered higher-level pipe.  use this one.
+/**
+   \class QPipeEnd qpipe.h QtCrypto
+
+   A buffered higher-level pipe end
+
+   This is either the read end or write end of a QPipe.
+
+   \ingroup UserAPI
+*/
 class QCA_EXPORT QPipeEnd : public QObject
 {
 	Q_OBJECT
 public:
+
+	/**
+	   The type of error
+	*/ 
 	enum Error
 	{
-		ErrorEOF,
-		ErrorBroken
+		ErrorEOF,    ///< End of file error
+		ErrorBroken  ///< Broken pipe error
 	};
 
+	/**
+	   Standard constructor
+	*/
 	QPipeEnd(QObject *parent = 0);
+
 	~QPipeEnd();
 
+	/**
+	   Reset the pipe end to an inactive state
+	*/
 	void reset();
 
+	/**
+	   The type of pipe end (either read or write)
+	*/
 	QPipeDevice::Type type() const;
+
+	/**
+	   Determine whether the pipe end is valid.
+
+	   \note This does not mean the pipe is ready to be used - you
+	   may need to call enable() first
+	*/
 	bool isValid() const;
+
+	/**
+	   Pipe identification
+	*/
 	Q_PIPE_ID id() const;
+
+	/**
+	   Pipe identification
+	*/
 	int idAsInt() const;
 
+	/**
+	   Take over an existing pipe handle
+
+	   \param id the pipe handle
+	   \param t the type of the pipe (read or write)
+	*/
 	void take(Q_PIPE_ID id, QPipeDevice::Type t);
+
 #ifdef QPIPE_SECURE
+	/**
+	   Sets whether the pipe uses secure memory for read/write
+
+	   Enabling this may reduce performance, and it should only be used if
+	   sensitive data is being transmitted (such as a passphrase).
+	*/
 	void setSecurityEnabled(bool secure);
 #endif
+
+	/**
+	   Enable the endpoint for the pipe
+
+	   When an endpoint is created, it is not
+	   able to be used until it is enabled.
+	*/
 	void enable();
+
+	/**
+	   Close the end of the pipe
+
+	   \sa closed()
+	*/
 	void close();
+
+	/**
+	   Let go of the active pipe handle, but don't close it
+
+	   Use this before destructing QPipeEnd, if you don't want the pipe
+	   to automatically close.
+	*/
 	void release();
+
+	/**
+	   Sets whether the pipe should be inheritable to child processes
+
+	   Returns true if inheritability was successfully changed, otherwise
+	   false.
+	*/
 	bool setInheritable(bool enabled);
 
-	void finalize(); // do an immediate read, and invalidate
-	void finalizeAndRelease(); // same as above, but don't close pipe
+	/**
+	   Clear the contents of the pipe, and invalidate the pipe
+	*/
+	void finalize();
 
+	/**
+	   Clear the contents of the pipe, and release the pipe
+	*/
+	void finalizeAndRelease();
+
+	/**
+	   Determine how many bytes are available to be read.
+
+	   This only makes sense at the read end of the pipe
+
+	   \sa readyRead() for a signal that can be used to determine
+	   when there are bytes available to read.
+	*/
 	int bytesAvailable() const;
+
+	/**
+	   Returns the number of bytes pending to write
+
+	   This only makes sense at the write end of the pipe
+
+	   \sa bytesWritten() for a signal that can be used to determine
+	   when bytes have been written
+	*/
 	int bytesToWrite() const;
 
-	// normal i/o
+	/**
+	   Read bytes from the pipe. 
+
+	   You can only call this on the read end of the pipe
+
+	   If the pipe is using secure memory, you should use readSecure()
+
+	   \param bytes the number of bytes to read (-1 for all 
+	   content).
+	*/
 	QByteArray read(int bytes = -1);
+
+	/**
+	   Write bytes to the pipe.
+
+	   You can only call this on the write end of the pipe.
+
+	   If the pipe is using secure memory, you should use writeSecure().
+
+	   \param a the array to write to the pipe
+	*/
 	void write(const QByteArray &a);
 
 #ifdef QPIPE_SECURE
-	// secure i/o
+	/**
+	   Read bytes from the pipe. 
+
+	   You can only call this on the read end of the pipe
+
+	   If the pipe is using insecure memory, you should use read()
+
+	   \param bytes the number of bytes to read (-1 for all 
+	   content).
+	*/
 	SecureArray readSecure(int bytes = -1);
+
+	/**
+	   Write bytes to the pipe.
+
+	   You can only call this on the write end of the pipe.
+
+	   If the pipe is using insecure memory, you should use write().
+
+	   \param a the array to write to the pipe
+	*/
 	void writeSecure(const SecureArray &a);
 #endif
 
+	/**
+	   Returns any unsent bytes queued for writing
+
+	   If the pipe is using secure memory, you should use
+	   takeBytesToWriteSecure().
+	*/
 	QByteArray takeBytesToWrite();
 
 #ifdef QPIPE_SECURE
+	/**
+	   Returns any unsent bytes queued for writing
+
+	   If the pipe is using insecure memory, you should use
+	   takeBytesToWrite().
+	*/
 	SecureArray takeBytesToWriteSecure();
 #endif
 
 Q_SIGNALS:
+	/**
+	   Emitted when there are bytes available to be read
+	   from the read end of the pipe.
+
+	   \sa bytesAvailable()
+	*/
 	void readyRead();
+
+	/**
+	   Emitted when bytes have been written to the 
+	   write end of the pipe.
+
+	   \param bytes the number of bytes written
+	*/
 	void bytesWritten(int bytes);
+
+	/**
+	   Emitted when this end of the pipe is closed as a result of calling
+	   close()
+
+	   If this is the write end of the pipe and there is data still
+	   pending to write, this signal will be emitted once all of the data
+	   has been written.
+
+	   To be notified if the other end of the pipe has been closed, see
+	   error().
+	*/
 	void closed();
+
+	/**
+	   Emitted when the pipe encounters an error trying to read or write,
+	   or if the other end of the pipe has been closed
+
+	   \param e the reason for error
+	*/
 	void error(QCA::QPipeEnd::Error e);
 
 private:
@@ -168,19 +354,28 @@ private:
 };
 
 /**
+   \class QPipe qpipe.h QtCrypto
+
    A FIFO buffer (named pipe) abstraction
 
-   This class creates a full buffer, consisting of two ends (QPipeEnd).
+   This class creates a full buffer, consisting of two ends
+   (QPipeEnd). You can obtain each end (after calling create()) using
+   readEnd() and writeEnd(), however you must call enable() on each end
+   before using the pipe.
 
    By default, the pipe ends are not inheritable by child processes.  On
    Windows, the pipe is created with inheritability disabled.  On Unix, the
    FD_CLOEXEC flag is set on each end's file descriptor.
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT QPipe
 {
 public:
 	/**
 	   Standard constructor
+
+	   \note You must call create() before using the pipe ends.
 
 	   \param parent the parent object for this object
 	*/
@@ -189,20 +384,23 @@ public:
 	~QPipe();
 
 	/**
-	   reset the pipe
+	   Reset the pipe.
+
+	   At this point, the readEnd() and writeEnd() calls
+	   will no longer be valid.
 	*/
 	void reset();
 
 #ifdef QPIPE_SECURE
 	/**
-	   create the pipe
+	   Create the pipe
 
 	   \param secure whether to use secure memory (true) or not (false)
 	*/
 	bool create(bool secure = false);
 #else
 	/**
-	   create the pipe
+	   Create the pipe
 	*/
 	bool create();
 #endif

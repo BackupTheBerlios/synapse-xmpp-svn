@@ -19,6 +19,10 @@
 #include <QtCrypto>
 #include <QtPlugin>
 
+#ifdef Q_OS_MAC
+#include <QFileInfo>
+#endif
+
 #ifdef Q_OS_WIN
 # include<windows.h>
 #endif
@@ -58,6 +62,12 @@ static QString find_bin()
 	QString s = find_reg_gpgProgram();
 	if(!s.isNull())
 		bin = s;
+#endif
+#ifdef Q_OS_MAC
+	// mac-gpg
+	QFileInfo fi("/usr/local/bin/gpg");
+	if(fi.exists())
+		bin = fi.filePath();
 #endif
 	return bin;
 }
@@ -683,6 +693,7 @@ public:
 	SecureMessage::SignMode signMode;
 	SecureMessage::Format format;
 	QByteArray in, out, sig;
+	int wrote;
 	bool ok, wasSigned;
 	GpgOp::Error op_err;
 	SecureMessageSignature signer;
@@ -695,6 +706,7 @@ public:
 	MyMessageContext(MyOpenPGPContext *_sms, Provider *p) : MessageContext(p, "pgpmsg"), gpg(find_bin())
 	{
 		sms = _sms;
+		wrote = 0;
 		ok = false;
 		wasSigned = false;
 
@@ -726,6 +738,7 @@ public:
 
 	virtual void reset()
 	{
+		wrote = 0;
 		ok = false;
 		wasSigned = false;
 	}
@@ -811,6 +824,13 @@ public:
 		return a;
 	}
 
+	virtual int written()
+	{
+		int x = wrote;
+		wrote = 0;
+		return x;
+	}
+
 	virtual void end()
 	{
 		gpg.endWrite();
@@ -888,7 +908,7 @@ public:
 		return _finished;
 	}
 
-	virtual void waitForFinished(int msecs)
+	virtual bool waitForFinished(int msecs)
 	{
 		// FIXME
 		Q_UNUSED(msecs);
@@ -925,7 +945,7 @@ public:
 				if(!asker.accepted())
 				{
 					seterror();
-					return;
+					return true;
 				}
 
 				gpg.submitPassphrase(asker.password());
@@ -937,7 +957,7 @@ public:
 				if(!tokenAsker.accepted())
 				{
 					seterror();
-					return;
+					return true;
 				}
 
 				gpg.cardOkay();
@@ -947,6 +967,7 @@ public:
 		}
 
 		complete();
+		return true;
 	}
 
 	virtual bool success() const
@@ -1005,9 +1026,7 @@ private slots:
 
 	void gpg_bytesWritten(int bytes)
 	{
-		Q_UNUSED(bytes);
-
-		// do nothing
+		wrote += bytes;
 	}
 
 	void gpg_finished()

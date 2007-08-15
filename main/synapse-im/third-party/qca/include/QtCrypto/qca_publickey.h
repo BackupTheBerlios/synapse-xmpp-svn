@@ -145,6 +145,8 @@ QCA_EXPORT QByteArray emsa3Encode(const QString &hashName, const QByteArray &dig
    \class DLGroup qca_publickey.h QtCrypto
 
    A discrete logarithm group
+
+   \ingroup UserAPI
 */
 class QCA_EXPORT DLGroup
 {
@@ -219,6 +221,9 @@ private:
 
    General superclass for public (PublicKey) and private (PrivateKey) keys
    used with asymmetric encryption techniques.
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT PKey : public Algorithm
 {
@@ -474,6 +479,9 @@ private:
    \class PublicKey qca_publickey.h QtCrypto
 
    Generic public key
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT PublicKey : public PKey
 {
@@ -752,6 +760,9 @@ private:
    \class PrivateKey qca_publickey.h QtCrypto
 
    Generic private key
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT PrivateKey : public PKey
 {
@@ -1019,7 +1030,10 @@ private:
    Class for generating asymmetric key pairs
 
    This class is used for generating asymmetric keys (public/private key
-   pairs)
+   pairs).
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT KeyGenerator : public QObject
 {
@@ -1155,6 +1169,9 @@ private:
    \class RSAPublicKey qca_publickey.h QtCrypto
 
    RSA Public Key
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT RSAPublicKey : public PublicKey
 {
@@ -1203,6 +1220,9 @@ public:
    \class RSAPrivateKey qca_publickey.h QtCrypto
 
    RSA Private Key
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT RSAPrivateKey : public PrivateKey
 {
@@ -1263,6 +1283,9 @@ public:
    \class DSAPublicKey qca_publickey.h QtCrypto
 
    Digital Signature %Algorithm Public Key
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT DSAPublicKey : public PublicKey
 {
@@ -1304,6 +1327,9 @@ public:
    \class DSAPrivateKey qca_publickey.h QtCrypto
 
    Digital Signature %Algorithm Private Key
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT DSAPrivateKey : public PrivateKey
 {
@@ -1344,6 +1370,9 @@ public:
    \class DHPublicKey qca_publickey.h QtCrypto
 
    Diffie-Hellman Public Key
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT DHPublicKey : public PublicKey
 {
@@ -1385,6 +1414,9 @@ public:
    \class DHPrivateKey qca_publickey.h QtCrypto
 
    Diffie-Hellman Private Key
+
+   \ingroup UserAPI
+
 */
 class QCA_EXPORT DHPrivateKey : public PrivateKey
 {
@@ -1420,7 +1452,7 @@ public:
 	*/
 	BigInteger x() const;
 };
-
+/*@}*/
 }
 
 #endif
