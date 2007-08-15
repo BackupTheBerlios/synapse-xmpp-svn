@@ -95,23 +95,6 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 				parent->removeChild(clc);
 				parent->appendChild(clc);
 			}
-			
-/*			SIMContactListItem *parent = clc->parent();
-			parent->removeChild(clc);
-			parent->appendChild(clc);
-			if(parent->type() == SIMContactListItem::Group)
-				parent->updateParents();
-			else {
-				clc->updateParents();
-				if(clc->parent() != parent) {
-					parent = clc->parent();
-					parent->updateParent();
-				}
-			}*/
-//			contactList()->updateVisibleParents();
-//			contactList()->updateInvisibleParents();
-//			if(!contactList()->search().isEmpty())
-//				contactList()->updateSearchParents();
 			contactList()->dataChanged();
 			return;
 		} else {
@@ -120,7 +103,6 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 			parent->removeChild(clc);
 			delete clc;
 			clc = NULL;
-			//contactList()->dataChanged();
 		}
 	}
 
@@ -147,10 +129,6 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 		clc = new SIMContactListContact(u, account(), contactList(), group);
 		group->appendChild(clc);
 		group->updateParents();
-// 		contactList()->updateVisibleParents();
-// 		contactList()->updateInvisibleParents();
-// 		if(!contactList()->search().isEmpty())
-// 			contactList()->updateSearchParents();
 		contactList()->dataChanged();
 	}
 }

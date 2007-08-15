@@ -259,7 +259,7 @@ PsiCon::PsiCon()
 
 	for(int i=0; i<5; i++)
 	{
-		d->lastStatusStrings[i].status = "";
+		d->lastStatusStrings[i].status = "None";
 		d->lastStatusStrings[i].type = Status::Offline;
 	}
 	useSound = true;

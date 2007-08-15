@@ -209,9 +209,10 @@ int SIMContactListItem::compare(SIMContactListItem *it1, SIMContactListItem *it2
 		SIMContactListGroup* it1_group = dynamic_cast<SIMContactListGroup*>(it1);
 		SIMContactListGroup* it2_group = dynamic_cast<SIMContactListGroup*>(it2);
 		if (it1_group && it2_group) {
-			if (it1_group->name() == QObject::tr("General") || it2_group->name() == QObject::tr("Agents/Transports"))
+			if (it1_group->name() == QObject::tr("General") || it2_group->name() == QObject::tr("Agents/Transports") || it2_group->name() == QObject::tr("Not in list"))
 				return -1;
-			if (it2_group->name() == QObject::tr("General") || it1_group->name() == QObject::tr("Agents/Transports"))
+			if (it2_group->name() == QObject::tr("General") || it1_group->name() == QObject::tr("Agents/Transports") ||
+			it1_group->name() == QObject::tr("Not in list"))
 				return 1;
 
 			if (it1_group->name() < it2_group->name()) {
@@ -235,7 +236,7 @@ int SIMContactListItem::compare(SIMContactListItem *it1, SIMContactListItem *it2
 
 void SIMContactListItem::updateParent()
 {
-	SIMContactListItem *newParent;
+	SIMContactListItem *newParent = parent();
 
 	if (type_ == Contact) {
 				SIMContactListContact *contact;

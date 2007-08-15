@@ -464,7 +464,7 @@ void UserProfile::reset()
 	lastStatusString = "";
 	for(int i=0; i<5; i++)
 	{
-		lastStatusStrings[i].status = "";
+		lastStatusStrings[i].status = "None";
 		lastStatusStrings[i].type = XMPP::Status::Offline;
 	}
 	useSound = TRUE;

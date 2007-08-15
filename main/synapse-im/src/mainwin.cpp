@@ -278,22 +278,20 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	setCentralWidget ( center );
 
 	d->vb_main = new QVBoxLayout(center);
-//	cvlist = new ContactView(center);
 	cvlist = new SIMContactListView(center);
 	cvlist->setItemDelegate(new SIMContactDelegate);
 	((SIMContactList *)d->psi->contactList())->setContactListView(cvlist);
 	SIMContactListModel *model = new SIMContactListModel(d->psi->contactList());
 	cvlist->setModel(model);
-//	cvlist->indentation();
 
-	int layoutMargin = 0; // 2 ------- zmiana
+	int layoutMargin = 0;
 #ifdef Q_WS_MAC
 	layoutMargin = 0;
 	cvlist->setFrameShape(QFrame::NoFrame);
 #endif
 	d->vb_main->setMargin(layoutMargin);
 	d->vb_main->setSpacing(layoutMargin);
-//-------------------------- Here can go search toolbar!!
+
 	d->cb_search = new QComboBox(center);
 	d->cb_search->setEditable(true);
 	d->blockString = false;
@@ -434,11 +432,8 @@ void MainWin::registerAction( IconAction *action )
 		{ "show_offline", toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowOffline(bool) ) },
 		{ "show_away",    toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowAway(bool) ) },
 		{ "show_groups", toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowGroups(bool) ) },
-//		{ "show_hidden",  toggled, cvlist, SLOT( setShowHidden(bool) ) },
 		{ "show_agents",  toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowAgents(bool) ) },
 		{ "show_self",    toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowSelf(bool) ) },
-//		{ "show_statusmsg", toggled, cvlist, SLOT( setShowStatusMsg(bool) ) },
-//		{ "show_no_offline_status_msg", toggled, cvlist, SLOT( setShowOfflineWithoutStatusMessage(bool) ) },
 
 		{ "button_options", activated, this, SIGNAL( doOptions() ) },
 
@@ -499,13 +494,10 @@ void MainWin::registerAction( IconAction *action )
 		const char *slot;
 	} reverseactionlist[] = {
 		{ "show_away",    ((SIMContactList*)d->psi->contactList()), SIGNAL( showAway(bool) ), setChecked },
-//		{ "show_hidden",  cvlist, SIGNAL( showHidden(bool) ), setChecked },
 		{ "show_offline", ((SIMContactList*)d->psi->contactList()), SIGNAL( showOffline(bool) ), setChecked },
 		{ "show_groups",  ((SIMContactList*)d->psi->contactList()), SIGNAL( showGroups(bool) ), setChecked },
 		{ "show_self",    ((SIMContactList*)d->psi->contactList()), SIGNAL( showSelf(bool) ), setChecked },
 		{ "show_agents",  ((SIMContactList*)d->psi->contactList()), SIGNAL( showAgents(bool) ), setChecked },
-//		{ "show_statusmsg", cvlist, SIGNAL( showStatusMsg(bool) ), setChecked },
-//		{ "show_no_offline_status_msg", cvlist, SIGNAL( showOfflineWithoutStatusMessage(bool) ), setChecked },
 		{ "", 0, 0, 0 }
 	};
 
@@ -517,9 +509,6 @@ void MainWin::registerAction( IconAction *action )
 			if (aName == "show_statusmsg") {
 				action->setChecked( PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.show").toBool() );
 			}
-/*			else if (aName == "show_no_offline_status_msg") {
-				action->setChecked( PsiOptions::instance()->getOption("options.ui.contactlist.status-messages.show-offline-without-status-message").toBool() );
-			}*/
 			else
 				action->setChecked( true );
 		}
@@ -585,25 +574,7 @@ void MainWin::setUseDock(bool use)
 
 void MainWin::searchRoster(const QString &text)
 {
-/*	d->searchString = text;
-	QTimer::singleShot(800, this, SLOT(searchRoster2()));
-	if(!d->blockString)
-	{
-		d->blockString = true;
-		d->searchString2 = d->searchString;
-	}*/
 	d->psi->contactList()->setSearch(text);
-}
-
-void MainWin::searchRoster2()
-{
-/*	if(d->searchString2 != d->searchString)
-		d->searchString2 = d->searchString;
-	else {
-		d->blockString = false;
-		d->searchString2 = d->searchString;*/
-//		cvlist->setSearch(d->searchString2);
-//	}
 }
 
 void MainWin::updateStatusLastMenu()
@@ -643,26 +614,20 @@ void MainWin::updateStatusLastMenu()
 
 void MainWin::buildStatusLastMenu()
 {
-//	d->getAction("status_lastly")->addTo(d->statusMenu);
 	if(d->statusLastMenu)
 	{
 		delete d->statusLastMenu;
 		d->statusLastMenu = 0;
 	}
 
-//	d->statusLastMenu = new QMenu(0);
 	d->statusLastMenu = d->statusMenu->addMenu(IconsetFactory::iconPtr("status/ask")->icon(),tr("Lastly used.."));
-//	d->statusLastMapper = new QSignalMapper();
+
 	for(int i=0; i<5; i++)
 	{
 		d->statusLastAction[i] = d->statusLastMenu->addAction("Last 1");
 		d->statusLastMapper->setMapping(d->statusLastAction[i], i);
 		connect (d->statusLastAction[i], SIGNAL(activated()), d->statusLastMapper, SLOT(map()));
 	}
-// 		IconAction *action = getAction( aName );
-
-// 		statusMapper->setMapping(action, statuslist[i].id);
-// 		statusActions[action] = statuslist[i].id;
 }
 
 void MainWin::buildStatusMenu()
@@ -1271,94 +1236,8 @@ void MainWin::setWindowIcon(const QPixmap& p)
 }
 #endif
 
-#if 0
-#if defined(Q_WS_WIN)
-#include <windows.h>
-void MainWin::showNoFocus()
-{
-	clearWState( WState_ForceHide );
-
-	if ( testWState(WState_Visible) ) {
-		SetWindowPos(winId(),HWND_TOPMOST,0,0,0,0, SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOSIZE);
-		if(!d->onTop)
-			SetWindowPos(winId(),HWND_NOTOPMOST,0,0,0,0, SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOSIZE);
-		return; // nothing to do
-	}
-
-	if ( isTopLevel() && !testWState( WState_Resized ) )  {
-		// do this before sending the posted resize events. Otherwise
-		// the layout would catch the resize event and may expand the
-		// minimum size.
-		QSize s = sizeHint();
-		QSizePolicy::ExpandData exp;
-#ifndef QT_NO_LAYOUT
-		if ( layout() ) {
-			if ( layout()->hasHeightForWidth() )
-				s.setHeight( layout()->totalHeightForWidth( s.width() ) );
-			exp =  layout()->expanding();
-		} else
-#endif
-		{
-			if ( sizePolicy().hasHeightForWidth() )
-				s.setHeight( heightForWidth( s.width() ) );
-			exp = sizePolicy().expanding();
-		}
-		if ( exp & QSizePolicy::Horizontally )
-			s.setWidth( QMAX( s.width(), 200 ) );
-		if ( exp & QSizePolicy::Vertically )
-			s.setHeight( QMAX( s.height(), 150 ) );
-		QRect screen = QApplication::desktop()->screenGeometry( QApplication::desktop()->screenNumber( pos() ) );
-		s.setWidth( QMIN( s.width(), screen.width()*2/3 ) );
-		s.setHeight( QMIN( s.height(), screen.height()*2/3 ) );
-		if ( !s.isEmpty() )
-			resize( s );
-	}
-
-	QApplication::sendPostedEvents( this, QEvent::Move );
-	QApplication::sendPostedEvents( this, QEvent::Resize );
-
-	setWState( WState_Visible );
-
-	if ( testWFlags(Qt::WStyle_Tool) || isPopup() ) {
-		raise();
-	} else if ( testWFlags(Qt::WType_TopLevel) ) {
-		while ( QApplication::activePopupWidget() )
-		QApplication::activePopupWidget()->close();
-	}
-
-	if ( !testWState(WState_Polished) )
-		polish();
-
-	if ( children() ) {
-		QObjectListIt it(*children());
-		register QObject *object;
-		QWidget *widget;
-		while ( it ) {				// show all widget children
-			object = it.current();		//   (except popups and other toplevels)
-			++it;
-			if ( object->isWidgetType() ) {
-				widget = (QWidget*)object;
-				if ( !widget->isHidden() && !widget->isTopLevel() )
-				widget->show();
-			}
-		}
-	}
-
-#if defined(QT_ACCESSIBILITY_SUPPORT)
-	QAccessible::updateAccessibility( this, 0, QAccessible::ObjectShow );
-#endif
-
-	SetWindowPos(winId(),HWND_TOP,0,0,0,0, SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
-	UpdateWindow(winId());
-}
-
-#else
-#endif
-#endif
-
 void MainWin::showNoFocus()
 {
 	bringToFront(this);
 }
 
-//#endif

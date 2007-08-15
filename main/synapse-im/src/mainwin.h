@@ -147,7 +147,6 @@ private slots:
 
 public slots:
 	void searchRoster(const QString &text);
-	void searchRoster2();
 
 	void updateStatusLastMenu();
 
