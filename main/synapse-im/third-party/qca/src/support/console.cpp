@@ -24,7 +24,6 @@
 #include <QPointer>
 #include <QTextCodec>
 #include <QTimer>
-#include <QMutex>
 
 #ifdef Q_OS_WIN
 # include <windows.h>
@@ -32,7 +31,6 @@
 # include <sys/termios.h>
 # include <unistd.h>
 # include <fcntl.h>
-# include <stdlib.h>
 #endif
 
 #define CONSOLEPROMPT_INPUT_MAX 56
@@ -210,7 +208,6 @@ public:
 	ConsoleWorker *worker;
 	Q_PIPE_ID _in_id, _out_id;
 	QByteArray in_left, out_left;
-	QMutex call_mutex;
 
 	ConsoleThread(QObject *parent = 0) : SyncThread(parent)
 	{
@@ -238,18 +235,8 @@ public:
 	{
 		QVariant ret;
 		bool ok;
-
-		call_mutex.lock();
 		ret = call(obj, method, args, &ok);
-		call_mutex.unlock();
-
 		Q_ASSERT(ok);
-		if(!ok)
-		{
-			fprintf(stderr, "QCA: ConsoleWorker call [%s] failed.\n", method);
-			abort();
-			return QVariant();
-		}
 		return ret;
 	}
 

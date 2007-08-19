@@ -41,7 +41,7 @@ namespace QCA {
 /**
    Specify the lower-bound for acceptable TLS/SASL security layers
 
-   For TLS, the interpretation of these levels is:
+   For TLS, the intepretation of these levels is:
    - Any cipher suite that provides non-authenticated communications
    (usually anonymous Diffie-Hellman) is SL_Integrity. 
    - Any cipher suite that is limited to 40 bits (export-version
@@ -97,8 +97,6 @@ enum SecurityLevel
    activities (which require network traffic to agree a
    configuration to use) and other overheads associated with
    the secure link.
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT SecureLayer : public QObject
 {
@@ -219,12 +217,7 @@ private:
 };
 
 /**
-   \class TLSSession qca_securelayer.h QtCrypto
-
    Session token, used for TLS resuming
-
-   \ingroup UserAPI
-
 */
 class QCA_EXPORT TLSSession : public Algorithm
 {
@@ -272,8 +265,6 @@ public:
    Socket Layer (SSL version 2 and SSL version 3). New
    applications should use at least TLS 1.0, and SSL version 2
    should be avoided due to known security problems.
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT TLS : public SecureLayer, public Algorithm
 {
@@ -337,10 +328,7 @@ public:
 	explicit TLS(QObject *parent = 0, const QString &provider = QString());
 
 	/**
-	   Constructor for Transport Layer Security connection.
-
-	   This constructor can be used for both normal %TLS (set mode to TLS::Stream)
-	   or DTLS (set mode to TLS::Datagram).
+	   Constructor for Transport Layer Security connection
 
 	   \param mode the connection Mode
 	   \param parent the parent object for this object
@@ -475,7 +463,7 @@ foreach(const CertificateInfoOrdered &info, tls->issuerList())
 	void setIssuerList(const QList<CertificateInfoOrdered> &issuers);
 
 	/**
-	   Resume a %TLS session using the given session object
+	   Resume a TLS session using the given session object
 	*/
 	void setSession(const TLSSession &session);
 
@@ -518,7 +506,7 @@ foreach(const CertificateInfoOrdered &info, tls->issuerList())
 	QString hostName() const;
 
 	/**
-	   Start the %TLS/SSL connection as a client
+	   Start the TLS/SSL connection as a client
 
 	   Typically, you'll want to perform RFC 2818 validation on the
 	   server's certificate, based on the hostname you're intending
@@ -539,18 +527,18 @@ foreach(const CertificateInfoOrdered &info, tls->issuerList())
 	void startClient(const QString &host = QString());
 
 	/**
-	   Start the %TLS/SSL connection as a server.
+	   Start the TLS/SSL connection as a server.
 	*/
 	void startServer();
 
 	/**
-	   Resumes %TLS processing.
+	   Resumes TLS processing.
 
 	   Call this function after hostNameReceived(), certificateRequested()
 	   peerCertificateAvailable() or handshaken() is emitted.  By
 	   requiring this function to be called in order to proceed,
 	   applications are given a chance to perform user interaction between
-	   steps in the %TLS process.
+	   steps in the TLS process.
 	*/
 	void continueAfterStep();
 
@@ -603,7 +591,7 @@ foreach(const CertificateInfoOrdered &info, tls->issuerList())
 	int cipherMaxBits() const;
 
 	/**
-	   The session object of the %TLS connection, which can be used
+	   The session object of the TLS connection, which can be used
 	   for resuming.
 	*/
 	TLSSession session() const;
@@ -616,13 +604,13 @@ foreach(const CertificateInfoOrdered &info, tls->issuerList())
 	Error errorCode() const;
 
 	/**
-	   After the SSL/%TLS handshake is complete, this
+	   After the SSL/TLS handshake is complete, this
 	   method allows you to determine if the other end
 	   of the connection (if the application is a client,
 	   this is the server; if the application is a server,
 	   this is the client) has a valid identity.
 
-	   Note that the security of %TLS/SSL depends on
+	   Note that the security of TLS/SSL depends on
 	   checking this. It is not enough to check that the
 	   certificate is valid - you must check that the
 	   certificate is valid for the entity that you are
@@ -635,7 +623,7 @@ foreach(const CertificateInfoOrdered &info, tls->issuerList())
 	IdentityResult peerIdentityResult() const;
 
 	/**
-	   After the SSL/%TLS handshake is valid, this method
+	   After the SSL/TLS handshake is valid, this method
 	   allows you to check if the received certificate
 	   from the other end is valid. As noted in
 	   peerIdentityResult(), you also need to check that
@@ -711,7 +699,7 @@ Q_SIGNALS:
 	   Emitted if a host name is set by the client.  At
 	   this time, the server can inspect the hostName().
 
-	   You must call continueAfterStep() in order for %TLS
+	   You must call continueAfterStep() in order for TLS
 	   processing to resume after this signal is emitted.
 
 	   This signal is only emitted in server mode.
@@ -724,7 +712,7 @@ Q_SIGNALS:
 	   Emitted when the server requests a certificate.  At
 	   this time, the client can inspect the issuerList().
 
-	   You must call continueAfterStep() in order for %TLS
+	   You must call continueAfterStep() in order for TLS
 	   processing to resume after this signal is emitted.
 
 	   This signal is only emitted in client mode.
@@ -738,7 +726,7 @@ Q_SIGNALS:
 	   At this time, you may inspect peerIdentityResult(),
 	   peerCertificateValidity(), and peerCertificateChain().
 
-	   You must call continueAfterStep() in order for %TLS
+	   You must call continueAfterStep() in order for TLS
 	   processing to resume after this signal is emitted.
 
 	   \sa continueAfterStep
@@ -747,10 +735,10 @@ Q_SIGNALS:
 
 	/**
 	   Emitted when the protocol handshake is complete.  At
-	   this time, all available information about the %TLS
+	   this time, all available information about the TLS
 	   session can be inspected.
 
-	   You must call continueAfterStep() in order for %TLS
+	   You must call continueAfterStep() in order for TLS
 	   processing to resume after this signal is emitted.
 
 	   \sa continueAfterStep
@@ -759,20 +747,7 @@ Q_SIGNALS:
 	void handshaken();
 
 protected:
-	/**
-	   Called when a connection is made to a particular signal
-
-	   \param signal the name of the signal that has been
-	   connected to.
-	*/
 	void connectNotify(const char *signal);
-
-	/**
-	   Called when a connection is removed from a particular signal
-
-	   \param signal the name of the signal that has been
-	   disconnected from.
-	*/
 	void disconnectNotify(const char *signal);
 
 private:
@@ -806,20 +781,17 @@ private:
    "protocol aware".  That means that %SASL does not understand how the client
    connects to the server, and %SASL does not understand the actual
    application protocol.
-
-   \ingroup UserAPI
-
 */
 class QCA_EXPORT SASL : public SecureLayer, public Algorithm
 {
 	Q_OBJECT
 public:
 	/**
-	   Possible errors that may occur when using %SASL
+	   Possible errors that may occur when using SASL
 	*/
 	enum Error
 	{
-		ErrorInit,      ///< problem starting up %SASL
+		ErrorInit,      ///< problem starting up SASL
 		ErrorHandshake, ///< problem during the authentication process
 		ErrorCrypt      ///< problem at anytime after
 	};
@@ -878,12 +850,10 @@ public:
 	/**
 	   \class Params qca_securelayer.h QtCrypto
 
-	   Parameter flags for the %SASL authentication
+	   Parameter flags for the SASL authentication
 
-	   This is used to indicate which parameters are needed by %SASL
+	   This is used to indicate which parameters are needed by SASL
 	   in order to complete the authentication process.
-
-	   \ingroup UserAPI
 	*/
 	class QCA_EXPORT Params
 	{
@@ -946,7 +916,7 @@ public:
 	/**
 	   Standard constructor
 
-	   \param parent the parent object for this %SASL connection
+	   \param parent the parent object for this SASL connection
 	   \param provider if specified, the provider to use. If not 
 	   specified, or specified as empty, then any provider is 
 	   acceptable.
@@ -955,14 +925,14 @@ public:
 	~SASL();
 
 	/**
-	   Reset the %SASL mechanism
+	   Reset the SASL mechanism
 	*/
 	void reset();
 
 	/**
 	   Specify connection constraints
 
-	   %SASL supports a range of authentication requirements, and
+	   SASL supports a range of authentication requirements, and
 	   a range of security levels. This method allows you to
 	   specify the requirements for your connection.
 

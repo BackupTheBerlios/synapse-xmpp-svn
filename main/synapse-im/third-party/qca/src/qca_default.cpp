@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2007  Justin Karneges <justin@affinix.com>
+ * Copyright (C) 2003-2005  Justin Karneges <justin@affinix.com>
  * Copyright (C) 2004,2005  Brad Hards <bradh@frogmouth.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -22,15 +22,11 @@
 
 #include <QMutex>
 #include <QHash>
-#include "qca_textfilter.h"
-#include "qca_cert.h"
 #include "qcaprovider.h"
 
 #ifndef QCA_NO_SYSTEMSTORE
 # include "qca_systemstore.h"
 #endif
-
-#define FRIENDLY_NAMES
 
 namespace QCA {
 
@@ -41,7 +37,7 @@ private:
 	bool _use_system;
 	QString _roots_file;
 	QStringList _skip_plugins;
-//	QStringList _plugin_priorities;
+	QStringList _plugin_priorities;
 
 public:
 	DefaultShared() : _use_system(true)
@@ -66,20 +62,19 @@ public:
 		return _skip_plugins;
 	}
 
-/*	QStringList plugin_priorities() const
+	QStringList plugin_priorities() const
 	{
 		QMutexLocker locker(&m);
 		return _plugin_priorities;
 	}
 
-	void set(bool use_system, const QString &roots_file, const QStringList &skip_plugins, const QStringList &plugin_priorities)*/
-	void set(bool use_system, const QString &roots_file, const QStringList &skip_plugins)
+	void set(bool use_system, const QString &roots_file, const QStringList &skip_plugins, const QStringList &plugin_priorities)
 	{
 		QMutexLocker locker(&m);
 		_use_system = use_system;
 		_roots_file = roots_file;
 		_skip_plugins = skip_plugins;
-//		_plugin_priorities = plugin_priorities;
+		_plugin_priorities = plugin_priorities;
 	}
 };
 
@@ -134,7 +129,7 @@ public:
   ghost@aladdin.com
 
  */
-/* $Id: qca_default.cpp 697168 2007-08-07 01:46:20Z infiniti $ */
+/* $Id: qca_default.cpp 681693 2007-06-29 21:34:01Z infiniti $ */
 /*
   Independent implementation of MD5 (RFC 1321).
 
@@ -787,10 +782,6 @@ public:
 //----------------------------------------------------------------------------
 // DefaultKeyStoreEntry
 //----------------------------------------------------------------------------
-
-// this escapes colons, commas, and newlines.  colons and commas so that they
-//   are available as delimiters, and newlines so that our output can be a
-//   single line of text.
 static QString escape_string(const QString &in)
 {
 	QString out;
@@ -802,128 +793,99 @@ static QString escape_string(const QString &in)
 			out += "\\c";
 		else if(in[n] == ',')
 			out += "\\o";
-		else if(in[n] == '\n')
-			out += "\\n";
 		else
 			out += in[n];
 	}
 	return out;
 }
 
-static bool unescape_string(const QString &in, QString *_out)
+static QString unescape_string(const QString &in)
 {
 	QString out;
 	for(int n = 0; n < in.length(); ++n)
 	{
 		if(in[n] == '\\')
 		{
-			if(n + 1 >= in.length())
-				return false;
-
-			if(in[n + 1] == '\\')
-				out += '\\';
-			else if(in[n + 1] == 'c')
-				out += ':';
-			else if(in[n + 1] == 'o')
-				out += ',';
-			else if(in[n + 1] == 'n')
-				out += '\n';
-			else
-				return false;
-			++n;
+			if(n + 1 < in.length())
+			{
+				if(in[n + 1] == '\\')
+					out += '\\';
+				else if(in[n + 1] == 'c')
+					out += ':';
+				else if(in[n + 1] == 'o')
+					out += ',';
+				++n;
+			}
 		}
 		else
 			out += in[n];
 	}
-	*_out = out;
-	return true;
+	return out;
 }
 
-static QString escape_stringlist(const QStringList &in)
-{
-	QStringList list;
-	for(int n = 0; n < in.count(); ++n)
-		list += escape_string(in[n]);
-	return list.join(":");
-}
-
-static bool unescape_stringlist(const QString &in, QStringList *_out)
+static QString makeId(const QString &storeId, const QString &storeName, const QString &entryId, const QString &entryName, const QString &entryType, const QString &pem)
 {
 	QStringList out;
+	out += escape_string("qca_def");
+	out += escape_string(storeId);
+	out += escape_string(storeName);
+	out += escape_string(entryId);
+	out += escape_string(entryName);
+	out += escape_string(entryType);
+	out += escape_string(pem);
+	return out.join(":");
+}
+
+static bool parseId(const QString &in, QString *storeId, QString *storeName, QString *entryId, QString *entryName, QString *entryType, QString *pem)
+{
 	QStringList list = in.split(':');
-	for(int n = 0; n < list.count(); ++n)
-	{
-		QString str;
-		if(!unescape_string(list[n], &str))
-			return false;
-		out += str;
-	}
-	*_out = out;
-	return true;
-}
-
-// serialization format is a colon separated list of 7 escaped strings
-//  0 - "qca_def_1" (header)
-//  1 - store id
-//  2 - store name
-//  3 - entry id
-//  4 - entry name
-//  5 - entry type (e.g. "cert")
-//  6 - string encoding of object (e.g. DER encoded in Base64)
-static QString entry_serialize(const QString &storeId, const QString &storeName, const QString &entryId, const QString &entryName, const QString &entryType, const QString &data)
-{
-	QStringList out;
-	out += "qca_def";
-	out += storeId;
-	out += storeName;
-	out += entryId;
-	out += entryName;
-	out += entryType;
-	out += data;
-	return escape_stringlist(out);
-}
-
-static bool entry_deserialize(const QString &in, QString *storeId, QString *storeName, QString *entryId, QString *entryName, QString *entryType, QString *data)
-{
-	QStringList list;
-	if(!unescape_stringlist(in, &list))
-		return false;
 	if(list.count() != 7)
 		return false;
-	if(list[0] != "qca_def")
+	QString header = unescape_string(list[0]);
+	if(header != "qca_def")
 		return false;
-	*storeId   = list[1];
-	*storeName = list[2];
-	*entryId   = list[3];
-	*entryName = list[4];
-	*entryType = list[5];
-	*data      = list[6];
+	*storeId   = unescape_string(list[1]);
+	*storeName = unescape_string(list[2]);
+	*entryId   = unescape_string(list[3]);
+	*entryName = unescape_string(list[4]);
+	*entryType = unescape_string(list[5]);
+	*pem       = unescape_string(list[6]);
 	return true;
 }
 
 class DefaultKeyStoreEntry : public KeyStoreEntryContext
 {
 public:
-	KeyStoreEntry::Type _type;
-	QString _id, _name, _storeId, _storeName;
+	KeyStoreEntry::Type item_type;
+	QString item_id, _storeId, _storeName;
 	Certificate _cert;
 	CRL _crl;
-	mutable QString _serialized;
+	QString item_save;
+
+	QString item_name;
 
 	DefaultKeyStoreEntry(const Certificate &cert, const QString &storeId, const QString &storeName, Provider *p) : KeyStoreEntryContext(p)
 	{
-		_type = KeyStoreEntry::TypeCertificate;
 		_storeId = storeId;
 		_storeName = storeName;
 		_cert = cert;
+		item_type = KeyStoreEntry::TypeCertificate;
 	}
 
 	DefaultKeyStoreEntry(const CRL &crl, const QString &storeId, const QString &storeName, Provider *p) : KeyStoreEntryContext(p)
 	{
-		_type = KeyStoreEntry::TypeCRL;
 		_storeId = storeId;
 		_storeName = storeName;
 		_crl = crl;
+		item_type = KeyStoreEntry::TypeCRL;
+	}
+
+	DefaultKeyStoreEntry(const DefaultKeyStoreEntry &from) : KeyStoreEntryContext(from)
+	{
+	}
+
+	~DefaultKeyStoreEntry()
+	{
 	}
 
 	virtual Provider::Context *clone() const
@@ -933,17 +895,31 @@ public:
 
 	virtual KeyStoreEntry::Type type() const
 	{
-		return _type;
+		return item_type;
 	}
 
 	virtual QString id() const
 	{
-		return _id;
+		return item_id;
 	}
 
 	virtual QString name() const
 	{
-		return _name;
+		return item_name;
+	}
+
+	QString makeName() const
+	{
+		// use the common name, else orgname
+		if(item_type == KeyStoreEntry::TypeCertificate)
+		{
+			QString str = _cert.commonName();
+			if(str.isEmpty())
+				str = _cert.subjectInfo().value(Organization);
+			return str;
+		}
+		else
+			return _crl.issuerInfo().value(CommonName);
 	}
 
 	virtual QString storeId() const
@@ -968,82 +944,7 @@ public:
 
 	virtual QString serialize() const
 	{
-		if(_serialized.isEmpty())
-		{
-			QString typestr;
-			QString datastr;
-
-			if(_type == KeyStoreEntry::TypeCertificate)
-			{
-				typestr = "cert";
-				datastr = Base64().arrayToString(_cert.toDER());
-			}
-			else
-			{
-				typestr = "crl";
-				datastr = Base64().arrayToString(_crl.toDER());
-			}
-
-			_serialized = entry_serialize(_storeId, _storeName, _id, _name, typestr, datastr);
-		}
-
-		return _serialized;
-	}
-
-	static DefaultKeyStoreEntry *deserialize(const QString &in, Provider *provider)
-	{
-		QString storeId, storeName, id, name, typestr, datastr;
-
-		if(entry_deserialize(in, &storeId, &storeName, &id, &name, &typestr, &datastr))
-		{
-			QByteArray data = Base64().stringToArray(datastr).toByteArray();
-			DefaultKeyStoreEntry *c;
-
-			if(typestr == "cert")
-			{
-				Certificate cert = Certificate::fromDER(data);
-				if(cert.isNull())
-					return 0;
-				c = new DefaultKeyStoreEntry(cert, storeId, storeName, provider);
-			}
-			else if(typestr == "crl")
-			{
-				CRL crl = CRL::fromDER(data);
-				if(crl.isNull())
-					return 0;
-				c = new DefaultKeyStoreEntry(crl, storeId, storeName, provider);
-			}
-			else
-				return 0;
-
-			c->_id = id;
-			c->_name = name;
-			c->_serialized = in;
-			return c;
-		}
-		return 0;
-	}
-
-	QString simpleId() const
-	{
-		if(_type == KeyStoreEntry::TypeCertificate)
-			return QString::number(qHash(_cert.toDER()));
-		else
-			return QString::number(qHash(_crl.toDER()));
-	}
-
-	QString simpleName() const
-	{
-		// use the common name, else orgname
-		if(_type == KeyStoreEntry::TypeCertificate)
-		{
-			QString str = _cert.commonName();
-			if(str.isEmpty())
-				str = _cert.subjectInfo().value(Organization);
-			return str;
-		}
-		else
-			return _crl.issuerInfo().value(CommonName);
+		return item_save;
 	}
 };
 
@@ -1054,7 +955,7 @@ class DefaultKeyStoreList : public KeyStoreListContext
 {
 	Q_OBJECT
 public:
-	bool x509_supported;
+	bool ready;
 	DefaultShared *shared;
 
 	DefaultKeyStoreList(Provider *p, DefaultShared *_shared) : KeyStoreListContext(p), shared(_shared)
@@ -1072,32 +973,24 @@ public:
 
 	virtual void start()
 	{
-		x509_supported = false;
+		ready = false;
 
+#ifndef QCA_NO_SYSTEMSTORE
+		if(qca_have_systemstore() &&
+		   isSupported("cert") &&
+		   isSupported("crl"))
+		{
+			ready = true;
+		}
+#endif
 		QMetaObject::invokeMethod(this, "busyEnd", Qt::QueuedConnection);
 	}
 
 	virtual QList<int> keyStores()
 	{
-		if(!x509_supported)
-		{
-			if(isSupported("cert") && isSupported("crl"))
-				x509_supported = true;
-		}
-
-		bool have_systemstore = false;
-#ifndef QCA_NO_SYSTEMSTORE
-		if(shared->use_system())
-			have_systemstore = qca_have_systemstore();
-#endif
-
 		QList<int> list;
-
-		// system store only shows up if the OS store is available or
-		//   there is a configured store file
-		if(x509_supported && (have_systemstore || !shared->roots_file().isEmpty()))
+		if(ready || !shared->roots_file().isEmpty())
 			list += 0;
-
 		return list;
 	}
 
@@ -1131,7 +1024,7 @@ public:
 		QList<Certificate> certs;
 		QList<CRL> crls;
 
-		if(shared->use_system())
+		if(ready && shared->use_system())
 		{
 			CertificateCollection col;
 #ifndef QCA_NO_SYSTEMSTORE
@@ -1149,56 +1042,70 @@ public:
 			crls += col.crls();
 		}
 
-#ifdef FRIENDLY_NAMES
-		QStringList names = makeFriendlyNames(certs);
-#endif
-		for(int n = 0; n < certs.count(); ++n)
+		//QStringList names = makeFriendlyNames(certs);
+		int n;
+		for(n = 0; n < certs.count(); ++n)
 		{
 			DefaultKeyStoreEntry *c = new DefaultKeyStoreEntry(certs[n], storeId(0), name(0), provider());
-			c->_id = c->simpleId();
-#ifdef FRIENDLY_NAMES
-			c->_name = names[n];
-#else
-			c->_name = c->simpleName();
-#endif
+			//c->item_id = QString::number(n);
+			QString ename = c->makeName();
+			//QString ename = names[n];
+			QString eid = QString::number(qHash(certs[n].toDER()));
+			c->item_name = ename;
+			c->item_id = eid;
+			c->item_save = makeId(storeId(0), name(0), eid, ename, "cert", certs[n].toPEM());
 			out.append(c);
 		}
-
-		for(int n = 0; n < crls.count(); ++n)
+		for(n = 0; n < crls.count(); ++n)
 		{
 			DefaultKeyStoreEntry *c = new DefaultKeyStoreEntry(crls[n], storeId(0), name(0), provider());
-			c->_id = c->simpleId();
-			c->_name = c->simpleName();
+			QString ename = c->makeName();
+			QString eid = QString::number(qHash(certs[n].toDER()));
+			c->item_name = ename;
+			c->item_id = eid;
+			c->item_save = makeId(storeId(0), name(0), eid, ename, "crl", crls[n].toPEM());
 			out.append(c);
 		}
 
 		return out;
 	}
 
+	// TODO
 	virtual KeyStoreEntryContext *entryPassive(const QString &serialized)
 	{
-		return DefaultKeyStoreEntry::deserialize(serialized, provider());
+		QString storeId, storeName, eid, ename, etype, pem;
+		if(parseId(serialized, &storeId, &storeName, &eid, &ename, &etype, &pem))
+		{
+			if(etype == "cert")
+			{
+				Certificate cert = Certificate::fromPEM(pem);
+				if(cert.isNull())
+					return 0;
+				DefaultKeyStoreEntry *c = new DefaultKeyStoreEntry(cert, storeId, storeName, provider());
+				c->item_name = ename;
+				c->item_id = eid;
+				c->item_save = serialized;
+				return c;
+			}
+			else if(etype == "crl")
+			{
+				CRL crl = CRL::fromPEM(pem);
+				if(crl.isNull())
+					return 0;
+				DefaultKeyStoreEntry *c = new DefaultKeyStoreEntry(crl, storeId, storeName, provider());
+				c->item_name = ename;
+				c->item_id = eid;
+				c->item_save = serialized;
+				return c;
+			}
+		}
+		return 0;
 	}
 };
 
 //----------------------------------------------------------------------------
 // DefaultProvider
 //----------------------------------------------------------------------------
-static bool unescape_config_stringlist(const QString &in, QStringList *_out)
-{
-	QStringList out;
-	QStringList list = in.split(',');
-	for(int n = 0; n < list.count(); ++n)
-	{
-		QString str;
-		if(!unescape_string(list[n], &str))
-			return false;
-		out += str.trimmed();
-	}
-	*_out = out;
-	return true;
-}
-
 class DefaultProvider : public Provider
 {
 public:
@@ -1260,7 +1167,7 @@ public:
 		config["use_system"] = true;
 		config["roots_file"] = QString();
 		config["skip_plugins"] = QString();
-//		config["plugin_priorities"] = QString();
+		config["plugin_priorities"] = QString();
 		return config;
 	}
 
@@ -1271,19 +1178,18 @@ public:
 		QString skip_plugins_str = config["skip_plugins"].toString();
 		QString plugin_priorities_str = config["plugin_priorities"].toString();
 
-		QStringList tmp;
- 
-		QStringList skip_plugins;
-		if(unescape_config_stringlist(skip_plugins_str, &tmp))
-			skip_plugins = tmp;
+		QStringList skip_plugins = skip_plugins_str.split(",");
+		for(int n = 0; n < skip_plugins.count(); ++n)
+		{
+			QString &s = skip_plugins[n];
+			s = unescape_string(s).trimmed();
+		}
 
-		QStringList plugin_priorities;
-		if(unescape_config_stringlist(plugin_priorities_str, &tmp))
-			plugin_priorities = tmp;
-
+		QStringList plugin_priorities = plugin_priorities_str.split(",");
 		for(int n = 0; n < plugin_priorities.count(); ++n)
 		{
 			QString &s = plugin_priorities[n];
+			s = unescape_string(s).trimmed();
 
 			// make sure the entry ends with ":number"
 			int x = s.indexOf(':');
@@ -1297,7 +1203,7 @@ public:
 			}
 		}
 
-		shared.set(use_system, roots_file, skip_plugins);
+		shared.set(use_system, roots_file, skip_plugins, plugin_priorities);
 	}
 };
 
@@ -1312,11 +1218,11 @@ QStringList skip_plugins(Provider *defaultProvider)
 	return that->shared.skip_plugins();
 }
 
-/*QStringList plugin_priorities(Provider *defaultProvider)
+QStringList plugin_priorities(Provider *defaultProvider)
 {
 	DefaultProvider *that = (DefaultProvider *)defaultProvider;
 	return that->shared.plugin_priorities();
-}*/
+}
 
 #include "qca_default.moc"
 

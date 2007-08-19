@@ -47,7 +47,6 @@ class CRL;
 class CertificateCollection;
 class CertificateChain;
 
-
 /**
    Certificate Request Format
 */
@@ -82,8 +81,6 @@ enum CertificateInfoTypeKnown
 };
 
 /**
-   \class CertificateInfoType qca_cert.h QtCrypto
-
    Certificate information type
 
    This class represents a type of information being stored in
@@ -114,8 +111,6 @@ enum CertificateInfoTypeKnown
 
    \sa Certificate::subjectInfo() and Certificate::issuerInfo()
    \sa CRL::issuerInfo()
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateInfoType
 {
@@ -224,11 +219,7 @@ private:
 };
 
 /**
-   \class CertificateInfoPair qca_cert.h QtCrypto
-
    One entry in a certificate information list
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateInfoPair
 {
@@ -286,7 +277,6 @@ private:
 	QSharedDataPointer<Private> d;
 };
 
-
 /**
    Known types of certificate constraints
 
@@ -318,8 +308,6 @@ enum ConstraintTypeKnown
 };
 
 /**
-   \class ConstraintType qca_cert.h QtCrypto
-
    Certificate constraint
 
    X.509 certificates can be constrained in their application - that is, some
@@ -327,8 +315,6 @@ enum ConstraintTypeKnown
    identify an approved purpose for a certificate.
 
    \note It is common for a certificate to have more than one purpose.
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT ConstraintType
 {
@@ -494,14 +480,10 @@ enum ValidateFlags
 typedef QMultiMap<CertificateInfoType, QString> CertificateInfo;
 
 /**
-   \class CertificateInfoOrdered qca_cert.h QtCrypto
-
    Ordered certificate properties type
 
    This container stores the information in the same sequence as
    the certificate format itself.
-
-   \ingroup UserAPI
 */
 class CertificateInfoOrdered : public QList<CertificateInfoPair>
 {
@@ -555,8 +537,6 @@ QCA_EXPORT QStringList makeFriendlyNames(const QList<Certificate> &list);
    %Certificate options
 
    \note In SPKAC mode, all options are ignored except for challenge
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateOptions
 {
@@ -802,8 +782,6 @@ private:
    Public Key (X.509) certificate
 
    This class contains one X.509 certificate
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT Certificate : public Algorithm
 {
@@ -1149,8 +1127,6 @@ private:
 
    \sa QCA::CertificateCollection for an alternative way to represent a group
    of Certificates that do not necessarily have a chained relationship.
-
-   \ingroup UserAPI
 */
 class CertificateChain : public QList<Certificate>
 {
@@ -1234,8 +1210,6 @@ inline CertificateChain CertificateChain::complete(const QList<Certificate> &iss
    %Certificate Request
 
    A CertificateRequest is a unsigned request for a Certificate
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateRequest : public Algorithm
 {
@@ -1495,8 +1469,6 @@ private:
    \class CRLEntry qca_cert.h QtCrypto
 
    Part of a CRL representing a single certificate
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT CRLEntry
 {
@@ -1628,8 +1600,6 @@ private:
    \sa CertificateCollection for a way to handle Certificates
    and CRLs as a single entity.
    \sa CRLEntry for the %CRL segment representing a single Certificate.
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT CRL : public Algorithm
 {
@@ -1806,8 +1776,6 @@ private:
 
    \sa QCA::CertificateChain for a representation of a chain of Certificates
    related by signatures.
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateCollection
 {
@@ -1953,8 +1921,6 @@ private:
 
    A %Certificate Authority is used to generate Certificates and
    %Certificate Revocation Lists (CRLs).
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT CertificateAuthority : public Algorithm
 {
@@ -2051,8 +2017,6 @@ private:
    For more information on PKCS12 "Personal Information
    Exchange Syntax Standard", see <a
    href="ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1.pdf">ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1.pdf</a>. 
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT KeyBundle
 {
@@ -2276,8 +2240,6 @@ private:
    Note that with the latter method, the key is of no use besides
    being informational.  The key must be in a keyring
    (that is, inKeyring() == true) to actually do crypto with it.
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT PGPKey : public Algorithm
 {
@@ -2443,8 +2405,6 @@ private:
 };
 
 /**
-   \class KeyLoader qca_cert.h QtCrypto
-
    Asynchronous private key loader
 
    GUI applications generally must use KeyLoader to load private keys.  This
@@ -2478,8 +2438,6 @@ private:
    QCA::PrivateKey::fromPEMFile(), QCA::PrivateKey::fromPEM() and
    QCA::PrivateKey::fromDER(). %QCA provides synchronous key bundle loading
    using QCA::KeyBundle::fromArray() and QCA::KeyBundle::fromFile().
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT KeyLoader : public QObject
 {

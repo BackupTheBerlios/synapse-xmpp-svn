@@ -37,14 +37,6 @@
 namespace QCA {
 
 /**
-   \defgroup UserAPI QCA user API
-
-   This is the main set of QCA classes, intended for use
-   in standard applications.
-*/
-
-
-/**
    \class Random qca_basic.h QtCrypto
 
    Source of random numbers
@@ -56,8 +48,6 @@ namespace QCA {
 
    The normal use of this class is expected to be through the
    static members - randomChar(), randomInt() and randomArray().
-
-   \ingroup UserAPI
  */
 class QCA_EXPORT Random : public Algorithm
 {
@@ -197,11 +187,6 @@ else
    you could simply call QCA::Hash("algoName").hash() with the
    data that you would otherwise have provided to the update()
    call.
-
-   For more information on hashing algorithms, see \ref hashing.
-
-   \ingroup UserAPI
-
 */
 class QCA_EXPORT Hash : public Algorithm, public BufferedComputation
 {
@@ -366,7 +351,6 @@ private:
 	Private *d;
 };
 
-
 /**
    \page hashing Hashing Algorithms
 
@@ -485,7 +469,7 @@ private:
 */
 
 /**
-   \page paddingDescription Padding
+   \Page padding Padding
 
    For those Cipher sub-classes that are block based, there are modes
    that require a full block on encryption and decryption - %Cipher Block
@@ -507,17 +491,16 @@ private:
    then the padding is 0x03 0x03 0x03 ).
 
    On encryption, for algorithm / mode combinations that require
-   padding, you will get a block of ciphertext when the input plain
-   text block is complete. When you call final(), you will get out the
-   ciphertext that corresponds to the last part of the plain text,
-   plus any padding. If you had provided plaintext that matched up
-   with a block size, then the cipher text block is generated from
-   pure padding - you always get at least some padding, to ensure that
-   the padding can be safely removed on decryption.
+   padding, you will get a block of ciphertext when the input plain text
+   block is complete. When you call final(), you will get out the ciphertext
+   that corresponds to the last bit of plain text, plus any padding. If you
+   had provided plaintext that matched up with a block size, then the cipher
+   text block is generated from pure padding - you always get at least some
+   padding, to ensure that the padding can be safely removed on decryption.
 
    On decryption, for algorithm / mode combinations that use padding,
    you will get back a block of plaintext when the input ciphertext block
-   is complete. When you call final(), you will get a block that has been
+   is complete. When you call final(), you will a block that has been
    stripped of ciphertext.
 */
 
@@ -538,29 +521,12 @@ private:
    - AES128 - "aes128"
    - AES192 - "aes192"
    - AES256 - "aes256"
-
-   When checking for the availability of a particular kind
-   of cipher operation (e.g. AES128 in CBC mode with PKCS7
-   padding), you append the mode and padding type (in that
-   example "aes128-cbc-pkcs7"). CFB and OFB modes don't use
-   padding, so they are always just the cipher name followed
-   by the mode (e.g. "blowfish-cfb" or "aes192-ofb"). If
-   you are not using padding with CBC mode (i.e. you are
-   ensuring block size operations yourself), just use 
-   the cipher name followed by "-cbc" (e.g. "blowfish-cbc"
-   or "aes256-cbc"). 
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT Cipher : public Algorithm, public Filter
 {
 public:
 	/**
-	   Mode settings for cipher algorithms.
-
-	   \note ECB is almost never what you want, unless you
-	   are trying to implement a %Cipher variation that is not
-	   supported by %QCA.
+	   Mode settings for cipher algorithms
 	*/
 	enum Mode
 	{
@@ -571,10 +537,7 @@ public:
 	};
 
 	/**
-	   Padding variations for cipher algorithms.
-
-	   See the \ref paddingDescription description for more details on
-	   padding schemes.
+	   Padding variations for cipher algorithms
 	*/
 	enum Padding
 	{
@@ -691,9 +654,7 @@ public:
 	   \param dir the Direction that this Cipher should use (Encode for
 	   encryption, Decode for decryption)
 	   \param key the SymmetricKey array that is the key
-	   \param iv the InitializationVector to use (not used for ECB Mode)
-
-	   \note You should not leave iv empty for any Mode except ECB.
+	   \param iv the InitializationVector to use
 	*/
 	void setup(Direction dir, const SymmetricKey &key, const InitializationVector &iv = InitializationVector());
 
@@ -730,9 +691,6 @@ private:
 
    For more information on HMAC, see H. Krawczyk et al. RFC2104 
    "HMAC: Keyed-Hashing for Message Authentication"
-
-   \ingroup UserAPI
-
 */
 class QCA_EXPORT MessageAuthenticationCode : public Algorithm, public BufferedComputation
 {
@@ -839,9 +797,6 @@ private:
    not need to use it directly unless you are
    adding another key derivation capability to %QCA - you should be
    using a sub-class. PBKDF2 using SHA1 is recommended for new applications.
-
-   \ingroup UserAPI
-
 */
 class QCA_EXPORT KeyDerivationFunction : public Algorithm
 {
@@ -901,8 +856,6 @@ private:
 
    This class implements Password Based Key Derivation Function version 1,
    as specified in RFC2898, and also in PKCS#5.
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT PBKDF1 : public KeyDerivationFunction
 {
@@ -923,9 +876,6 @@ public:
 
    This class implements Password Based Key Derivation Function version 2,
    as specified in RFC2898, and also in PKCS#5.
-
-   \ingroup UserAPI
-
 */
 class QCA_EXPORT PBKDF2 : public KeyDerivationFunction
 {

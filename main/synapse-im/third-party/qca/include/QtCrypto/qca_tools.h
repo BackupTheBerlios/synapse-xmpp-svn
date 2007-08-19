@@ -83,8 +83,6 @@ namespace QCA {
    subclass or call toByteArray() to convert to QByteArray.
 
    Note that this class is implicitly shared (that is, copy on write).
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT MemoryRegion
 {
@@ -297,12 +295,11 @@ private:
    The %SecureArray provides an array of memory from a pool that is,
    at least partly, secure. In this sense, secure means that the contents
    of the memory should not be made available to other applications. By
-   comparison, a QByteArray or QString may be held in pages that might be
-   swapped to disk or free'd without being cleared first.
+   comparison, a QMemArray (or subclass such as QCString or QByteArray) may
+   be held in pages that might be swapped to disk or free'd without being
+   cleared first.
 
    Note that this class is implicitly shared (that is, copy on write).
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT SecureArray : public MemoryRegion
 {
@@ -536,8 +533,6 @@ if ( BigInteger("3499543804349") ==
 	// do something
 }
    \endcode
-
-   \ingroup UserAPI
 */
 class QCA_EXPORT BigInteger
 {
@@ -774,15 +769,12 @@ private:
 	QSharedDataPointer<Private> d;
 };
 
-
-
 /**
    Stream operator
 
    \relates BigInteger
 */
 QCA_EXPORT QTextStream &operator<<(QTextStream &stream, const BigInteger &b);
-
 
 }
 

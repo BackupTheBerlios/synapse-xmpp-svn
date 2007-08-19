@@ -293,6 +293,7 @@ public:
 		resetState();
 		result_ = Continue;
 		step = 0;
+		tryAgain();
 	}
 
 	virtual void nextStep(const QByteArray &from_net) {
@@ -444,11 +445,11 @@ ready:
 		QMetaObject::invokeMethod(this, "resultsReady", Qt::QueuedConnection);
 	}
 
-	virtual bool waitForResultsReady(int msecs) {
+	virtual void waitForResultsReady(int msecs) {
 
 		// TODO: for now, all operations block anyway
 		Q_UNUSED(msecs);
-		return true;
+//		return true;
 	}
 
 	virtual Result result() const {

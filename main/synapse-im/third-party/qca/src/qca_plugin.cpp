@@ -43,7 +43,7 @@ QVariantMap getProviderConfig_internal(Provider *p);
 
 // from qca_default.cpp
 QStringList skip_plugins(Provider *defaultProvider);
-//QStringList plugin_priorities(Provider *defaultProvider);
+QStringList plugin_priorities(Provider *defaultProvider);
 
 static ProviderManager *g_pluginman = 0;
 
@@ -706,7 +706,7 @@ void ProviderManager::mergeFeatures(QStringList *a, const QStringList &b)
 
 int ProviderManager::get_default_priority(const QString &name) const
 {
-/*	QStringList list = plugin_priorities(def);
+	QStringList list = plugin_priorities(def);
 	foreach(const QString &s, list)
 	{
 		// qca_default already sanity checks the strings
@@ -715,7 +715,7 @@ int ProviderManager::get_default_priority(const QString &name) const
 		int spriority = s.mid(n + 1).toInt();
 		if(sname == name)
 			return spriority;
-	}*/
+	}
 	return -1;
 }
 

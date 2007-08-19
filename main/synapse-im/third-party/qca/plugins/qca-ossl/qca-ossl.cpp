@@ -141,15 +141,6 @@ static SecureArray dsasig_raw_to_der(const SecureArray &in)
 	return result;
 }
 
-static int passphrase_cb(char *buf, int size, int rwflag, void *u)
-{
-	Q_UNUSED(buf);
-	Q_UNUSED(size);
-	Q_UNUSED(rwflag);
-	Q_UNUSED(u);
-	return 0;
-}
-
 /*static bool is_basic_constraint(const ConstraintType &t)
 {
 	bool basic = false;
@@ -2645,6 +2636,15 @@ public:
 		return nk;
 	}
 
+	static int passphrase_cb(char *buf, int size, int rwflag, void *u)
+	{
+		Q_UNUSED(buf);
+		Q_UNUSED(size);
+		Q_UNUSED(rwflag);
+		Q_UNUSED(u);
+		return 0;
+	}
+
 	virtual QByteArray publicToDER() const
 	{
 		EVP_PKEY *pkey = get_pkey();
@@ -2701,7 +2701,7 @@ public:
 		QByteArray in = s.toLatin1();
 		BIO *bi = BIO_new(BIO_s_mem());
 		BIO_write(bi, in.data(), in.size());
-		EVP_PKEY *pkey = PEM_read_bio_PUBKEY(bi, NULL, passphrase_cb, NULL);
+		EVP_PKEY *pkey = PEM_read_bio_PUBKEY(bi, NULL, NULL, NULL);
 		BIO_free(bi);
 
 		if(!pkey)
@@ -2781,7 +2781,7 @@ public:
 		if(!passphrase.isEmpty())
 			pkey = qca_d2i_PKCS8PrivateKey(in, NULL, NULL, (void *)passphrase.data());
 		else
-			pkey = qca_d2i_PKCS8PrivateKey(in, NULL, passphrase_cb, NULL);
+			pkey = qca_d2i_PKCS8PrivateKey(in, NULL, &passphrase_cb, NULL);
 
 		if(!pkey)
 			return ErrorDecode;
@@ -2805,7 +2805,7 @@ public:
 		if(!passphrase.isEmpty())
 			pkey = PEM_read_bio_PrivateKey(bi, NULL, NULL, (void *)passphrase.data());
 		else
-			pkey = PEM_read_bio_PrivateKey(bi, NULL, passphrase_cb, NULL);
+			pkey = PEM_read_bio_PrivateKey(bi, NULL, &passphrase_cb, NULL);
 		BIO_free(bi);
 
 		if(!pkey)
@@ -2938,11 +2938,11 @@ public:
 		BIO_write(bi, in.data(), in.size());
 
 		if(t == TypeCert)
-			cert = PEM_read_bio_X509(bi, NULL, passphrase_cb, NULL);
+			cert = PEM_read_bio_X509(bi, NULL, NULL, NULL);
 		else if(t == TypeReq)
-			req = PEM_read_bio_X509_REQ(bi, NULL, passphrase_cb, NULL);
+			req = PEM_read_bio_X509_REQ(bi, NULL, NULL, NULL);
 		else if(t == TypeCRL)
-			crl = PEM_read_bio_X509_CRL(bi, NULL, passphrase_cb, NULL);
+			crl = PEM_read_bio_X509_CRL(bi, NULL, NULL, NULL);
 
 		BIO_free(bi);
 
@@ -5260,11 +5260,11 @@ public:
 		return true;
 	}
 
-	virtual bool waitForResultsReady(int msecs)
+	virtual void waitForResultsReady(int msecs)
 	{
 		// TODO: for now, all operations block anyway
 		Q_UNUSED(msecs);
-		return true;
+//		return true;
 	}
 
 	virtual Result result() const
@@ -5406,14 +5406,14 @@ public:
 			{
 				const MyCertContext *cc = static_cast<const MyCertContext *>(cert_list[n].context());
 				X509 *x = cc->item.cert;
-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
+				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
 				X509_STORE_add_cert(store, x);
 			}
 			for(n = 0; n < crl_list.count(); ++n)
 			{
 				const MyCRLContext *cc = static_cast<const MyCRLContext *>(crl_list[n].context());
 				X509_CRL *x = cc->item.crl;
-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
+				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
 				X509_STORE_add_crl(store, x);
 			}
 		}
@@ -5722,7 +5722,6 @@ public:
 	SecureMessage::Format format;
 
 	Operation op;
-	bool _finished;
 
 	QByteArray in, out;
 	QByteArray sig;
@@ -5789,7 +5788,6 @@ public:
 	virtual void start(SecureMessage::Format f, Operation op)
 	{
 		format = f;
-		_finished = false;
 
 		// TODO: other operations
 		//if(op == Sign)
@@ -5806,7 +5804,6 @@ public:
 	{
 		this->in.append(in);
 		total += in.size();
-		QMetaObject::invokeMethod(this, "updated", Qt::QueuedConnection);
 	}
 
 	virtual QByteArray read()
@@ -5823,8 +5820,6 @@ public:
 
 	virtual void end()
 	{
-		_finished = true;
-
 		// sign
 		if(op == Sign)
 		{
@@ -5970,7 +5965,7 @@ public:
 			if(format == SecureMessage::Binary)
 				p7 = d2i_PKCS7_bio(bi, NULL);
 			else // Ascii
-				p7 = PEM_read_bio_PKCS7(bi, NULL, passphrase_cb, NULL);
+				p7 = PEM_read_bio_PKCS7(bi, NULL, NULL, NULL);
 			BIO_free(bi);
 
 			if(!p7)
@@ -6050,14 +6045,14 @@ public:
 				//printf("trusted: [%s]\n", qPrintable(cert_list[n].commonName()));
 				const MyCertContext *cc = static_cast<const MyCertContext *>(cert_list[n].context());
 				X509 *x = cc->item.cert;
-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
+				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509);
 				X509_STORE_add_cert(store, x);
 			}
 			for(int n = 0; n < crl_list.count(); ++n)
 			{
 				const MyCRLContext *cc = static_cast<const MyCRLContext *>(crl_list[n].context());
 				X509_CRL *x = cc->item.crl;
-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
+				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
 				X509_STORE_add_crl(store, x);
 			}
 			// add these crls also
@@ -6066,7 +6061,7 @@ public:
 			{
 				const MyCRLContext *cc = static_cast<const MyCRLContext *>(crl_list[n].context());
 				X509_CRL *x = cc->item.crl;
-				//CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
+				CRYPTO_add(&x->references, 1, CRYPTO_LOCK_X509_CRL);
 				X509_STORE_add_crl(store, x);
 			}
 
@@ -6141,10 +6136,11 @@ public:
 
 	virtual bool finished() const
 	{
-		return _finished;
+		// TODO
+		return true;
 	}
 
-	virtual bool waitForFinished(int msecs)
+	virtual void waitForFinished(int msecs)
 	{
 		// TODO
 		Q_UNUSED(msecs);
@@ -6154,7 +6150,7 @@ public:
 			thread->wait();
 			getresults();
 		}
-		return true;
+//		return true;
 	}
 
 	virtual bool success() const
@@ -6193,12 +6189,9 @@ public:
 		// TODO/FIXME !!! InvalidSignature might be used here even
 		//   if the signature is just fine, and the key is invalid
 		//   (we need to use InvalidKey instead).
-		QCA::Validity verror = ErrorValidityUnknown;
-		if(signerChain.count() == 1 && signerChain.primary().isSelfSigned())
-			verror = ErrorSelfSigned;
 		SecureMessageSignature s(
 			ver_ret ? SecureMessageSignature::Valid : SecureMessageSignature::InvalidSignature,
-			ver_ret ? ValidityGood : verror,
+			ver_ret ? ValidityGood : ErrorValidityUnknown,
 			key,
 			QDateTime::currentDateTime());
 
@@ -6464,11 +6457,9 @@ public:
 		list += "aes192-ecb";
 		list += "aes192-cfb";
 		list += "aes192-cbc";
-		list += "aes192-cbc-pkcs7";
 		list += "aes192-ofb";
 		list += "aes256-ecb";
 		list += "aes256-cbc";
-		list += "aes256-cbc-pkcs7";
 		list += "aes256-cfb";
 		list += "aes256-ofb";
 		list += "blowfish-ecb";
@@ -6477,7 +6468,6 @@ public:
 		list += "blowfish-cfb";
 		list += "blowfish-ofb";
 		list += "tripledes-ecb";
-		list += "tripledes-cbc";
 		list += "des-ecb";
 		list += "des-ecb-pkcs7";
 		list += "des-cbc";
@@ -6573,8 +6563,6 @@ public:
 			return new opensslCipherContext( EVP_aes_192_cfb(), 0, this, type);
 		else if ( type == "aes192-cbc" )
 			return new opensslCipherContext( EVP_aes_192_cbc(), 0, this, type);
-		else if ( type == "aes192-cbc-pkcs7" )
-			return new opensslCipherContext( EVP_aes_192_cbc(), 1, this, type);
 		else if ( type == "aes192-ofb" )
 			return new opensslCipherContext( EVP_aes_192_ofb(), 0, this, type);
 		else if ( type == "aes256-ecb" )
@@ -6583,8 +6571,6 @@ public:
 			return new opensslCipherContext( EVP_aes_256_cfb(), 0, this, type);
 		else if ( type == "aes256-cbc" )
 			return new opensslCipherContext( EVP_aes_256_cbc(), 0, this, type);
-		else if ( type == "aes256-cbc-pkcs7" )
-			return new opensslCipherContext( EVP_aes_256_cbc(), 1, this, type);
 		else if ( type == "aes256-ofb" )
 			return new opensslCipherContext( EVP_aes_256_ofb(), 0, this, type);
 		else if ( type == "blowfish-ecb" )
@@ -6599,8 +6585,6 @@ public:
 			return new opensslCipherContext( EVP_bf_cbc(), 1, this, type);
 		else if ( type == "tripledes-ecb" )
 			return new opensslCipherContext( EVP_des_ede3(), 0, this, type);
-		else if ( type == "tripledes-cbc" )
-			return new opensslCipherContext( EVP_des_ede3_cbc(), 0, this, type);
 		else if ( type == "des-ecb" )
 			return new opensslCipherContext( EVP_des_ecb(), 0, this, type);
 		else if ( type == "des-ecb-pkcs7" )

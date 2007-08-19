@@ -306,19 +306,6 @@ private:
 //----------------------------------------------------------------------------
 // Synchronizer
 //----------------------------------------------------------------------------
-class SynchronizerAgent : public QObject
-{
-	Q_OBJECT
-public:
-	SynchronizerAgent(QObject *parent = 0) : QObject(parent)
-	{
-		QMetaObject::invokeMethod(this, "started", Qt::QueuedConnection);
-	}
-
-signals:
-	void started();
-};
-
 class Synchronizer::Private : public QThread
 {
 	Q_OBJECT
@@ -331,7 +318,6 @@ public:
 
 	QObject *obj;
 	QEventLoop *loop;
-	SynchronizerAgent *agent;
 	TimerFixer *fixer;
 	QMutex m;
 	QWaitCondition w;
@@ -440,14 +426,10 @@ protected:
 			}
 
 			loop = &eventLoop;
-			agent = new SynchronizerAgent;
-			connect(agent, SIGNAL(started()), SLOT(agent_started()), Qt::DirectConnection);
+			m.unlock();
 
 			// run the event loop
 			eventLoop.exec();
-
-			delete agent;
-			agent = 0;
 
 			// eventloop done, flush pending events
 			QCoreApplication::instance()->sendPostedEvents();
@@ -460,12 +442,6 @@ protected:
 			loop = 0;
 			w.wakeOne();
 		}
-	}
-
-private slots:
-	void agent_started()
-	{
-		m.unlock();
 	}
 };
 

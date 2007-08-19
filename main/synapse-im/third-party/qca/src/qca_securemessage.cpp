@@ -114,7 +114,6 @@ void SecureMessageKey::setPGPPublicKey(const PGPKey &pub)
 void SecureMessageKey::setPGPSecretKey(const PGPKey &sec)
 {
 	d->ensureType(SecureMessageKey::PGP);
-	Q_ASSERT(sec.isSecret());
 	d->pgp_sec = sec;
 }
 
@@ -261,24 +260,12 @@ public:
 	QByteArray detachedSig;
 	QString hashName;
 	SecureMessageSignatureList signers;
-	QString dtext;
 
-	QList<int> bytesWrittenArgs;
-	QTimer readyReadTrigger, bytesWrittenTrigger, finishedTrigger;
-
-	Private(SecureMessage *_q) : readyReadTrigger(this), bytesWrittenTrigger(this), finishedTrigger(this)
+	Private(SecureMessage *_q)
 	{
 		q = _q;
 		c = 0;
 		system = 0;
-
-		readyReadTrigger.setSingleShot(true);
-		bytesWrittenTrigger.setSingleShot(true);
-		finishedTrigger.setSingleShot(true);
-		connect(&readyReadTrigger, SIGNAL(timeout()), SLOT(t_readyRead()));
-		connect(&bytesWrittenTrigger, SIGNAL(timeout()), SLOT(t_bytesWritten()));
-		connect(&finishedTrigger, SIGNAL(timeout()), SLOT(t_finished()));
-
 		reset(ResetAll);
 	}
 
@@ -291,11 +278,6 @@ public:
 	{
 		if(c)
 			c->reset();
-
-		bytesWrittenArgs.clear();
-		readyReadTrigger.stop();
-		bytesWrittenTrigger.stop();
-		finishedTrigger.stop();
 
 		if(mode >= ResetSessionAndData)
 		{
@@ -345,7 +327,6 @@ public slots:
 
 			success = c->success();
 			errorCode = c->errorCode();
-			dtext = c->diagnosticText();
 			if(success)
 			{
 				detachedSig = c->signature();
@@ -356,29 +337,11 @@ public slots:
 		}
 
 		if(sig_read)
-			readyReadTrigger.start();
+			QTimer::singleShot(0, q, SIGNAL(readyRead()));
 		if(sig_written)
-		{
-			bytesWrittenArgs += written;
-			bytesWrittenTrigger.start();
-		}
+			QMetaObject::invokeMethod(q, "bytesWritten", Qt::QueuedConnection, Q_ARG(int, written));
 		if(sig_done)
-			finishedTrigger.start();
-	}
-
-	void t_readyRead()
-	{
-		emit q->readyRead();
-	}
-
-	void t_bytesWritten()
-	{
-		emit q->bytesWritten(bytesWrittenArgs.takeFirst());
-	}
-
-	void t_finished()
-	{
-		emit q->finished();
+			QTimer::singleShot(0, q, SIGNAL(finished()));
 	}
 };
 
@@ -601,7 +564,8 @@ SecureMessageSignatureList SecureMessage::signers() const
 
 QString SecureMessage::diagnosticText() const
 {
-	return d->dtext;
+	// TODO
+	return QString();
 }
 
 //----------------------------------------------------------------------------

@@ -20,16 +20,14 @@
 
 #include "qca_keystore.h"
 
+#include "qcaprovider.h"
+
 #include <QCoreApplication>
 #include <QAbstractEventDispatcher>
 #include <QPointer>
 #include <QSet>
 #include <QMutex>
 #include <QWaitCondition>
-
-#include <stdlib.h> // abort
-
-#include "qcaprovider.h"
 
 Q_DECLARE_METATYPE(QCA::KeyStoreEntry)
 Q_DECLARE_METATYPE(QList<QCA::KeyStoreEntry>)
@@ -540,7 +538,6 @@ class KeyStoreThread : public SyncThread
 	Q_OBJECT
 public:
 	KeyStoreTracker *tracker;
-	QMutex call_mutex;
 
 	KeyStoreThread(QObject *parent = 0) : SyncThread(parent)
 	{
@@ -588,23 +585,12 @@ public:
 	}
 };
 
-// this function is thread-safe
 static QVariant trackercall(const char *method, const QVariantList &args = QVariantList())
 {
 	QVariant ret;
 	bool ok;
-
-	g_ksm->thread->call_mutex.lock();
 	ret = g_ksm->thread->call(KeyStoreTracker::instance(), method, args, &ok);
-	g_ksm->thread->call_mutex.unlock();
-
 	Q_ASSERT(ok);
-	if(!ok)
-	{
-		fprintf(stderr, "QCA: KeyStoreTracker call [%s] failed.\n", method);
-		abort();
-		return QVariant();
-	}
 	return ret;
 }
 
@@ -1390,9 +1376,7 @@ public:
 
 	void do_update()
 	{
-		// ksm doesn't have reset or state changes so we can
-		//   use QPointer here for full SS.
-		QPointer<QObject> self(this);
+		QPointer<QObject> self(this); // for signal-safety
 
 		bool newbusy = KeyStoreTracker::instance()->isBusy();
 		QList<KeyStoreTracker::Item> newitems = KeyStoreTracker::instance()->getItems();
@@ -1561,7 +1545,6 @@ KeyStoreManager::KeyStoreManager(QObject *parent)
 
 KeyStoreManager::~KeyStoreManager()
 {
-	Q_ASSERT(KeyStoreTracker::instance());
 	KeyStoreTracker::instance()->removeTarget(d);
 	delete d;
 }
