@@ -183,6 +183,8 @@ public:
 	int type() const { return File; }
 	XMPP::Jid from() const;
 	void setFrom(const XMPP::Jid &);
+	void resetFileTransfer();
+	XMPP::FileTransfer *fileTransfer();
 	XMPP::FileTransfer *takeFileTransfer();
 
 	virtual int priority() const;

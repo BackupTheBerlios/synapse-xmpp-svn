@@ -202,6 +202,8 @@ public:
 	ServerInfoManager* serverInfoManager();
 	BookmarkManager* bookmarkManager();
 
+	void logEvent(const Jid &, PsiEvent *);
+
 signals:
 	void disconnected();
 	void reconnecting();
@@ -388,7 +390,6 @@ private:
 	void simulateContactOffline(UserListItem *);
 	void simulateRosterOffline();
 	void cpUpdate(const UserListItem &, const QString &rname="", bool fromPresence=false);
-	void logEvent(const Jid &, PsiEvent *);
 	void queueEvent(PsiEvent *);
 	void openNextEvent(const UserListItem &);
 	void updateReadNext(const Jid &);

@@ -43,6 +43,7 @@
 #endif
 #include "psicontactlist.h"
 #include "accountlabel.h"
+#include "psievent.h"
 
 typedef Q_UINT64 LARGE_TYPE;
 
@@ -210,6 +211,11 @@ void FileTransferHandler::send(const XMPP::Jid &to, const QString &fname, const 
 
 	d->f.setFileName(fname);
 	d->ft->sendFile(d->peer, d->fileName, d->fileSize, desc);
+	FileEvent *fe = new FileEvent(to, d->ft, d->pa);
+	fe->setTimeStamp(QDateTime::currentDateTime());
+	d->pa->logEvent(to,fe);
+	fe->resetFileTransfer();
+	delete fe;
 }
 
 PsiAccount *FileTransferHandler::account() const

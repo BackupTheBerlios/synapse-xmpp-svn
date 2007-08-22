@@ -20,6 +20,7 @@
 #include "jidutil.h"
 #include "psiaccount.h"
 #include "userlist.h"
+#include "filetransfer.h"
 
 static QString getNext(QString *str)
 {
@@ -140,7 +141,13 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 		if (m.containsHTML())
 			html = m.htmlString();
 		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" + html + "')");
-	} 
+	}
+	else if(e->type() == PsiEvent::File)
+	{
+		FileEvent *fe = (FileEvent *)e;
+		XMPP::FileTransfer *ft = fe->fileTransfer();
+		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('file','" + (e->originLocal() ? "to" : "from") + "','" + fe->timeStamp().date().toString() + "','" + fe->timeStamp().time().toString() + "',' Transfering file : " + ft->fileName() + QString("\n Size: %1").arg(ft->fileSize()) + "','')");
+	}
 	else if(e->type() == PsiEvent::Auth) 
 	{
 		AuthEvent *ae = (AuthEvent *)e;	
@@ -229,6 +236,8 @@ HistoryItem *HistoryDB::getEvents(QTreeWidget *eventsTree, QString j, QDate date
 			icon = "psi/chat";
 		else if(query.record(i).value("type").toString() == "error")
 			icon = "psi/system";
+		else if(query.record(i).value("type").toString() == "file")
+			icon = "psi/file";
 		else
 			icon = "psi/message";
 		QTime  time;

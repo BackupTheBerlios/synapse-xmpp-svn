@@ -427,6 +427,17 @@ void FileEvent::setFrom(const Jid &j)
 	v_from = j;
 }
 
+void FileEvent::resetFileTransfer()
+{
+	ft = NULL;
+}
+
+FileTransfer *FileEvent::fileTransfer()
+{
+	FileTransfer *_ft = ft;
+	return _ft;
+}
+
 FileTransfer *FileEvent::takeFileTransfer()
 {
 	FileTransfer *_ft = ft;

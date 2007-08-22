@@ -2213,6 +2213,7 @@ void PsiAccount::client_incomingFileTransfer()
 
 	FileEvent *fe = new FileEvent(ft->peer().full(), ft, this);
 	fe->setTimeStamp(QDateTime::currentDateTime());
+	logEvent(fe->from(), fe);
 	handleEvent(fe);
 }
 
@@ -2868,14 +2869,18 @@ void PsiAccount::itemPublished(const Jid& j, const QString& n, const PubSubItem&
 		if (found)
 			tune += e.text();
 
+		printf("tune: %s\n", tune.ascii());
+
 		foreach(UserListItem* u, findRelevant(j)) {
 			// FIXME: try to find the right resource using JEP-33 'replyto'
 			//UserResourceList::Iterator rit = u->userResourceList().find(<resource>);
 			//bool found = (rit == u->userResourceList().end()) ? false: true;
 			//if(found) 
 			//	(*rit).setTune(tune);
-			u->setTune(tune);
-			cpUpdate(*u);
+			if(u->tune().compare(tune) != 0) {
+				u->setTune(tune);
+				cpUpdate(*u);
+			}
 		}
 	}
 	else if (n == "http://jabber.org/protocol/mood") {

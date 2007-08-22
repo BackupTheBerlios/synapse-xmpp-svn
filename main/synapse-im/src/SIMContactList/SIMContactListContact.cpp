@@ -475,7 +475,7 @@ SIMContactListItem *SIMContactListContact::updateParent(SIMContactListContact *i
 			newParent = contactList->searchGroup();
 		}
 	}
- 	else if (!contactList->showOffline() && item->status().type() == Status::Offline && !item->alerting()) {
+ 	else if (!contactList->showOffline() && item->status().type() == Status::Offline && !item->alerting() && !item->u()->isSelf()) {
 		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
 		newParent = contactList->invisibleGroup();
 	}
@@ -503,9 +503,6 @@ SIMContactListItem *SIMContactListContact::updateParent(SIMContactListContact *i
 	if ((!contactList->showGroups() || !contactList->search().isEmpty()) && newParent != contactList->searchGroup()) {
 		newParent = contactList->rootItem();
 	}
-
-	if(item->status().type() == Status::Offline)
-		printf("Offline parent type: %d\n", newParent->type());
 
 	return newParent;
 }
