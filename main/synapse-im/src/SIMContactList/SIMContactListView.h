@@ -34,7 +34,6 @@ private slots:
 	void qlv_doubleclick(const QModelIndex&);
 
 protected:
-	void wheelEvent(QWheelEvent *);
 	bool event(QEvent *event);
 	void mousePressEvent(QMouseEvent *e);
 

@@ -90,22 +90,21 @@ bool SIMContactListView::event(QEvent *event)
 		QPoint pos = mapToGlobal(helpEvent->pos());
 		return model()->setData(index,QVariant(pos),Qt::ToolTipRole);
 	}
-	return QWidget::event(event);
-}
-
-void SIMContactListView::wheelEvent(QWheelEvent *event)
-{
-	// Workaround for bug in wheelEvent in QScrollBar;
-	QScrollBar *sb = verticalScrollBar();
-     	int numDegrees = event->delta() / 8;
-     	int numSteps = numDegrees / 15;
+	else if (event->type() == QEvent::Wheel) {
+		QWheelEvent *ew= static_cast<QWheelEvent *>(event);
+		QScrollBar *sb = verticalScrollBar();
+     		int numDegrees = ew->delta() / 8;
+     		int numSteps = numDegrees / 15;
 	
-	if (numSteps < (sb->minimum() - sb->value()))
-		numSteps = sb->value() * (-1);
-	else if (numSteps > (sb->maximum() - sb->value()))
-		numSteps = (sb->maximum() - sb->value());
+		if (numSteps < (sb->minimum() - sb->value()))
+			numSteps = sb->value() * (-1);
+		else if (numSteps > (sb->maximum() - sb->value()))
+			numSteps = (sb->maximum() - sb->value());
 
-       	sb->setValue(verticalScrollBar()->value() - numSteps);
+       		sb->setValue(verticalScrollBar()->value() - numSteps);
+		return true;
+	}
+	return QWidget::event(event);
 }
 
 // Drag & Drop
