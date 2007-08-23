@@ -32,6 +32,7 @@ public:
 	QString toolTip();
 
 	static SIMContactListItem *updateParent(SIMContactListContact *item, SIMContactList *contactList);
+	void updateOptions();
 
 private:
 	UserListItem u_;

@@ -220,6 +220,13 @@ void SIMContactList::updateSearchParents()
 	emit s_dataChanged();
 }
 
+void SIMContactList::updateOptions()
+{
+	root_->updateOptions();
+	searchGroup_->updateOptions();
+	invisibleGroup_->updateOptions();
+}
+
 void SIMContactList::updateParents()
 {
 	root_->updateParents();

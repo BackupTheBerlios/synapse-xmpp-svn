@@ -55,6 +55,7 @@ public slots:
 	void setShowSelf(bool);
 	void setShowGroups(bool);
 
+	void updateOptions();
 	void dataChanged();
 signals:
 	void showOffline(bool);

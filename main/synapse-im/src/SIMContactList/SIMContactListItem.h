@@ -50,7 +50,7 @@ public:
 	void setParent(SIMContactListItem *parent);
 	void updateParents();
 	void updateParent();
-
+	void updateOptions();
 //signals:
 //	void dataChanged();
 

@@ -381,6 +381,7 @@ bool PsiCon::init()
 	connect(this, SIGNAL(emitOptionsUpdate()), d->mainwin, SLOT(optionsUpdate()));
 
 	connect(this, SIGNAL(emitOptionsUpdate()), d->mainwin->cvlist, SLOT(optionsUpdate()));
+	connect(this, SIGNAL(emitOptionsUpdate()), ((SIMContactList*)d->contactList), SLOT(updateOptions()));
 
 	d->mainwin->restoreSavedGeometry(d->pro.mwgeom);
 	d->mainwin->updateStatusLastMenu();

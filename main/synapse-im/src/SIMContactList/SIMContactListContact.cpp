@@ -507,3 +507,9 @@ SIMContactListItem *SIMContactListContact::updateParent(SIMContactListContact *i
 	return newParent;
 }
 
+void SIMContactListContact::updateOptions()
+{
+	UserListItem uloc = *u();
+	setUserListItem(uloc);
+}
+

@@ -265,3 +265,11 @@ void SIMContactListItem::updateParents()
 	updateParent();
 }
 
+void SIMContactListItem::updateOptions()
+{
+	QList<SIMContactListItem*> items(childItems);
+	for (int i = 0; i<items.size(); ++i)
+		items.at(i)->updateOptions();
+	if (type_ == SIMContactListItem::Contact)
+		((SIMContactListContact* )this)->updateOptions();
+}
