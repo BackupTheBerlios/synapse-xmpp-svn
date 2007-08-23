@@ -14,6 +14,10 @@
 #include "pgputil.h"
 #include "avatars.h"
 
+#ifdef USE_PEP
+#include "serverinfomanager.h"
+#endif
+
 #include <QAction>
 #include <QMenu>
 #include <QMessageBox>
@@ -171,6 +175,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	bool avail = u_.isAvailable();
 
 	QAction *status = NULL;
+	QAction *mood = NULL;
 
 	QAction *addToContactList = NULL;
 	QAction *serviceDiscovery = NULL;
@@ -198,8 +203,9 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 
 	if(self) {
 		status = pm.addAction(SIMContactList::tr("Set &Status"));
-#ifdef PEP
+#ifdef USE_PEP
 		if(online && account()->serverInfoManager()->hasPEP()) {
+			mood = pm.addAction(SIMContactList::tr("Mood"));
 			avatAssign = pm.addAction(SIMContactList::tr("Set Avatar"));
 			avatClear = pm.addAction(SIMContactList::tr("Unset Avatar"));
 		}
@@ -295,10 +301,9 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 
 	if (ret == status) {
 		account()->changeStatus(0);
-#ifdef PEP
+#ifdef USE_PEP
 	} else if (ret == mood) {
 		account()->actionSetMood();
-		account()->actionUnsetAvatar();
 #endif
 	} else if (ret == serviceDiscovery) {
 		account()->actionDisco(Jid(account()->jid().host()),"");
@@ -382,7 +387,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	} else if (ret == remove) {
 		account()->actionRemove(u_.jid());
 	} else if (ret == avatAssign) {
-#ifdef PEP
+#ifdef USE_PEP
 		if(self)
 			account()->actionSetAvatar();
 		else {
@@ -391,11 +396,11 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
  			if(!file.isNull()) {
  				account()->avatarFactory()->importManualAvatar(u_.jid(), file);
  			}
-#ifdef PEP
+#ifdef USE_PEP
 		}
 #endif
 	} else if (ret == avatClear) {
-#ifdef PEP
+#ifdef USE_PEP
 		if(self)
 			account()->actionUnsetAvatar();
 		else
