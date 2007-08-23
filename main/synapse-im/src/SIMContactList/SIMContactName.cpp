@@ -38,7 +38,9 @@ void SIMContactName::setText(const QString &txt, const QColor &color, int width)
 		PsiRichText::install(v_rt);
 	}
 	PsiRichText::setText(v_rt, text);
-	v_rt->setDefaultFont(option.font[fRoster]);
+	QFont fnt;
+	fnt.fromString(option.font[fRoster]);
+	v_rt->setDefaultFont(fnt);
 	PsiRichText::ensureTextLayouted(v_rt, width - 2);
 }
 
