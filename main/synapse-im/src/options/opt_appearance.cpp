@@ -162,7 +162,7 @@ void OptionsTabAppearanceMisc::restoreOptions(const Options *opt)
 	d->cb_style->addItems(stylesList);
 	d->cb_style->setCurrentItem(n);
 	d->ck_stylePalette->setChecked( PsiOptions::instance()->getOption("options.ui.style.use-palette").toBool() );
-	d->ck_rosterEmot->setChecked( !PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool());
+	d->ck_rosterEmot->setChecked( PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool());
 }
 
 void OptionsTabAppearanceMisc::changeStyle(const QString &styleName)

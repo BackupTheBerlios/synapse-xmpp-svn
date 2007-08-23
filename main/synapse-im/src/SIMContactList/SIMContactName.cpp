@@ -31,12 +31,13 @@ SIMContactName::SIMContactName(const QString &txt, const QColor &color, int widt
 void SIMContactName::setText(const QString &txt, const QColor &color, int width)
 {
 	color_ = color;
-/*	if (PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool())
+	QString text = txt;
+	if (PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool())
 	{
-		txt = TextUtil::emoticonify(txt);
+		text = TextUtil::emoticonify(txt);
 		PsiRichText::install(v_rt);
-	}*/
-	PsiRichText::setText(v_rt, txt);
+	}
+	PsiRichText::setText(v_rt, text);
 	v_rt->setDefaultFont(option.font[fStatus]);
 	PsiRichText::ensureTextLayouted(v_rt, width - 2);
 }
