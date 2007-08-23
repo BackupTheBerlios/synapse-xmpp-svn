@@ -25,6 +25,8 @@
 #include <QLineEdit>
 #include <QInputDialog>
 #include <QPainter>
+#include <QApplication>
+#include "qclipboard.h"
 
 SIMContactListContact::SIMContactListContact(const UserListItem &_u, PsiAccount *_pa, SIMContactList *cl, SIMContactListItem *parent)
 :SIMContactListItem(SIMContactListItem::Contact, _pa, cl, parent), alertIcon_(NULL)
@@ -195,6 +197,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	QAction *avatAssign = NULL;
 	QAction *avatClear = NULL;
 	QAction *pgp = NULL;
+	QAction *copyStatusMsg = NULL;
 
 	QAction *logon = NULL;
 
@@ -293,6 +296,9 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_ONLINE).icon(), SIMContactList::tr("&Log on"));
 		else
 			logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_OFFLINE).icon(), SIMContactList::tr("&Log off"));
+
+	if(!description().isEmpty())
+		copyStatusMsg = pm.addAction(SIMContactList::tr("Copy status message"));
 
 	QAction *ret = pm.exec(p);
 	if(ret == NULL)
@@ -413,6 +419,12 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	} else if (ret == logon) {
 		Status s=makeStatus(STATUS_OFFLINE,"");
 		account()->actionAgentSetStatus(jid(), s);
+	} else if (ret == copyStatusMsg) {
+		QClipboard *clipboard = QApplication::clipboard();
+		QString cliptext = description();
+			
+		clipboard->setText(cliptext, QClipboard::Clipboard);
+		clipboard->setText(cliptext, QClipboard::Selection);	
 	}
 }
 
