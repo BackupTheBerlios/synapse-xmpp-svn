@@ -118,15 +118,14 @@ void SIMContactListContact::setAlertIcon(PsiIcon *icon)
 void SIMContactListContact::setUserListItem(const UserListItem &_u)
 {
 	u_=_u;
-	
+	QFont fnt2;
+	fnt2.fromString(option.font[fRoster]);
 	u_.setAvatarFactory(account()->avatarFactory());
-	QString s = name();
+	QString s = QString("<font size='%1'>").arg(fnt2.pointSize()-8) + name() + "</font>";
 	if (u_.isSelf())
-		s = account()->name();
+		s = QString("<font size='%1'>").arg(fnt2.pointSize()-8) + account()->name() + "</font>";
 	if(!status().status().isEmpty()) {
 		QFont fnt;
-		QFont fnt2;
-		fnt2.fromString(option.font[fRoster]);
 		fnt.fromString(option.font[fStatus]);
 		int size = fnt.pointSize() - fnt2.pointSize();
 		s += "<br><font size='"+QString("%1").arg(size)+"' color='" + option.color[cStatus].name() + "'>";		
