@@ -81,9 +81,7 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 	printf("jid = %s\n", u.jid().bare().ascii());
 	SIMContactListContact *clc = contactList()->findEntry(u.jid().bare(), u.isSelf());
 	if(clc) {
-		printf("clc found\n");
-		if (clc->u()->groups() == u.groups() || u.isSelf()) {
-			printf("update\n");
+		if (clc->u()->groups() == u.groups() || u.isSelf() || !clc->u()->inList()) {
 			clc->setUserListItem(u);
 			SIMContactListItem *parent = clc->parent();
 			clc->updateParents();
@@ -98,7 +96,6 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 			contactList()->dataChanged();
 			return;
 		} else {
-			printf("remove\n");
 			SIMContactListItem *parent = clc->parent();
 			parent->removeChild(clc);
 			delete clc;
