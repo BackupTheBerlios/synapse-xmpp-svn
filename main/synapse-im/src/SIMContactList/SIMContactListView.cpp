@@ -173,10 +173,10 @@ void SIMContactListView::dropEvent(QDropEvent *e)
 
 void SIMContactListView::mousePressEvent(QMouseEvent *e)
 {
-	if (e->modifiers() && Qt::ShiftModifier) {
+	if (e->modifiers().testFlag(Qt::ShiftModifier)) {
 		//drag event!!
 		SIMContactListItem *item = static_cast<SIMContactListItem*>(indexAt(e->pos()).internalPointer());
-		if(item && (item->type() != SIMContactListItem::Contact || !item->account()->loggedIn())) {
+		if(item && (item->type() == SIMContactListItem::Contact) && item->account()->loggedIn()) {
 			SIMContactListContact *contact = static_cast<SIMContactListContact*>(item);
 			if(contact) {
 				QPixmap pixmap = contact->state();
