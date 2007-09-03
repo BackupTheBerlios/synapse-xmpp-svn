@@ -1110,9 +1110,9 @@ void PsiCon::slotApplyOptions(const Options &opt)
 	}*/
 
 	// update s5b
+	updateS5BServerAddresses();
 	if(oldOpt.dtPort != option.dtPort)
 		s5b_init();
-	updateS5BServerAddresses();
 
 	// mainwin stuff
 	d->mainwin->setWindowOpts(option.alwaysOnTop, (option.useDock && option.dockToolMW));

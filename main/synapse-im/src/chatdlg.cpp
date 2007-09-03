@@ -195,7 +195,7 @@ public:
 	{
 		QString PEP_;
 		if (mood && !mood->isEmpty())
-			PEP_ = QString("<b>") + tr("Mood") + " :</b> " + *mood;
+			PEP_ = QString("<icon name=\"psi/smile\"> <b>") + tr("Mood") + " :</b> " + *mood;
 		if (tune && !tune->isEmpty())
 		{
 			if (!PEP_.isEmpty())

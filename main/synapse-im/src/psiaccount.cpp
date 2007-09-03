@@ -3161,7 +3161,9 @@ void PsiAccount::actionExecuteCommandSpecific(const Jid& j, const QString& node)
 
 void PsiAccount::actionSetMood()
 {
-	MoodDlg *w = new MoodDlg(this);
+	QList<PsiAccount *> pal;
+	pal.append(this);
+	MoodDlg *w = new MoodDlg(pal);
 	w->show();
 }
 

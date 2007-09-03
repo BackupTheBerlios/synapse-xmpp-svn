@@ -66,7 +66,7 @@
 #include "SIMContactDelegate.h"
 
 #include "mainwin_p.h"
-
+#include "mooddlg.h"
 using namespace XMPP;
 
 // deletes submenus in a popupmenu
@@ -455,6 +455,7 @@ void MainWin::registerAction( IconAction *action )
 		{ "menu_quit",           activated, this, SLOT( try2tryCloseProgram() ) },
 		{ "menu_play_sounds",    toggled,   this, SLOT( actPlaySoundsActivated(bool) ) },
 		{ "publish_tune",        toggled,   this, SLOT( actPublishTuneActivated(bool) ) },
+		{ "publish_mood",        activated,   this, SLOT( actPublishMood() ) },
 
 		{ "event_notifier", SIGNAL( clicked(int) ), this, SLOT( statusClicked(int) ) },
 		{ "event_notifier", activated, this, SLOT( doRecvNextEvent() ) },
@@ -653,6 +654,7 @@ void MainWin::buildStatusMenu()
 	d->statusMenu->insertSeparator();
 	d->getAction("status_offline")->addTo(d->statusMenu);
 	d->statusMenu->insertSeparator();
+	d->getAction("publish_mood")->addTo(d->statusMenu);
 	d->getAction("publish_tune")->addTo(d->statusMenu);
 }
 
@@ -870,6 +872,23 @@ void MainWin::actAboutQtActivated ()
 void MainWin::actPlaySoundsActivated (bool state)
 {
 	useSound = state;
+}
+
+void MainWin::actPublishMood ()
+{
+	QList<PsiAccount *> pal = d->psi->contactList()->enabledAccounts();
+	QList<PsiAccount *> pal_pep;
+	printf("list\n");
+	foreach( PsiAccount *pa, pal) {
+		if( pa->serverInfoManager()->hasPEP() )
+			pal_pep.append(pa);
+	}
+	printf("done\n");
+	if (!pal_pep.isEmpty()) {
+		printf("mood\n");
+		MoodDlg *w = new MoodDlg(pal_pep);
+		w->show();
+	}
 }
 
 void MainWin::actPublishTuneActivated (bool state)
@@ -1219,6 +1238,7 @@ void MainWin::accountFeaturesChanged()
 	}
 
 //	d->getAction("publish_tune")->setEnabled(have_pep);
+	d->getAction("publish_mood")->setEnabled(have_pep);
 	d->getAction("publish_tune")->setEnabled(true);
 }
 

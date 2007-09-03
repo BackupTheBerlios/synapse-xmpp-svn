@@ -138,6 +138,7 @@ private slots:
 	void actAboutQtActivated ();
 	void actPlaySoundsActivated (bool);
 	void actPublishTuneActivated (bool);
+	void actPublishMood();
 	void actTipActivated();
 
 	bool showDockMenu(const QPoint &);

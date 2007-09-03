@@ -247,10 +247,13 @@ void PsiActionList::Private::createMainWin()
 	}
 
 	{
+		IconAction *actPublishMood = new IconAction (tr("Publish mood"), "psi/smile", tr("Publish &mood"), 0, this, 0, true);
+
 		IconAction *actPublishTune = new IconAction (tr("Publish tune"), "psi/publishTune", tr("Publish &tune"), 0, this, 0, true);
 		actPublishTune->setWhatsThis (tr("Toggles whether the currently playing tune should be published or not."));
 
 		ActionNames actions[] = {
+			{ "publish_mood", actPublishMood },
 			{ "publish_tune", actPublishTune },
 			{ "", 0 }
 		};
