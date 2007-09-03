@@ -126,7 +126,7 @@ QString ApplicationInfo::resourcesDir()
 QString ApplicationInfo::homeDir()
 {
 	// Try the environment override first
-	char *p = getenv("PSIDATADIR");
+	char *p = getenv("SYNAPSE_IM_DATADIR");
 	if(p)
 		return p;
 

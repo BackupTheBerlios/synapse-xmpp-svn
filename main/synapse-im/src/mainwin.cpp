@@ -285,6 +285,9 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	((SIMContactList *)d->psi->contactList())->setContactListView(cvlist);
 	SIMContactListModel *model = new SIMContactListModel(d->psi->contactList());
 	cvlist->setModel(model);
+	QPalette pal = cvlist->palette();
+	pal.setColor(QPalette::Base, option.color[cListBack]);
+	cvlist->setPalette(pal);
 
 	int layoutMargin = 0;
 #ifdef Q_WS_MAC
@@ -1080,7 +1083,10 @@ void MainWin::optionsUpdate()
 	else 
 		mainMenuBar()->show();
 #endif
-	
+	QPalette pal = cvlist->palette();
+	pal.setColor(QPalette::Base, option.color[cListBack]);
+	cvlist->setPalette(pal);
+
 	setWindowOpacity(double(qMax(MINIMUM_OPACITY,PsiOptions::instance()->getOption("options.ui.contactlist.opacity").toInt()))/100);
 
 	buildStatusMenu();
