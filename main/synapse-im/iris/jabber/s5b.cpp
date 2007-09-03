@@ -39,6 +39,10 @@
 
 #define MAXSTREAMHOSTS 5
 
+#ifdef USE_UPNP
+#include "upnp.h"
+#endif
+
 //#define S5B_DEBUG
 
 namespace XMPP {
@@ -2041,6 +2045,9 @@ class S5BServer::Private
 {
 public:
 	SocksServer serv;
+#ifdef USE_UPNP
+	SIMUPNP *upnp;
+#endif
 	QStringList hostList;
 	Q3PtrList<S5BManager> manList;
 	Q3PtrList<Item> itemList;
@@ -2053,6 +2060,9 @@ S5BServer::S5BServer(QObject *parent)
 	d->itemList.setAutoDelete(true);
 	connect(&d->serv, SIGNAL(incomingReady()), SLOT(ss_incomingReady()));
 	connect(&d->serv, SIGNAL(incomingUDP(const QString &, int, const QHostAddress &, int, const QByteArray &)), SLOT(ss_incomingUDP(const QString &, int, const QHostAddress &, int, const QByteArray &)));
+#ifdef USE_UPNP
+	d->upnp = new SIMUPNP(&d->serv);
+#endif
 }
 
 S5BServer::~S5BServer()
@@ -2068,13 +2078,24 @@ bool S5BServer::isActive() const
 
 bool S5BServer::start(int port)
 {
+#ifdef USE_UPNP
+	d->upnp->setLocalPort((quint16)port);
+	d->upnp->setExternalPort((quint16)port);
+	d->upnp->rebind();
+	return true;
+#else
 	d->serv.stop();
 	return d->serv.listen(port, true);
+#endif
 }
 
 void S5BServer::stop()
 {
+#ifdef USE_UPNP
+	d->upnp->unbind();
+#else
 	d->serv.stop();
+#endif
 }
 
 void S5BServer::setHostList(const QStringList &list)
@@ -2084,7 +2105,14 @@ void S5BServer::setHostList(const QStringList &list)
 
 QStringList S5BServer::hostList() const
 {
+#ifdef USE_UPNP
+	QStringList hl = d->hostList;
+	if(!d->upnp->externalIP().isEmpty())
+		hl.append(d->upnp->externalIP());
+	return hl;
+#else
 	return d->hostList;
+#endif
 }
 
 int S5BServer::port() const

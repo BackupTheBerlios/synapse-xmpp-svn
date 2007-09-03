@@ -29,6 +29,7 @@ include_directories(
 ../iris/xmpp-core
 ../iris/xmpp-im
 ../iris/jabber
+../iris/upnp
 ../iris
 ${QT_INCLUDE_DIR}
 ${QT_CORE_INCLUDE_DIR}
@@ -59,7 +60,18 @@ set(idn_SRCS
 	../iris/libidn/stringprep.c
 )
 
+# UPNP
+ADD_DEFINITIONS(-DUSE_UPNP)
+set(upnp_SRCS
+	../iris/upnp/upnp.cpp
+)
+
+set(upnp_H
+	../iris/upnp/upnp.h
+)
+
 set(iris_H
+	${upnp_H}
 	../iris/xmpp-core/securestream.h
 	../iris/xmpp-core/parser.h
 	../iris/xmpp-core/xmlprotocol.h
@@ -142,7 +154,7 @@ set(iris_H ${iris_H} ${linklocal_H})
 endif(AVAHI_FOUND)
 endif(QT_QTDBUS_FOUND)
 
-set(iris_SRCS ${cutestuff_SRCS} ${idn_SRCS} ${linklocal_SRCS}
+set(iris_SRCS ${cutestuff_SRCS} ${idn_SRCS} ${linklocal_SRCS} ${upnp_SRCS}
 	../iris/xmpp-core/securestream.cpp
 	../iris/xmpp-core/connector.cpp
 	../iris/jabber/s5b.cpp
