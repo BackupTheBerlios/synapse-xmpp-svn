@@ -306,7 +306,6 @@ set(synapse-im_H
 	voicecaller.h
 	xdata_widget.h
 	xmlconsole.h
-	plugins/core/coreinterface.h
 )
 
 set(res_RC
