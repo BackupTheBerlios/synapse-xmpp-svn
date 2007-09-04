@@ -33,7 +33,6 @@
 #include "geolocation.h"
 #include "physicallocation.h"
 #include "maybe.h"
-#include "gmail_notify.h"
 
 class AvatarFactory;
 namespace XMPP {
@@ -139,8 +138,6 @@ public:
 	const GeoLocation& geoLocation() const;
 	void setPhysicalLocation(const PhysicalLocation&);
 	const PhysicalLocation& physicalLocation() const;
-	GMailNotify *gMailNotify();
-	void setGMailNotify(GMailNotify*);
 	void setAvatarFactory(AvatarFactory*);
 
 	UserResourceList & userResourceList();
@@ -164,12 +161,10 @@ private:
 	bool v_private;
 	QStringList secList;
 	QString v_keyID;
-//	QPixmap v_avatar;
 	Mood v_mood;
 	QString v_tune;
 	GeoLocation v_geoLocation;
 	PhysicalLocation v_physicalLocation;
-	GMailNotify* v_gMailNotify;
 	AvatarFactory* v_avatarFactory;
 };
 

@@ -76,7 +76,6 @@
 #include "psicontactlist.h"
 #include "accountlabel.h"
 #include "serverinfomanager.h"
-#include "garchive.h"
 
 #include <QPainter>
 #include <QAbstractTextDocumentLayout>
@@ -541,8 +540,6 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 	ui_.toolbar->addAction(d->act_history);
 	if (d->pa->voiceCaller())
 		ui_.toolbar->addAction(d->act_voice);
-	if (d->pa->gArchive() != NULL)
-		ui_.toolbar->addAction(d->act_otr);
 	ui_.toolbar->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 	//hb3->addWidget(d->toolbar);
 
@@ -593,7 +590,6 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 		d->act_pgp->setChecked(true);
 	
 	connect(d->pa->psi(), SIGNAL(accountCountChanged()), this, SLOT(updateIdentityVisibility()));
-	updateOtr();
 }
 
 ChatDlg::~ChatDlg()
@@ -826,27 +822,6 @@ void ChatDlg::setJid(const Jid &jid)
 const QString& ChatDlg::getDisplayNick()
 {
 	return d->dispNick;
-}
-
-void ChatDlg::updateOtr()
-{
-	d->act_otr->setEnabled((d->pa->gArchive() != NULL) && d->pa->gArchive()->isEnabled());
-	if((d->pa->gArchive() != NULL) && d->pa->gArchive()->isEnabled())
-	{
-		d->pa->gArchive()->isEvent(jid().full()) ? appendSysMsg(tr("--- Your are now off the record! ---")) : appendSysMsg(tr("--- Recording is on! ---"));
-	}
-}
-
-void ChatDlg::updateSave(bool on)
-{
-	if(on)
-	{
-		 appendSysMsg(tr("### Archiving is on! ###"));
-		 updateOtr();
-	} else {
-		appendSysMsg(tr("### Archiving is off! ###"));
-	}
-	
 }
 
 QSize ChatDlg::defaultSize()
@@ -1734,8 +1709,6 @@ void ChatDlg::buildMenu()
 
 	d->pm_settings->addAction(d->act_icon);
 	d->pm_settings->addAction(d->act_file);
-	if (d->pa->gArchive() != NULL)
-		d->act_otr->addTo( d->pm_settings );
 	if (d->pa->voiceCaller())
 		d->act_voice->addTo( d->pm_settings );
 	d->pm_settings->addAction(d->act_pgp);

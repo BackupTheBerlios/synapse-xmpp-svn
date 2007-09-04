@@ -106,16 +106,15 @@
 #include "filetransdlg.h"
 #include "systeminfo.h"
 #include "avatars.h"
-#include "ahc_plugin.h"
+#include "ahcommanddlg.h"
+#include "ahcservermanager.h"
 #include "mucjoindlg.h"
-#include "garchive.h"
 #include "rc.h"
 #include "tabdlg.h"
 #include "certutil.h"
 #include "proxy.h"
 #include "psicontactlist.h"
 #include "timeserver.h"
-#include "gmail_notify.h"
 
 #ifdef PSI_PLUGINS
 #include "pluginmanager.h"
@@ -281,7 +280,10 @@ public:
 	GArchive *ga;
 
 	// Ad-hoc commands
-	AHCBox *ahc;
+	AHCServerManager *ahcManager;
+	RCSetStatusServer *rcSetStatusServer;
+	RCSetOptionsServer *rcSetOptionsServer;
+	RCForwardServer *rcForwardServer;
 
 	// Avatars
 	AvatarFactory* avatarFactory;
@@ -446,7 +448,6 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 #ifdef LINKLOCAL
 	d->linkLocal = false;
 #endif
-//	d->cp = 0;
 	d->contactListAccount = 0;
 	d->ga = NULL;
 	d->userCounter = 0;
@@ -641,7 +642,11 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent)
 	new TimeServer(d->client->rootTask());
 
 	// Initialize Adhoc Commands server
-	d->ahc = 0;
+	d->ahcManager = new AHCServerManager(this);
+	d->rcSetStatusServer = 0;
+	d->rcSetOptionsServer = 0;
+	d->rcForwardServer = 0;
+	setRCEnabled(option.useRC);
 
 	// Plugins
 #ifdef PSI_PLUGINS
@@ -722,7 +727,7 @@ PsiAccount::~PsiAccount()
 	if (d->jingleSessionManager)
 		delete d->jingleSessionManager;
 #endif	
-	delete d->ahc;
+	delete d->ahcManager;
 //	delete d->cp;
 	delete d->privacyManager; //!!
 	delete d->capsManager;
@@ -1620,31 +1625,6 @@ void PsiAccount::resolveContactName()
 void PsiAccount::serverFeaturesChanged()
 {
 	setPEPAvailable(d->serverInfoManager->hasPEP());
-//	d->self.gMailNotify()->setEnabled(d->serverInfoManager->hasGoogleMailNotify());
-//	if(d->serverInfoManager->hasGoogleArchive())
-//		d->ga->enable();
-	if(d->serverInfoManager->hasGoogleMailNotify() && d->self.gMailNotify() == NULL) {
-		CoreInterface *ci = d->psi->loadCorePlugin("google_notify");
-		if(ci != NULL) {
-			GMailNotify *gmn = (GMailNotify*)ci;
-			if(gmn) {
-				gmn->setup(this,jid(),true);
-				gmn->init();
-				d->self.setGMailNotify(gmn);
-			}
-		}
-	} else if(!d->serverInfoManager->hasGoogleMailNotify() && d->self.gMailNotify() != NULL)
-		d->self.gMailNotify()->setEnabled(false);
-	else if(d->serverInfoManager->hasGoogleMailNotify() && d->self.gMailNotify() != NULL)
-		d->self.gMailNotify()->setEnabled(true);
-
-	if(d->serverInfoManager->hasGoogleArchive() && d->ga == NULL) {
-		CoreInterface *ci = d->psi->loadCorePlugin("google_archive");
-		if(ci != NULL) {
-			d->ga = (GArchive*)ci;
-			d->ga->setup(this,jid(),true);
-		}
-	}
 }
 
 void PsiAccount::setPEPAvailable(bool b) 
@@ -3019,8 +2999,6 @@ ChatDlg *PsiAccount::ensureChatDlg(const Jid &j)
 		connect(c, SIGNAL(aInfo(const Jid &)), SLOT(actionInfo(const Jid &)));
 		connect(c, SIGNAL(aHistory(const Jid &)), SLOT(actionHistory(const Jid &)));
 		connect(c, SIGNAL(aFile(const Jid &)), SLOT(actionSendFile(const Jid &)));
-		if(d->ga != NULL)
-			connect(c, SIGNAL(aOtr(const XMPP::Jid &)), d->ga, SLOT(changeOtr(const XMPP::Jid &)));
 		connect(c, SIGNAL(aVoice(const Jid &)), SLOT(actionVoice(const Jid &)));
 		connect(d->psi, SIGNAL(emitOptionsUpdate()), c, SLOT(optionsUpdate()));
 		connect(this, SIGNAL(updateContact(const Jid &, bool)), c, SLOT(updateContact(const Jid &, bool)));
@@ -3155,8 +3133,13 @@ void PsiAccount::actionExecuteCommand(const Jid& j, const QString& node)
 
 void PsiAccount::actionExecuteCommandSpecific(const Jid& j, const QString& node)
 {
-	if(d->ahc)
-		d->ahc->process(j,node);
+	if(node.isEmpty()) {
+		AHCommandDlg *w = new AHCommandDlg(this,j);
+		w->show();
+	}
+	else {
+		AHCommandDlg::executeCommand(d->client,j,node);
+	}
 }
 
 void PsiAccount::actionSetMood()
@@ -4792,16 +4775,19 @@ void PsiAccount::optionsUpdate()
 
 void PsiAccount::setRCEnabled(bool b)
 {
-	if(b && !d->ahc) {
-		CoreInterface *ci = d->psi->loadCorePlugin("ahc");
-		if(ci != NULL) {
-			d->ahc = (AHCBox*)ci;
-			d->ahc->setPsiCon(d->psi);
-			d->ahc->init();
-		}
+	if (b && !d->rcSetStatusServer) {
+		d->rcSetStatusServer = new RCSetStatusServer(d->ahcManager);
+		d->rcForwardServer = new RCForwardServer(d->ahcManager);
+		d->rcSetOptionsServer = new RCSetOptionsServer(d->ahcManager, d->psi);
 	}
-	if(d->ahc)
-		d->ahc->setEnabled(b);
+	else if (!b && d->rcSetStatusServer) {
+		delete d->rcSetStatusServer;
+		d->rcSetStatusServer = 0;
+		delete d->rcForwardServer;
+		d->rcForwardServer = 0;
+		delete d->rcSetOptionsServer;
+		d->rcSetOptionsServer = 0;
+	}
 }
 
 void PsiAccount::setSendChatState(bool b)

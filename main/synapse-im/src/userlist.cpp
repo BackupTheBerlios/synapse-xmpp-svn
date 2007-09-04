@@ -31,7 +31,6 @@
 #include "mucmanager.h"
 #include "psioptions.h"
 #include "jidutil.h"
-#include "gmail_notify.h"
 
 using namespace XMPP;
 
@@ -293,14 +292,8 @@ void UserResourceList::sort()
 // UserListItem
 //----------------------------------------------------------------------------
 UserListItem::UserListItem(bool self)
-: v_inList(false), v_self(self), v_private(false), v_gMailNotify(NULL), v_avatarFactory(NULL), lastmsgtype(-1)
+: v_inList(false), v_self(self), v_private(false), v_avatarFactory(NULL), lastmsgtype(-1)
 {
-/*	v_inList = false;
-	v_self = self;
-	v_private = false;
-	v_gMailNotify = NULL;
-	v_avatarFactory = NULL;
-	lastmsgtype = -1;*/
 }
 
 UserListItem::~UserListItem()
@@ -352,16 +345,6 @@ const PhysicalLocation& UserListItem::physicalLocation() const
 	return v_physicalLocation;
 }
 
-GMailNotify* UserListItem::gMailNotify()
-{
-	return v_gMailNotify;
-}
-
-void UserListItem::setGMailNotify(GMailNotify *gmn)
-{
-	v_gMailNotify = gmn;
-}
-
 void UserListItem::setAvatarFactory(AvatarFactory* av)
 {
 	v_avatarFactory = av;
@@ -371,9 +354,6 @@ void UserListItem::setJid(const Jid &j)
 {
 	LiveRosterItem::setJid(j);
 	
-	if (v_gMailNotify)
-		v_gMailNotify->setJid(j);
-
 	int n = jid().full().find('@');
 	if(n == -1)
 		v_isTransport = true;
@@ -496,9 +476,6 @@ QString UserListItem::makeBareTip(bool trim, bool doLinkify) const
 		str += QString("<div style='white-space:pre'>%1 &lt;%2&gt;</div>").arg(Qt::escape(nick)).arg(Qt::escape(JIDUtil::toString(jid(),true)));
 	else
 		str += QString("<div style='white-space:pre'>%1</div>").arg(Qt::escape(nick));
-
-	if(v_self && v_gMailNotify != NULL && v_gMailNotify->isEvent(jid()))
-		str += QString("<div style='white-space:pre'><icon name=\"psi/sendMessage\"> %1: %2</nobr></div>").arg(Qt::escape(QObject::tr("New mails"))).arg(Qt::escape(QString("%1").arg(v_gMailNotify->countEvents())));
 
 	// subscription
 	if(!v_self && subscription().type() != Subscription::Both)

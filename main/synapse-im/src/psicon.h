@@ -121,8 +121,6 @@ public:
 	IconSelectPopup *iconSelectPopup() const;
 	void processEvent(PsiEvent *);
 
-	CoreInterface *loadCorePlugin(QString name);
-
 	QString lastStatusString;
 
 signals:

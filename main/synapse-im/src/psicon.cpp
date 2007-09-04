@@ -84,7 +84,6 @@
 #include "shortcutmanager.h"
 #include "globalshortcutmanager.h"
 #include "desktoputil.h"
-#include "coreinterface.h"
 
 #ifdef Q_WS_MAC
 #include "mac_dock.h"
@@ -1373,30 +1372,6 @@ void PsiCon::processEvent(PsiEvent *e)
 
 		bringToFront(w);
 	}
-}
-
-CoreInterface *PsiCon::loadCorePlugin(QString name)
-{
-	QStringList libPaths = QCoreApplication::libraryPaths();
-	for (int i = 0; i < libPaths.size(); ++i)
-	{
-#ifdef Q_WS_WIN
-		QDir pluginDirectory(libPaths.at(i) + "/plugins/");
-#else
-		QDir pluginDirectory(libPaths.at(i) + "/synapse-im/");
-#endif
-		QString fn = QString("lib")+name+"*";
-		if(!pluginDirectory.entryList(QStringList() << fn).isEmpty())
-		{
-			QString fileName = pluginDirectory.entryList(QStringList() << fn).first();
-
-			QPluginLoader pluginLoader(pluginDirectory.absoluteFilePath(fileName));
-			QObject *plugin = pluginLoader.instance();
-			if (plugin)
-				return qobject_cast<CoreInterface *>(plugin);
-		}
-	}
-	return NULL;
 }
 
 MainWin *PsiCon::mainWin()

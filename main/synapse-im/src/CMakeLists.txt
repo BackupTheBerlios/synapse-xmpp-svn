@@ -106,11 +106,11 @@ set(synapse-im_noMOC_SRCS
 	accountregdlg.cpp
 	accountscombobox.cpp
 	adduserdlg.cpp
-#	ahcexecutetask.cpp
-#	ahcformdlg.cpp
-#	ahcommand.cpp
- #	ahcommanddlg.cpp
-#	ahcommandserver.cpp
+	ahcexecutetask.cpp
+	ahcformdlg.cpp
+	ahcommand.cpp
+	ahcommanddlg.cpp
+	ahcommandserver.cpp
 	alertable.cpp
 	antievil.cpp
 	applicationinfo.cpp
@@ -126,7 +126,6 @@ set(synapse-im_noMOC_SRCS
 	conferencebookmark.cpp
 	desktoputil.cpp
 	entitytimetask.cpp
-#	garchive_otr.cpp
 	gcuserview.cpp
 	geolocation.cpp
 	historydb.cpp
@@ -171,7 +170,7 @@ set(synapse-im_noMOC_SRCS
 	psitoolbar.cpp
 	psitrayicon.cpp
 	pubsubsubscription.cpp
-#	rc.cpp
+	rc.cpp
 	resourcemenu.cpp
 	rosteritemexchangetask.cpp
 	rtparse.cpp
@@ -202,7 +201,6 @@ set(synapse-im_SRCS
 	${dbus_SRCS}
 	${wb_SRCS}
 	pixmaputil.cpp
-#	contactview.cpp
 	mainwin_p.cpp
 	accountmanagedlg.cpp
 	eventdlg.cpp
@@ -210,8 +208,7 @@ set(synapse-im_SRCS
 	searchdlg.cpp
 	groupchatdlg.cpp
 	registrationdlg.cpp
-#	qwextend.cpp
- #	ahcservermanager.cpp
+	ahcservermanager.cpp
 	discodlg.cpp
 	alerticon.cpp
 	psipopup.cpp
@@ -220,9 +217,7 @@ set(synapse-im_SRCS
 	actionlist.cpp
  	privacymanager.cpp
 	psiactionlist.cpp
-#	gmail_notify.cpp
 	httpauthmanager.cpp
-#	garchive.cpp
 	psicon.cpp
 	psiaccount.cpp
 )
@@ -238,8 +233,8 @@ set(synapse-im_H
 	accountregdlg.h
 	accountscombobox.h
 	adduserdlg.h
-#	ahcformdlg.h
-#	ahcommanddlg.h
+	ahcformdlg.h
+	ahcommanddlg.h
 	alertable.h
 	alerticon.h
 	antievil.h
@@ -251,13 +246,9 @@ set(synapse-im_H
 	chatdlg.h
 	chateditproxy.h
 	chatsplitter.h
-#	contactview.h
 	discodlg.h
 	eventdlg.h
-#	entitytimetask.h
 	filetransdlg.h
-#	garchive.h
-#	gmail_notify.h
 	gcuserview.h
 	groupchatdlg.h
 	mucaffiliationsmodel.h
@@ -379,16 +370,6 @@ endif(WIN32)
 if(SPEEX_FOUND)
 set(synapse-im_SRCS ${synapse-im_SRCS} ${jingle_SRCS})
 endif(SPEEX_FOUND)
-
-#///
-INCLUDE_DIRECTORIES(
-	plugins/core
-	plugins/core/gmail
-	plugins/core/garchive
-	plugins/core/ahc
-)
-
-add_subdirectory(plugins)
 
 add_executable(synapse-im
 	${synapse-im_SRCS}

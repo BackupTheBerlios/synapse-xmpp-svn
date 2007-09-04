@@ -72,9 +72,6 @@ public:
 	void setJid(const Jid &);
 	const QString & getDisplayNick();
 
-	void updateOtr();
-	void updateSave(bool on);
-
 	static QSize defaultSize();
 	bool readyToHide();
 
