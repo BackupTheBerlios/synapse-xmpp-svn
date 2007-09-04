@@ -10,7 +10,6 @@ SIMContactList::SIMContactList(QObject* parent)
 : QObject(parent), showOffline_(false), showGroups_(true), showAccounts_(false), showAway_(true), showSelf_(true), showAgents_(true)
 {
 	root_ = new SIMContactListItem(SIMContactListItem::Root, 0, this);
-	//connect(root_, SIGNAL(dataChanged()), this, SIGNAL(dataChanged()));
 	invisibleGroup_ = new SIMContactListItem(SIMContactListItem::Root, 0, this);
 	searchGroup_ = new SIMContactListItem(SIMContactListItem::Root, 0, this);
 }
@@ -94,7 +93,6 @@ void SIMContactList::setSearch(const QString& search)
 	} else if (search.startsWith(oldsearch))
 		updateVisibleParents();
 	else if (oldsearch.startsWith(search))
-//		updateInvisibleParents();
 		updateSearchParents();
 	else
 		updateParents();
@@ -102,7 +100,6 @@ void SIMContactList::setSearch(const QString& search)
 
 bool SIMContactList::isGroupOpen(const QString &s)
 {
-	printf("group : %s : %s\n", s.ascii(), groupStates[s] ? "open" : "close"); 
 	return groupStates[s];
 }
 void SIMContactList::setGroupOpen(const QString &s, bool b)

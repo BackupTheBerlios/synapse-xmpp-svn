@@ -55,7 +55,7 @@ SIMContactListGroup *SIMContactListAccount::ensureGroup(const QString &group_nam
 		group = new SIMContactListGroup(group_name, account(), contactList(), contactList()->rootItem());
 		contactList()->rootItem()->appendChild(group);
 	}
-	//contactList()->dataChanged();
+
 	return group;
 }
 
@@ -78,7 +78,7 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 {
 	if(!account()->enabled())
 		return;
-	printf("jid = %s\n", u.jid().bare().ascii());
+
 	SIMContactListContact *clc = contactList()->findEntry(u.jid().bare(), u.isSelf());
 	if(clc) {
 		if (clc->u()->groups() == u.groups() || u.isSelf() || !clc->u()->inList()) {

@@ -18,15 +18,10 @@
 SIMContactListView::SIMContactListView(QWidget* parent) : QTreeView(parent)
 {
 	setUniformRowHeights(false);
-// 	setAlternatingRowColors(true);
-//	setAnimated(true);
 	setRootIsDecorated(false);
 	setDragEnabled(true);
 	setDragDropMode(DragDrop);
 	setSelectionMode(NoSelection);
-//	int iconSize = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt() + 4;
-//	setIconSize(QSize(iconSize,iconSize));
-//	setShowIcons(PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toInt());
 	setEditTriggers(QAbstractItemView::EditKeyPressed|QAbstractItemView::AnyKeyPressed);
 	setIndentation(0);
 	updateOptions();
@@ -123,11 +118,6 @@ void SIMContactListView::dragMoveEvent(QDragMoveEvent *e)
 
 void SIMContactListView::dropEvent(QDropEvent *e)
 {
-/*	QStringList f = e->mimeData()->formats();
-	for(int i=0;i<f.size();i++)
-		printf("MIME Type : %s\n", f.takeAt(i).ascii());
-	printf("Urls : %d\n", e->mimeData()->hasUrls() ? 1 : 0);
-	printf("Text : %d\n", e->mimeData()->hasText() ? 1 : 0);*/
 	SIMContactListItem *item = static_cast<SIMContactListItem*>(indexAt(e->pos()).internalPointer());
 	if (item == NULL || !item->account()->loggedIn()) {
 		e->ignore();
@@ -215,17 +205,13 @@ void SIMContactListView::qlv_doubleclick(const QModelIndex &index)
 bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 {
 	bool done = false;
-//	printf("singleClicked()\n");
+
 	const QModelIndex index = indexAt(e->pos());
-//	emit singleClicked(e->button(), index);
 	if(!index.isValid())
 		return false;
 
-//	lcto_active = false;
 	QAbstractItemModel* m = model();
 	SIMContactListItem* item = static_cast<SIMContactListItem*>(index.internalPointer());
-
-//	setSelected(item, true);
 
 	if(e->button() == Qt::MidButton) {
 		if(item->type() == SIMContactListItem::Contact || item->type() == SIMContactListItem::Meta) {
@@ -263,7 +249,6 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 		}
 		else {
 			if(e->button() == Qt::RightButton) {
-// 				qlv_contextPopup(i, pos, c);
 				model()->setData(index,QVariant(mapToGlobal(e->pos())),SIMContactListModel::ContextMenuRole);
 				done = true;
 			}

@@ -23,11 +23,8 @@ public:
 	QSize sizeHint( const QRect &rect) const;
 
 private:
-//	QString name_;
-//	QString desc_;
 	QColor color_;
 	QTextDocument *v_rt;
-//	QRect rect_;
 };
 
 Q_DECLARE_METATYPE(SIMContactName);

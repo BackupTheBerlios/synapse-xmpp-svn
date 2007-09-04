@@ -1,8 +1,3 @@
-//#include <QAbstractItemModel>
-//#include <QModelIndex>
-//#include <QVariant>
-//#include <QColor>
-
 #include "SIMContactListModel.h"
 
 #include "SIMContactList.h"

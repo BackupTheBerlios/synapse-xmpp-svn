@@ -207,9 +207,10 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		status = pm.addAction(SIMContactList::tr("Set &Status"));
 #ifdef USE_PEP
 		if(online && account()->serverInfoManager()->hasPEP()) {
-			mood = pm.addAction(SIMContactList::tr("Mood"));
-			avatAssign = pm.addAction(SIMContactList::tr("Set Avatar"));
-			avatClear = pm.addAction(SIMContactList::tr("Unset Avatar"));
+			QMenu *set = pm.addMenu(SIMContactList::tr("PEP"));
+			mood = set->addAction(IconsetFactory::icon("psi/smile").icon(),SIMContactList::tr("Set Mood"));
+			avatAssign = set->addAction(SIMContactList::tr("Set Avatar"));
+			avatClear = set->addAction(SIMContactList::tr("Unset Avatar"));
 		}
 #endif
 		addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), SIMContactList::tr("&Add a contact"));
@@ -433,52 +434,6 @@ QString SIMContactListContact::toolTip()
 	return u_.makeBareTip(false,true);
 }
 
-/*SIMContactListItem *SIMContactListContact::updateParent()
-//static clientUpdateParent(SIMContactListItem *item, SIMContactListItem *parent, SIMContactList *contactList)
-{
-	SIMContactListItem *newParent = parent();
-
-	if (!contactList()->search().isEmpty()) {
-		QString search = contactList()->search();
-		if (name().contains(search) || jid().bare().contains(search)) {
-			newParent = defaultParent();;
-		} else {
-			newParent = contactList()->searchGroup();
-		}
-	}
- 	else if (!contactList()->showOffline() && status().type() == Status::Offline) {
-		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
-		newParent = contactList()->invisibleGroup();
-	}
-	else if (!contactList()->showAway() && (status().type() == Status::Away || status().type() == Status::XA)) {
-		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
-		newParent = contactList()->invisibleGroup();
-	}
- 	else if (!contactList()->showAgents() &&  u_.isTransport()) {
-		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
-		 return newParent = contactList()->invisibleGroup();
-	}
- 	else if (!contactList()->showSelf() &&  u_.isSelf()) {
-		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
-		newParent = contactList()->invisibleGroup();
-	}
-	else {
-		//qDebug() << "contactlistcontact.cpp: Falling back on default parent";
-		newParent = defaultParent();
-	}
-
-	if(contactList()->showSelf() && u_.isSelf()) {
-		newParent = defaultParent();
-	}
-
-	if ((!contactList()->showGroups() || !contactList()->search().isEmpty()) && newParent != contactList()->searchGroup()) {
-		newParent = contactList()->rootItem();
-	}
-
-	return newParent;
-}*/
-
-//SIMContactListItem *SIMContactListContact::updateParent()
 SIMContactListItem *SIMContactListContact::updateParent(SIMContactListContact *item, SIMContactList *contactList)
 {
 	SIMContactListItem *newParent = item->parent();
@@ -492,23 +447,18 @@ SIMContactListItem *SIMContactListContact::updateParent(SIMContactListContact *i
 		}
 	}
  	else if (!contactList->showOffline() && item->status().type() == Status::Offline && !item->alerting() && !item->u()->isSelf()) {
-		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
 		newParent = contactList->invisibleGroup();
 	}
 	else if (!contactList->showAway() && (item->status().type() == Status::Away || item->status().type() == Status::XA)) {
-		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
 		newParent = contactList->invisibleGroup();
 	}
  	else if (!contactList->showAgents() &&  item->u()->isTransport()) {
-		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
 		 return newParent = contactList->invisibleGroup();
 	}
  	else if (!contactList->showSelf() &&  item->u()->isSelf()) {
-		//qDebug() << "contactlistcontact.cpp: Contact is invisible";
 		newParent = contactList->invisibleGroup();
 	}
 	else {
-		//qDebug() << "contactlistcontact.cpp: Falling back on default parent";
 		newParent = item->defaultParent();
 	}
 
