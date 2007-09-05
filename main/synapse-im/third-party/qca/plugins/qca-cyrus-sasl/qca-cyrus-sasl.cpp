@@ -663,7 +663,7 @@ public:
 		servermode = false;
 		step = 0;
 		result_result = Success;
-//		clientTryAgain();
+		clientTryAgain();
 		doResultsReady();
 		return;
 	}
@@ -818,11 +818,11 @@ public:
 		ssf_max = maxSSF;
 	}
 
-	virtual void waitForResultsReady(int msecs)
+	virtual bool waitForResultsReady(int msecs)
 	{
 		// TODO: for now, all operations block anyway
 		Q_UNUSED(msecs);
-//		return true;
+		return true;
 	}
 
 	virtual void update(const QByteArray &from_net, const QByteArray &from_app)

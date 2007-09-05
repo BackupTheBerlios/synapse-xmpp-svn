@@ -805,6 +805,21 @@ static QString read_ksentry_file(const QString &fileName)
 	return out;
 }
 
+static bool is_pem_file(const QString &fileName)
+{
+	QFile f(fileName);
+	if(!f.open(QFile::ReadOnly))
+		return false;
+	QTextStream ts(&f);
+	if(!ts.atEnd())
+	{
+		QString line = ts.readLine();
+		if(line.startsWith("-----BEGIN"))
+			return true;
+	}
+	return false;
+}
+
 static QByteArray read_der_file(const QString &fileName)
 {
 	QFile f(fileName);
@@ -866,7 +881,7 @@ public:
 	{
 	}
 
-	MyConstraintType(QCA::ConstraintType _type, const QString &_varname, const QString &_name, const QString &_desc)
+	MyConstraintType(const QCA::ConstraintType &_type, const QString &_varname, const QString &_name, const QString &_desc)
 	:type(_type), varname(_varname), name(_name), desc(_desc)
 	{
 	}
@@ -1807,6 +1822,19 @@ static QVariantMap provider_config_edit(const QVariantMap &in)
 	return provider_config_edit_generic(in);
 }
 
+static QString get_fingerprint(const QCA::Certificate &cert, const QString &hashType)
+{
+	QString hex = QCA::Hash(hashType).hashToString(cert.toDER());
+	QString out;
+	for(int n = 0; n < hex.count(); ++n)
+	{
+		if(n != 0 && n % 2 == 0)
+			out += ':';
+		out += hex[n];
+	}
+	return out;
+}
+
 static QString kstype_to_string(QCA::KeyStore::Type _type)
 {
 	QString type;
@@ -1889,7 +1917,7 @@ static void print_info_ordered(const QString &title, const QCA::CertificateInfoO
 	}
 }
 
-static QString constraint_to_string(QCA::ConstraintType t)
+static QString constraint_to_string(const QCA::ConstraintType &t)
 {
 	QList<MyConstraintType> list = makeConstraintTypeList();
 	for(int n = 0; n < list.count(); ++n)
@@ -1897,7 +1925,7 @@ static QString constraint_to_string(QCA::ConstraintType t)
 		if(list[n].type == t)
 			return list[n].name;
 	}
-	return QString("Unknown Constraint");
+	return t.id();
 }
 
 static QString sigalgo_to_string(QCA::SignatureAlgorithm algo)
@@ -1976,6 +2004,9 @@ static void print_cert(const QCA::Certificate &cert, bool ordered = false)
 
 	QCA::PublicKey key = cert.subjectPublicKey();
 	printf("Public Key:\n%s", key.toPEM().toLatin1().data());
+
+	printf("SHA1 Fingerprint: %s\n", qPrintable(get_fingerprint(cert, "sha1")));
+	printf("MD5 Fingerprint: %s\n", qPrintable(get_fingerprint(cert, "md5")));
 }
 
 static void print_certreq(const QCA::CertificateRequest &cert, bool ordered = false)
@@ -2508,16 +2539,14 @@ static QCA::PrivateKey get_K(const QString &name)
 		return key;
 	}
 
-	QCA::ConvertResult result;
-	key = QCA::PrivateKey::fromPEMFile(name, QCA::SecureArray(), &result);
-	if(result == QCA::ErrorDecode)
-	{
+	if(is_pem_file(name))
+		key = QCA::PrivateKey::fromPEMFile(name);
+	else
 		key = QCA::PrivateKey::fromDER(read_der_file(name));
-		if(key.isNull())
-		{
-			fprintf(stderr, "Error: unable to read/process private key file.\n");
-			return key;
-		}
+	if(key.isNull())
+	{
+		fprintf(stderr, "Error: unable to read/process private key file.\n");
+		return key;
 	}
 
 	return key;
@@ -2543,15 +2572,15 @@ static QCA::Certificate get_C(const QString &name)
 	}
 
 	// try file
-	QCA::Certificate cert = QCA::Certificate::fromPEMFile(name);
+	QCA::Certificate cert;
+	if(is_pem_file(name))
+		cert = QCA::Certificate::fromPEMFile(name);
+	else
+		cert = QCA::Certificate::fromDER(read_der_file(name));
 	if(cert.isNull())
 	{
-		cert = QCA::Certificate::fromDER(read_der_file(name));
-		if(cert.isNull())
-		{
-			fprintf(stderr, "Error: unable to read/process certificate file.\n");
-			return cert;
-		}
+		fprintf(stderr, "Error: unable to read/process certificate file.\n");
+		return cert;
 	}
 
 	return cert;
@@ -3676,15 +3705,15 @@ int main(int argc, char **argv)
 				return 1;
 			}
 
-			QCA::CRL crl = QCA::CRL::fromPEMFile(args[2]);
+			QCA::CRL crl;
+			if(is_pem_file(args[2]))
+				crl = QCA::CRL::fromPEMFile(args[2]);
+			else
+				crl = QCA::CRL::fromDER(read_der_file(args[2]));
 			if(crl.isNull())
 			{
-				crl = QCA::CRL::fromDER(read_der_file(args[2]));
-				if(crl.isNull())
-				{
-					fprintf(stderr, "Error: unable to read/process CRL file.\n");
-					return 1;
-				}
+				fprintf(stderr, "Error: unable to read/process CRL file.\n");
+				return 1;
 			}
 
 			print_crl(crl, ordered);

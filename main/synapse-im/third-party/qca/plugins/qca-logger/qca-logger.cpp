@@ -133,6 +133,10 @@ public:
 	init () {}
 
 	virtual
+	void
+	deinit () {}
+
+	virtual
 	QString
 	name () const {
 		return "qca-logger";

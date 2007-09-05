@@ -424,11 +424,11 @@ public:
 			++step;
 			result_ = Continue;
 		}
-		else if (step == 2) {
+/*		else if (step == 2) {
 			out_buf.resize(0);
 			result_ = Continue;
 			++step;
-		}
+		}*/
 		else {
 			out_buf.resize(0);
 			result_ = Success;
@@ -440,16 +440,16 @@ ready:
 	virtual void update(const QByteArray &from_net, const QByteArray &from_app) {
 		result_to_app_ = from_net;
 		result_to_net_ = from_app;
-		encoded_ = 1;
+		encoded_ = from_app.size();
 		result_ = Success;
 		QMetaObject::invokeMethod(this, "resultsReady", Qt::QueuedConnection);
 	}
 
-	virtual void waitForResultsReady(int msecs) {
+	virtual bool waitForResultsReady(int msecs) {
 
 		// TODO: for now, all operations block anyway
 		Q_UNUSED(msecs);
-//		return true;
+		return true;
 	}
 
 	virtual Result result() const {

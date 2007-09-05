@@ -418,8 +418,13 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		else 
 			account()->actionUnassignKey(u_.jid());
 	} else if (ret == logon) {
-		Status s=makeStatus(STATUS_OFFLINE,"");
-		account()->actionAgentSetStatus(jid(), s);
+		if(!u_.isAvailable()) {
+			Status s=makeStatus(STATUS_ONLINE,"");
+			account()->actionAgentSetStatus(jid(), s);
+		} else {
+			Status s=makeStatus(STATUS_OFFLINE,"");
+			account()->actionAgentSetStatus(jid(), s);
+		}
 	} else if (ret == copyStatusMsg) {
 		QClipboard *clipboard = QApplication::clipboard();
 		QString cliptext = description();

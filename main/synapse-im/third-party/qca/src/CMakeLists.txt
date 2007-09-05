@@ -1,3 +1,19 @@
+include(CheckIncludeFiles)
+CHECK_INCLUDE_FILES(sys/filio.h HAVE_SYS_FILIO_H)
+IF(HAVE_SYS_FILIO_H)
+  ADD_DEFINITIONS(-DHAVE_SYS_FILIO_H)
+ENDIF(HAVE_SYS_FILIO_H)
+
+INCLUDE(CheckCXXSourceCompiles)
+CHECK_CXX_SOURCE_COMPILES("
+# include <stdlib.h>
+# include <sys/mman.h>
+int main() { void *f = 0; return mlock(f,8); }
+" MLOCK_TAKES_VOID)
+if(NOT MLOCK_TAKES_VOID)
+  MESSAGE(STATUS "mlock(2) does not take a void *")
+  ADD_DEFINITIONS(-DMLOCK_NOT_VOID_PTR)
+endif(NOT MLOCK_TAKES_VOID)
 
 # base source files
 
@@ -130,8 +146,8 @@ if(APPLE)
    TARGET_LINK_LIBRARIES(qca ${CARBON_LIBRARY} ${CARBON_LIBRARY_SECURITY})
 endif(APPLE)
 
+#set_target_properties(qca PROPERTIES VERSION ${QCA_LIB_MAJOR_VERSION}.${QCA_LIB_MINOR_VERSION}.${QCA_LIB_PATCH_VERSION} SOVERSION ${QCA_LIB_MAJOR_VERSION} )
 set_target_properties(qca PROPERTIES VERSION 2.0.0 SOVERSION 2 )
-
 INSTALL(TARGETS qca DESTINATION ${LIB_INSTALL_DIR})
 
 
