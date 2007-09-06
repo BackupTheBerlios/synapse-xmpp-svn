@@ -389,13 +389,13 @@ add_executable(synapse-im
 LINK_DIRECTORIES( ../lib )
 
 TARGET_LINK_LIBRARIES( synapse-im
+    iris
+    qca
     ${QT_LIBRARIES}
     ${QT_QTNETWORK_LIBRARY}
     ${QT_QTSQL_LIBRARY}
     ${QT_QTXML_LIBRARY}
     ${QT_QT3SUPPORT_LIBRARY}
-    iris
-    qca
 )
 if(WIN32)
 TARGET_LINK_LIBRARIES( synapse-im
