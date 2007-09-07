@@ -83,6 +83,8 @@ if(QT_QTDBUS_FOUND)
     endif(AVAHI_FOUND)
 endif(QT_QTDBUS_FOUND)
 
+add_definitions(-DQT_NO_DEBUG)
+
 add_subdirectory(third-party/qca)
 
 if(SPEEX_FOUND)
