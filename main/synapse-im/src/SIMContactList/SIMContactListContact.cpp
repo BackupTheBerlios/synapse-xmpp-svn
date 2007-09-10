@@ -13,6 +13,7 @@
 #include "capsmanager.h"
 #include "pgputil.h"
 #include "avatars.h"
+#include "desktoputil.h"
 
 #ifdef USE_PEP
 #include "serverinfomanager.h"
@@ -197,7 +198,9 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	QAction *avatAssign = NULL;
 	QAction *avatClear = NULL;
 	QAction *pgp = NULL;
+	QAction *copyJid = NULL;
 	QAction *copyStatusMsg = NULL;
+	QAction *goToUrl = NULL;
 
 	QAction *logon = NULL;
 
@@ -298,8 +301,12 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		else
 			logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_OFFLINE).icon(), SIMContactList::tr("&Log off"));
 
-	if(!description().isEmpty())
+	copyJid = pm.addAction(SIMContactList::tr("Copy JID"));
+	if(!description().isEmpty()) {
 		copyStatusMsg = pm.addAction(SIMContactList::tr("Copy status message"));
+		if(TextUtil::linkify(description()).compare(description()) != 0)
+			goToUrl = pm.addAction(SIMContactList::tr("Go to URL.."));
+	}
 
 	QAction *ret = pm.exec(p);
 	if(ret == NULL)
@@ -425,12 +432,27 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			Status s=makeStatus(STATUS_OFFLINE,"");
 			account()->actionAgentSetStatus(jid(), s);
 		}
+	} else if (ret == copyJid) {
+		QClipboard *clipboard = QApplication::clipboard();
+		QString cliptext = jid().bare();
+			
+		clipboard->setText(cliptext, QClipboard::Clipboard);
+		clipboard->setText(cliptext, QClipboard::Selection);	
 	} else if (ret == copyStatusMsg) {
 		QClipboard *clipboard = QApplication::clipboard();
 		QString cliptext = description();
 			
 		clipboard->setText(cliptext, QClipboard::Clipboard);
 		clipboard->setText(cliptext, QClipboard::Selection);	
+	} else if (ret == goToUrl) {
+		QString url = TextUtil::linkify(description());
+		int i = url.find("href=\"");
+		int j = url.find("\">",i);
+		if ( j == -1 )
+			j = url.find("\" >", i);
+		i = i+6;
+		url = url.mid(i, j - i);
+		DesktopUtil::openUrl(url);
 	}
 }
 
