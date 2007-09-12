@@ -16,7 +16,7 @@ public:
 	QPixmap state();
 	QPixmap pixmap();
 	QPixmap avatar();
-	const QString &description();
+	QString description();
 	const SIMContactName &contactName();
 	const QColor &textColor();
 

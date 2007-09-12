@@ -82,7 +82,7 @@ QPixmap SIMContactListContact::avatar()
 	return QPixmap();
 }
 
-const QString &SIMContactListContact::description()
+QString SIMContactListContact::description()
 {
 	return status().status();
 }
@@ -124,6 +124,7 @@ void SIMContactListContact::setUserListItem(const UserListItem &_u)
 	u_=_u;
 	u_.setAvatarFactory(account()->avatarFactory());
 	QString s = name();
+
 	if (u_.isSelf())
 		s = account()->name();
 	if(!status().status().isEmpty()) {
