@@ -7,6 +7,7 @@
 
 class SIMContactListGroup;
 class SIMContactListContact;
+class SIMContactListMeta;
 
 class SIMContactListAccount : public SIMContactListItem {
 // 	Q_OBJECT
@@ -31,6 +32,7 @@ public:
 
 private:
 	SIMContactListGroup *ensureGroup(const QString &group_name);
+	SIMContactListMeta *ensureMeta(const QString  &meta_name, SIMContactListGroup *group);
 
 	int state_;
 };

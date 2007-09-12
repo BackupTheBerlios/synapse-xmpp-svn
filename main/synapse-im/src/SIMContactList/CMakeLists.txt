@@ -3,6 +3,7 @@ include_directories(SIMContactList)
 set(simcontactlist_noMOC_SRCS
 	SIMContactList/SIMContactListAccount.cpp
 	SIMContactList/SIMContactListContact.cpp
+	SIMContactList/SIMContactListMeta.cpp
 	SIMContactList/SIMContactList.cpp
 	SIMContactList/SIMContactListGroup.cpp
 	SIMContactList/SIMContactListItem.cpp
@@ -15,6 +16,7 @@ set(simcontactlist_noMOC_SRCS
 set(simcontactlist_H
 	SIMContactList/SIMContactListAccount.h
 	SIMContactList/SIMContactListContact.h
+	SIMContactList/SIMContactListMeta.h
 	SIMContactList/SIMContactList.h
 	SIMContactList/SIMContactListGroup.h
 	SIMContactList/SIMContactListItem.h

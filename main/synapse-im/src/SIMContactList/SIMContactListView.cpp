@@ -8,6 +8,7 @@
 #include "SIMContactListModel.h"
 #include "SIMContactListView.h"
 #include "SIMContactListItem.h"
+#include "SIMContactListMeta.h"
 #include "SIMContactListContact.h"
 #include "SIMContactListGroup.h"
 
@@ -135,19 +136,33 @@ void SIMContactListView::dropEvent(QDropEvent *e)
 		SIMContactListContact *contact = static_cast<SIMContactListContact*>(indexAt(offset).internalPointer());
 
 		if(item && contact) {
-			SIMContactListGroup *group;
-			if(item->type() == SIMContactListItem::Contact)
-				group = static_cast<SIMContactListGroup*>(item->parent());
-			else
-				group = static_cast<SIMContactListGroup*>(item);
-			SIMContactListGroup *oldParent = static_cast<SIMContactListGroup*>(contact->parent());
-			contact->setDefaultParent(item);
-			contact->updateParents();
-			contact->account()->actionGroupRemove(contact->jid(), oldParent->name());
-			contact->account()->actionGroupAdd(contact->jid(), group->name());
+// Przebudować dla obsługi Metakontaktów -- should work!
+			if (item->type() == SIMContactListItem::Contact)
+				item = item->parent();
+
+			if (item->type() == SIMContactListItem::Group)
+			{
+				SIMContactListGroup *group = static_cast<SIMContactListGroup*>(item);
+				SIMContactListGroup *oldParent = static_cast<SIMContactListGroup*>(contact->parent());
+				contact->setDefaultParent(item);
+				contact->updateParents();
+				contact->account()->actionGroupRemove(contact->jid(), oldParent->name());
+				contact->account()->actionGroupAdd(contact->jid(), group->name());
+			} else  if (item->type() == SIMContactListItem::Meta) {
+				SIMContactListMeta *meta = static_cast<SIMContactListMeta*>(item);
+				SIMContactListGroup *oldParent = static_cast<SIMContactListGroup*>(contact->parent());
+				SIMContactListGroup *newgroup = static_cast<SIMContactListGroup*>(item->parent());
+				contact->setDefaultParent(item);
+				contact->updateParents();
+				contact->account()->actionGroupRemove(contact->jid(), oldParent->name());
+				contact->account()->actionGroupAdd(contact->jid(), newgroup->name());
+				contact->account()->actionMetaAdd(contact->jid(), meta->name(), meta->size() + 1);
+			}
 			e->accept();
 		}
 	} else if (e->mimeData()->hasUrls()) {
+		if (item->type() == SIMContactListItem::Meta)
+			item = item->child(0);
 		SIMContactListContact *contact = static_cast<SIMContactListContact*>(item);
 		if (contact) {
 			QStringList filesList;
@@ -267,8 +282,10 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 
 void SIMContactListView::scActionDefault(SIMContactListItem *item)
 {
-	if(item->type() == SIMContactListItem::Contact)
+	if (item->type() == SIMContactListItem::Contact)
 		item->account()->actionDefault((static_cast<SIMContactListContact*>(item))->jid());
+	else if (item->type() == SIMContactListItem::Meta)
+		item->account()->actionDefault((static_cast<SIMContactListMeta*>(item))->jid());
 }
 
 void SIMContactListView::resizeColumns()

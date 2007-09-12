@@ -2633,7 +2633,7 @@ ResourceList::ConstIterator ResourceList::priority() const
 //---------------------------------------------------------------------------
 // RosterItem
 //---------------------------------------------------------------------------
-RosterItem::RosterItem(const Jid &_jid)
+RosterItem::RosterItem(const Jid &_jid) : v_jidPriority(0)
 {
 	v_jid = _jid;
 	v_push = false;

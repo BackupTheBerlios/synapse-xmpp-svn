@@ -17,7 +17,7 @@ public:
 	SIMContactListItem *invisibleGroup();
 	SIMContactListItem *searchGroup();
 
-	SIMContactListGroup *findGroup(const QString &group_name);
+	SIMContactListItem *findItem(const QString &name, int _type);
 	SIMContactListContact *findEntry(const QString &j, bool self = false);
 
 	const QString &search();

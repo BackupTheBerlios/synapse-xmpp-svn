@@ -1,5 +1,6 @@
 #include "SIMContactListItem.h"
 #include "SIMContactListContact.h"
+#include "SIMContactListMeta.h"
 #include "SIMContactListAccount.h"
 #include "SIMContactListGroup.h"
 #include "SIMContactList.h"
@@ -43,13 +44,13 @@ SIMContactListGroup *SIMContactListAccount::ensureGroup(const QString &group_nam
 {
 	SIMContactListGroup *group = NULL;
 	if(contactList()->showAccounts()) {
-		group = findGroup(group_name);
+		group = (SIMContactListGroup *)findItem(group_name, SIMContactListItem::Group);
 		if(group)
 			return group;
 		group = new SIMContactListGroup(group_name, account(), contactList(), this);
 		appendChild(group);
 	} else {
-		group = contactList()->findGroup(group_name);
+		group = (SIMContactListGroup *)contactList()->findItem(group_name, SIMContactListItem::Group);
 		if(group)
 			return group;
 		group = new SIMContactListGroup(group_name, account(), contactList(), contactList()->rootItem());
@@ -57,6 +58,48 @@ SIMContactListGroup *SIMContactListAccount::ensureGroup(const QString &group_nam
 	}
 
 	return group;
+}
+
+SIMContactListMeta *SIMContactListAccount::ensureMeta(const QString &meta_name, SIMContactListGroup *group)
+{
+	SIMContactListMeta *meta = NULL;
+	if(contactList()->showAccounts()) {
+		meta = (SIMContactListMeta *)findItem(meta_name, SIMContactListItem::Meta);
+		if(meta)
+			return meta;
+		meta = new SIMContactListMeta(meta_name, account(), contactList(), group);
+	} else {
+		meta = (SIMContactListMeta *)contactList()->findItem(meta_name, SIMContactListItem::Meta);
+		if(meta)
+			return meta;
+		meta = new SIMContactListMeta(meta_name, account(), contactList(), group);
+	//	contactList()->rootItem()->appendChild(group);
+	}
+/*	printf("group_size : %d\n", group->size());
+	for(int i=0; i<group->size(); i++)
+	{
+		meta = NULL;
+		if ((meta = dynamic_cast<SIMContactListMeta*>(group->child(i)))) {
+			printf("meta\n");
+			if (meta->name().compare(meta_name) == 0)
+				return meta;
+		}
+	}
+	if(meta == NULL) {
+	for(int i=0; i<contactList()->invisibleGroup()->size(); i++)
+	{
+		meta = NULL;
+		if ((meta = dynamic_cast<SIMContactListMeta*>(contactList()->invisibleGroup()->child(i)))) {
+			printf("meta\n");
+			if (meta->name().compare(meta_name) == 0)
+				return meta;
+		}
+	}
+	}
+
+	printf("not found %s\n", meta_name.toAscii().data());
+	meta = new SIMContactListMeta(meta_name, account(), contactList(), group);*/
+	return meta;
 }
 
 void SIMContactListAccount::setAlert(const Jid &j, PsiIcon *icon)
@@ -70,6 +113,9 @@ void SIMContactListAccount::setAlert(const Jid &j, PsiIcon *icon)
 			parent->updateParent();
 			parent = clc->parent();
 			parent->updateParent();
+		} else if (clc->parent()->type() == SIMContactListItem::Meta) {
+			parent->removeChild(clc);
+			parent->appendChild(clc);
 		}
 	}
 }
@@ -81,7 +127,7 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 
 	SIMContactListContact *clc = contactList()->findEntry(u.jid().bare(), u.isSelf());
 	if(clc) {
-		if (clc->u()->groups() == u.groups() || u.isSelf() || !clc->u()->inList()) {
+		if ((clc->u()->groups() == u.groups() && clc->u()->metas() == u.metas()) || u.isSelf() || !clc->u()->inList()) {
 			clc->setUserListItem(u);
 			SIMContactListItem *parent = clc->parent();
 			clc->updateParents();
@@ -92,6 +138,12 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 			} else {
 				parent->removeChild(clc);
 				parent->appendChild(clc);
+			}
+			if(parent->type() == SIMContactListItem::Meta) {
+				SIMContactListItem *item = parent;
+				parent = item->parent();
+				parent->removeChild(item);
+				parent->appendChild(item);
 			}
 			contactList()->dataChanged();
 			return;
@@ -123,8 +175,16 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 		else
 			group_name = QObject::tr("Not in list");
 		SIMContactListGroup *group = ensureGroup(group_name);
-		clc = new SIMContactListContact(u, account(), contactList(), group);
-		group->appendChild(clc);
+		QStringList metas = u.metas();
+		if(metas.isEmpty()) {
+			clc = new SIMContactListContact(u, account(), contactList(), group);
+			group->appendChild(clc);
+		} else {
+			SIMContactListMeta *meta = ensureMeta(metas.takeFirst(), group);
+			clc = new SIMContactListContact(u, account(), contactList(), meta);
+			meta->appendChild(clc);
+			meta->updateParents();
+		}
 		group->updateParents();
 		contactList()->dataChanged();
 	}

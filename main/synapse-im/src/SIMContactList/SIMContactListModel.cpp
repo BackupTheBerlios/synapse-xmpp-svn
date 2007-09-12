@@ -4,6 +4,7 @@
 #include "SIMContactListItem.h"
 #include "SIMContactListAccount.h"
 #include "SIMContactListGroup.h"
+#include "SIMContactListMeta.h"
 #include "SIMContactListContact.h"
 #include "SIMContactListView.h"
 #include "SIMContactName.h"
@@ -33,12 +34,15 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 
 	SIMContactListAccount *account;
 	SIMContactListGroup *group;
+	SIMContactListMeta *meta;
 	SIMContactListContact *contact;
 
 	SIMContactListItem* item = static_cast<SIMContactListItem*>(index.internalPointer());
 	if (role == Qt::DisplayRole && index.column() == NameColumn) {
 		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
 			return qVariantFromValue(contact->contactName());
+		} else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
+			return qVariantFromValue(meta->contactName());
 		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
 			return qVariantFromValue(group->name());
 		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
@@ -47,6 +51,8 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 	} else if (role == Qt::DecorationRole && index.column() == StateColumn) {
 		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
 			return qVariantFromValue(contact->state());
+		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+			return qVariantFromValue(meta->state());
 		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
 			return qVariantFromValue(group->pixmap());
 		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
@@ -55,6 +61,8 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 	} else if (role == Qt::DecorationRole && index.column() == PixmapColumn) {
 		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
 			return qVariantFromValue(contact->pixmap());
+		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+			return qVariantFromValue(meta->pixmap());
 		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
 			return qVariantFromValue(group->pixmap());
 		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
@@ -63,10 +71,14 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 	} else if (role == Qt::DecorationRole && index.column() == AvatarColumn) {
 		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
 			return qVariantFromValue(contact->avatar());
+		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+			return qVariantFromValue(meta->avatar());
 		}
 	}
 	else if (role == Qt::BackgroundColorRole) {
 		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
+			return qVariantFromValue(option.color[cListBack]);
+		} else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
 			return qVariantFromValue(option.color[cListBack]);
 		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
 			return qVariantFromValue(option.color[cGroupBack]);
@@ -77,6 +89,9 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 	else if (role == Qt::TextColorRole) {
 		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
 			return qVariantFromValue(contact->textColor());
+		}
+		else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
+			return qVariantFromValue(meta->textColor());
 		}
 		else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
 			return qVariantFromValue(option.color[cGroupFore]);
@@ -91,6 +106,8 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 	else if (role == Qt::EditRole) {
 		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
 			return qVariantFromValue(contact->name());
+		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+			return qVariantFromValue(meta->name());
 		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
 			return qVariantFromValue(group->name());
 		}		
@@ -113,12 +130,15 @@ bool SIMContactListModel::setData(const QModelIndex& index, const QVariant& data
 
 	SIMContactListAccount *account;
 	SIMContactListGroup *group;
+	SIMContactListMeta *meta;
 	SIMContactListContact *contact;
 
 	SIMContactListItem* item = static_cast<SIMContactListItem*>(index.internalPointer());
 	if (role == ContextMenuRole) {
 		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
 			contact->showContextMenu(data.toPoint());
+		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+			meta->showContextMenu(data.toPoint());
 		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
 			group->showContextMenu(data.toPoint());
 		}
@@ -127,6 +147,8 @@ bool SIMContactListModel::setData(const QModelIndex& index, const QVariant& data
 	if (role == Qt::ToolTipRole) {
 		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
 			PsiToolTip::showText(data.toPoint(),contact->toolTip(),contactList_->contactListView());
+		} else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
+			PsiToolTip::showText(data.toPoint(),meta->toolTip(),contactList_->contactListView());
 		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
 			PsiToolTip::showText(data.toPoint(),group->toolTip(),contactList_->contactListView());
 		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {

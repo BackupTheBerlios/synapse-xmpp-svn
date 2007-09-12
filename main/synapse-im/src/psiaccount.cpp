@@ -3449,6 +3449,7 @@ void PsiAccount::actionMetaAdd(const Jid &j, const QString &m, int priority)
 
 	if(!u->addMeta(m, priority))
 		return;
+	
 	cpUpdate(*u);
 	emit d->client->addMetacontact(j, m, priority);
 }

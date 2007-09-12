@@ -34,16 +34,16 @@ SIMContactListItem *SIMContactList::searchGroup()
 	return searchGroup_;
 }
 
-SIMContactListGroup *SIMContactList::findGroup(const QString &group_name)
+SIMContactListItem *SIMContactList::findItem(const QString &name, int _type)
 {
-	SIMContactListGroup *clg = root_->findGroup(group_name);
-	if(clg)
-		return clg;
-	clg = invisibleGroup_->findGroup(group_name);
-	if(clg)
-		return clg;
-	clg = searchGroup_->findGroup(group_name);
-	return clg;
+	SIMContactListItem *cli = root_->findItem(name, _type);
+	if(cli)
+		return cli;
+	cli = invisibleGroup_->findItem(name, _type);
+	if(cli)
+		return cli;
+	cli = searchGroup_->findItem(name, _type);
+	return cli;
 }
 
 SIMContactListContact *SIMContactList::findEntry(const QString &j, bool self)

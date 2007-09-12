@@ -1,6 +1,7 @@
 #include "SIMContactListItem.h"
 #include "SIMContactList.h"
 #include "SIMContactListContact.h"
+#include "SIMContactListMeta.h"
 #include "SIMContactListGroup.h"
 #include "psiaccount.h"
 #include "psicon.h"
@@ -44,7 +45,23 @@ PsiAccount *SIMContactListItem::account()
 void SIMContactListItem::appendChild(SIMContactListItem *item)
 {
 	bool inserted = false;
-		
+	
+	if( parent() == contactList()->invisibleGroup() || parent() == contactList()->searchGroup() )
+	{
+	QList<SIMContactListItem*>::Iterator it = childItems.begin();
+	while(it != childItems.end() && !inserted) {
+		if (SIMContactListItem::compare_invisible(*it,item) >= 0) {
+			childItems.insert(it,item);
+			inserted = true;
+		}
+		it++;
+	}
+
+	if (!inserted) {
+		childItems.push_back(item);
+	}
+	} else {
+
 	QList<SIMContactListItem*>::Iterator it = childItems.begin();
 	while(it != childItems.end() && !inserted) {
 		if (SIMContactListItem::compare(*it,item) >= 0) {
@@ -57,6 +74,7 @@ void SIMContactListItem::appendChild(SIMContactListItem *item)
 	if (!inserted) {
 		childItems.push_back(item);
 	}
+	}
 }
 
 void SIMContactListItem::removeChild(SIMContactListItem *item)
@@ -64,16 +82,27 @@ void SIMContactListItem::removeChild(SIMContactListItem *item)
 	childItems.removeAll(item);
 }
 
-SIMContactListGroup *SIMContactListItem::findGroup(const QString &group_name)
+SIMContactListItem *SIMContactListItem::findItem(const QString &name, int _type)
 {
-	SIMContactListGroup *group = NULL;
-	for(int i=0; i<size(); i++)
-	{
-		group = dynamic_cast<SIMContactListGroup*>(child(i));
-		if(group && (group->name().compare(group_name) == 0))
-			return (SIMContactListGroup*)child(i);
+	if (_type == SIMContactListItem::Group) {
+		SIMContactListGroup *group = NULL;
+		for(int i=0; i<size(); i++)
+		{
+			group = dynamic_cast<SIMContactListGroup*>(child(i));
+			if(group && (group->name().compare(name) == 0))
+				return child(i);
+		}
+		return NULL;
+	} else if (_type == SIMContactListItem::Meta) {
+		SIMContactListMeta *meta = NULL;
+		for(int i=0; i<size(); i++)
+		{
+			meta = dynamic_cast<SIMContactListMeta*>(child(i));
+			if(meta && (meta->name().compare(name) == 0))
+				return child(i);
+		}
+		return NULL;
 	}
-	return NULL;
 }
 
 SIMContactListContact *SIMContactListItem::findEntry(const QString &j, bool self)
@@ -112,12 +141,13 @@ void SIMContactListItem::setParent(SIMContactListItem* parent)
 		if (parentItem) {
 			parentItem->removeChild(this);
 		}
+
+		parentItem = parent;
 	
 		if (parent) {
 			parent->appendChild(this);
 		}
 		
-		parentItem = parent;
 		contactList_->dataChanged();
 	}
 }
@@ -171,6 +201,16 @@ void SIMContactListItem::showContextMenu(const QPoint&)
 	
 }
 
+int SIMContactListItem::compare_invisible(SIMContactListItem *it1, SIMContactListItem *it2)
+{
+	// Contacts 	it2->do wstawienia
+	//		it1->wstawiony
+	if(it2->type() < it1->type())
+		return 1;
+	else
+		return -1;
+}
+
 int SIMContactListItem::compare(SIMContactListItem *it1, SIMContactListItem *it2)
 {
 	// Contacts 	it2->do wstawienia
@@ -181,29 +221,43 @@ int SIMContactListItem::compare(SIMContactListItem *it1, SIMContactListItem *it2
 
 		SIMContactListContact* it1_contact = dynamic_cast<SIMContactListContact*>(it1);
 		SIMContactListContact* it2_contact = dynamic_cast<SIMContactListContact*>(it2);
-		if (it1_contact && it2_contact) {
-			if (rankStatus(it1_contact->status().type()) > rankStatus(it2_contact->status().type()))
-				return 1;
-			if (rankStatus(it1_contact->status().type()) < rankStatus(it2_contact->status().type()))
-				return -1;
-			if (it1_contact->name() < it2_contact->name()) {
-				return -1;
+		SIMContactListMeta* it1_meta = dynamic_cast<SIMContactListMeta*>(it1);
+		SIMContactListMeta* it2_meta = dynamic_cast<SIMContactListMeta*>(it2);
+
+		QString it1_name = (it1_contact) ? it1_contact->name() : it1_meta->name();
+		QString it2_name = (it2_contact) ? it2_contact->name() : it2_meta->name();
+		
+		if (!it1_name.isEmpty() && !it2_name.isEmpty()) {
+			int it1_rank = rankStatus((it1_contact) ? it1_contact->status().type() : it1_meta->status().type());
+			int it2_rank = rankStatus((it2_contact) ? it2_contact->status().type() : it2_meta->status().type());
+
+			if (it2_contact && (it2_contact->parent()->type() == SIMContactListItem::Meta) && it2_contact->alerting())
+				it2_rank == -1;
+			if ((it1_contact && it2_contact) && it1_rank == it2_rank) {
+				it1_rank = it1_contact->u()->jidPriority();
+ 				it2_rank = it2_contact->u()->jidPriority();
 			}
-			else if (it1_contact->name() > it2_contact->name()) {
+
+			if (it1_rank > it2_rank)
 				return 1;
-			}
+			else if (it1_rank < it2_rank)
+				return -1;
+			else if (it1_name < it2_name)
+				return -1;
+			else if (it1_name > it2_name)
+				 return 1;
 			else {
 				return 0;
 			}
 		}
-		else if (it1_contact) {
+		else if (!it1_name.isEmpty()) {
 			return -1;
 		}
-		else if (it2_contact) {
+		else if (!it2_name.isEmpty()) {
 			return 1;
 		}	
-	}else {
-		if(it2->type() == SIMContactListItem::Contact)
+	} else {
+		if(it2->type() > SIMContactListItem::Group)
 			return 1;
 
 		SIMContactListGroup* it1_group = dynamic_cast<SIMContactListGroup*>(it1);
@@ -241,8 +295,11 @@ void SIMContactListItem::updateParent()
 	if (type_ == Contact) {
 				SIMContactListContact *contact;
 				contact = dynamic_cast<SIMContactListContact*>(this);
-//				newParent = contact->updateParent();
 				newParent = SIMContactListContact::updateParent(contact, contactList());
+	} else if (type_ == Meta) {
+				SIMContactListMeta *meta;
+				meta = dynamic_cast<SIMContactListMeta*>(this);
+				newParent = meta->updateParent();
 	} else if (type_ == Group) {
 				SIMContactListGroup *group;
 				group = dynamic_cast<SIMContactListGroup*>(this);

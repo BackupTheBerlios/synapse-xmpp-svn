@@ -29,7 +29,7 @@ public:
 	void appendChild(SIMContactListItem *child);
 	void removeChild(SIMContactListItem *child);
 
-	SIMContactListGroup *findGroup(const QString &group_name);
+	SIMContactListItem *findItem(const QString &name, int _type);
 	SIMContactListContact *findEntry(const QString &j, bool self = false);
 
 	SIMContactListItem *child(int row);
@@ -55,6 +55,7 @@ public:
 //	void dataChanged();
 
 private:
+	static int compare_invisible(SIMContactListItem *it1, SIMContactListItem *it2);
 	static int compare(SIMContactListItem *it1, SIMContactListItem *it2);
 
 	QList<SIMContactListItem*> childItems;

@@ -1,4 +1,5 @@
 #include "SIMContactListContact.h"
+#include "SIMContactListMeta.h"
 #include "SIMContactListGroup.h"
 #include "SIMContactList.h"
 #include "SIMContactListModel.h"
@@ -194,6 +195,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	QAction *authRequest = NULL;
 	QAction *authRemove = NULL;
 	QAction *remove = NULL;
+	QAction *meta = NULL;
 	QAction *group = NULL;
 	QAction *avatAssign = NULL;
 	QAction *avatClear = NULL;
@@ -277,6 +279,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 
 		remove = manage->addAction(IconsetFactory::icon("psi/remove").icon(), SIMContactList::tr("Rem&ove"));
 
+		meta = manage->addAction(SIMContactList::tr("Add meta.."));
 		group = manage->addAction(SIMContactList::tr("Add group.."));
 
 		if (PsiOptions::instance()->getOption("options.ui.menu.contact.custom-picture").toBool()) {
@@ -386,6 +389,37 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 					account()->actionGroupAdd(u_.jid(), newgroup);
 					break;
 				}
+			}
+		}
+	} else if (ret == meta) {
+		while(1) {
+			bool ok = false;
+			QString newmeta = QInputDialog::getText(SIMContactList::tr("Create New Metacontact"), SIMContactList::tr("Enter the new Metacontact name:"), QLineEdit::Normal, QString::null, &ok, contactList()->contactListView());
+			int newmeta_priority = QInputDialog::getInteger(SIMContactList::tr("Set priority for contact"), SIMContactList::tr("Enter the priority:"), 1, 1,100,1, &ok, contactList()->contactListView());
+			if(!ok)
+				break;
+			if(newmeta.isEmpty())
+				continue;
+
+			// make sure we don't have it already
+			bool found = false;
+			const QStringList &metas = u_.metas();
+			for(QStringList::ConstIterator it = metas.begin(); it != metas.end(); ++it) {
+				if(*it == newmeta) {
+					found = true;
+					break;
+				}
+			}
+
+			if(!found) {
+				account()->actionMetaAdd(u_.jid(), newmeta, newmeta_priority);
+				break;
+/*				SIMContactListMeta *meta = dynamic_cast<SIMContactListMeta*>(parent());
+				if(meta) {
+					account()->actionMetaRemove(u_.jid(), group->name());
+					account()->actionMetaAdd(u_.jid(), newgroup, newmeta_priority);
+					break;
+				}*/
 			}
 		}
 	} else if (ret == authResend) {
