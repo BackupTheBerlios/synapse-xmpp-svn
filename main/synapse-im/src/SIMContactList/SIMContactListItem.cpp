@@ -46,34 +46,31 @@ void SIMContactListItem::appendChild(SIMContactListItem *item)
 {
 	bool inserted = false;
 	
-	if( parent() == contactList()->invisibleGroup() || parent() == contactList()->searchGroup() )
+	if( this == contactList()->invisibleGroup() || this == contactList()->searchGroup() )
 	{
-	QList<SIMContactListItem*>::Iterator it = childItems.begin();
-	while(it != childItems.end() && !inserted) {
-		if (SIMContactListItem::compare_invisible(*it,item) >= 0) {
-			childItems.insert(it,item);
-			inserted = true;
+		QList<SIMContactListItem*>::Iterator it = childItems.begin();
+		while(it != childItems.end() && !inserted) {
+			if (SIMContactListItem::compare_invisible(*it,item) >= 0) {
+				childItems.insert(it,item);
+				inserted = true;
+			}
+			it++;
 		}
-		it++;
-	}
 
-	if (!inserted) {
-		childItems.push_back(item);
-	}
 	} else {
 
-	QList<SIMContactListItem*>::Iterator it = childItems.begin();
-	while(it != childItems.end() && !inserted) {
-		if (SIMContactListItem::compare(*it,item) >= 0) {
-			childItems.insert(it,item);
-			inserted = true;
+		QList<SIMContactListItem*>::Iterator it = childItems.begin();
+		while(it != childItems.end() && !inserted) {
+			if (SIMContactListItem::compare(*it,item) >= 0) {
+				childItems.insert(it,item);
+				inserted = true;
+			}
+			it++;
 		}
-		it++;
 	}
 
 	if (!inserted) {
 		childItems.push_back(item);
-	}
 	}
 }
 
@@ -205,7 +202,7 @@ int SIMContactListItem::compare_invisible(SIMContactListItem *it1, SIMContactLis
 {
 	// Contacts 	it2->do wstawienia
 	//		it1->wstawiony
-	if(it2->type() < it1->type())
+	if(it2->type() > it1->type())
 		return 1;
 	else
 		return -1;
@@ -233,6 +230,7 @@ int SIMContactListItem::compare(SIMContactListItem *it1, SIMContactListItem *it2
 
 			if (it2_contact && (it2_contact->parent()->type() == SIMContactListItem::Meta) && it2_contact->alerting())
 				it2_rank == -1;
+
 			if ((it1_contact && it2_contact) && it1_rank == it2_rank) {
 				it1_rank = it1_contact->u()->jidPriority();
  				it2_rank = it2_contact->u()->jidPriority();

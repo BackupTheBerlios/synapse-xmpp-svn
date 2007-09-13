@@ -63,42 +63,22 @@ SIMContactListGroup *SIMContactListAccount::ensureGroup(const QString &group_nam
 SIMContactListMeta *SIMContactListAccount::ensureMeta(const QString &meta_name, SIMContactListGroup *group)
 {
 	SIMContactListMeta *meta = NULL;
-	if(contactList()->showAccounts()) {
-		meta = (SIMContactListMeta *)findItem(meta_name, SIMContactListItem::Meta);
-		if(meta)
-			return meta;
-		meta = new SIMContactListMeta(meta_name, account(), contactList(), group);
-	} else {
-		meta = (SIMContactListMeta *)contactList()->findItem(meta_name, SIMContactListItem::Meta);
-		if(meta)
-			return meta;
-		meta = new SIMContactListMeta(meta_name, account(), contactList(), group);
-	//	contactList()->rootItem()->appendChild(group);
-	}
-/*	printf("group_size : %d\n", group->size());
-	for(int i=0; i<group->size(); i++)
-	{
-		meta = NULL;
-		if ((meta = dynamic_cast<SIMContactListMeta*>(group->child(i)))) {
-			printf("meta\n");
-			if (meta->name().compare(meta_name) == 0)
-				return meta;
-		}
-	}
-	if(meta == NULL) {
-	for(int i=0; i<contactList()->invisibleGroup()->size(); i++)
-	{
-		meta = NULL;
-		if ((meta = dynamic_cast<SIMContactListMeta*>(contactList()->invisibleGroup()->child(i)))) {
-			printf("meta\n");
-			if (meta->name().compare(meta_name) == 0)
-				return meta;
-		}
-	}
-	}
 
-	printf("not found %s\n", meta_name.toAscii().data());
-	meta = new SIMContactListMeta(meta_name, account(), contactList(), group);*/
+	meta = (SIMContactListMeta *)group->findItem(meta_name, SIMContactListItem::Meta);
+	if(meta)
+		return meta;
+
+	meta = (SIMContactListMeta *)contactList()->invisibleGroup()->findItem(meta_name, SIMContactListItem::Meta);
+	if(meta)
+		return meta;
+
+	meta = (SIMContactListMeta *)contactList()->searchGroup()->findItem(meta_name, SIMContactListItem::Meta);
+	if(meta)
+		return meta;
+
+	meta = new SIMContactListMeta(meta_name, account(), contactList(), group);
+	group->appendChild(meta);
+
 	return meta;
 }
 

@@ -90,17 +90,25 @@ void SIMContactListMeta::showContextMenu(const QPoint &p)
 
 QString SIMContactListMeta::toolTip()
 {
-	if (child(0))
-		return (dynamic_cast<SIMContactListContact*>(child(0)))->toolTip();
-	else
+	QString toolTip_;
+	int i = 0;
+
+	while(child(i)) {
+		toolTip_ += (dynamic_cast<SIMContactListContact*>(child(i)))->toolTip();
+		i++;
+	}
+
+	if(i ==0 )
 		return name();
+
+	return toolTip_;
 }
 
 SIMContactListItem *SIMContactListMeta::updateParent()
 {
 	SIMContactListItem *newParent = parent();
 
-	if (size() == 0 && !contactList()->showOffline()) {
+	if (size() == 0) {
 		if(contactList()->search().isEmpty())
 			newParent = contactList()->invisibleGroup();
 		else
