@@ -4,7 +4,7 @@
 // Description: Class to access history database.
 //
 //
-// Author: Andrzej Wójcik <andrzej@hi-low.eu>, (C) 2007
+// Author: Andrzej Wï¿½jcik <andrzej@hi-low.eu>, (C) 2007
 //
 // Copyright: See COPYING file that comes with this distribution
 //
@@ -22,7 +22,8 @@ class HistoryDB : public QObject
 {
 	Q_OBJECT
 public:
-	QTreeWidgetItem *getDates(HistoryDlg *dlg,QTreeWidget *dateTree,QString j, QDate selected, QString searchFor="");
+	void getDates(HistoryDlg *dlg,QTreeWidget *dateTree,QString j,int from, int count);
+//	QTreeWidgetItem *getDates(HistoryDlg *dlg,QTreeWidget *dateTree,QString j, QDate selected, QString searchFor="");
 	QTreeWidgetItem *getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QString searchFor);
 
 	HistoryItem *getEvents(QTreeWidget *eventsTree,QString j, QDate date, QString searchFor="");
@@ -35,6 +36,7 @@ private:
 	HistoryDB();
 	~HistoryDB();
 
+	void ensureDate(const QString &j, const QDate &date);
 	QString getTableName(QString j);
 	QStringList tablesList();
 	void createIndex();

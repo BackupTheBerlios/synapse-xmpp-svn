@@ -61,7 +61,7 @@ HistoryItem::HistoryItem()
 }
 
 HistoryDlg::HistoryDlg(const XMPP::Jid& j, PsiAccount* pa)
-: pa_(pa), jidFull_(j)
+: pa_(pa), jidFull_(j), from_(0), count_(30)
 {
 	setupUi(this);
 	setModal(false);
@@ -188,7 +188,7 @@ void HistoryDlg::doMonths()
 {
 	HistoryDB *h = HistoryDB::instance();
 	DateTree->clear();
-	h->getDates(this, DateTree, jid_,lookDate, findText);
+	h->getDates(this, DateTree, jid_, from_, count_);
 	DateTree->sortByColumn(1,Qt::DescendingOrder);
 	DateItem *di = (DateItem*)DateTree->takeTopLevelItem(0);
 	if(di)
@@ -202,19 +202,24 @@ void HistoryDlg::doMonths()
 
 void HistoryDlg::doNext()
 {
-	lookDate = lookDate.addMonths(1);
+//	lookDate = lookDate.addMonths(1);
+	from_ = from_ - count_;
+	if(from_ < 0)
+		from_ = 0;
 	doMonths();
 }
 
 void HistoryDlg::doLatest()
 {
 	lookDate = QDate::currentDate();
+	from_ = 0;
 	doMonths();
 }
 
 void HistoryDlg::doPrev()
 {
-	lookDate = lookDate.addMonths(-1);
+//	lookDate = lookDate.addMonths(-1);
+	from_ = from_ + count_;
 	doMonths();
 }
 

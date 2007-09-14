@@ -4,7 +4,7 @@
 // Description: a dialog to show events history.
 //
 //
-// Author: Andrzej Wójcik <andrzej@hi-low.eu>, (C) 2007
+// Author: Andrzej Wï¿½jcik <andrzej@hi-low.eu>, (C) 2007
 //
 // Copyright: See COPYING file that comes with this distribution
 //
@@ -82,6 +82,8 @@ private:
 	QString jid_;
 	QString findText;
 	QDate lookDate;
+	int from_;
+	int count_;
 };
 
 #endif

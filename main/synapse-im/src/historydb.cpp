@@ -81,7 +81,7 @@ HistoryDB::HistoryDB()
 : QObject(0)
 {
 	db = QSqlDatabase::addDatabase("QSQLITE");
-	db.setDatabaseName(pathToProfile(activeProfile) + "/history.db");
+	db.setDatabaseName(pathToProfile(activeProfile) + "/history_v2.db");
 	if (!db.open()) {
 		QMessageBox::critical(0, tr("Cannot open database"),
 		tr("Unable to establish a database connection.\n"
@@ -103,8 +103,8 @@ HistoryDB::~HistoryDB()
 
 void HistoryDB::createIndex()
 {
-	QSqlQuery inquery("CREATE TABLE tablesList VALUES ('name' TEXT)");
-	QSqlQuery tnquery("INSERT INTO tablesList VALUES ('tableList')");
+	QSqlQuery inquery("CREATE TABLE tablesList ('name' TEXT)");
+	QSqlQuery tnquery("INSERT INTO tablesList VALUES ('tablesList')");
 	tablesList_ = tablesList();
 }
 
@@ -122,7 +122,8 @@ QStringList HistoryDB::tablesList()
 
 void HistoryDB::createJidTable(QString j)
 {
-	QSqlQuery tquery("CREATE TABLE '" + j + "' ('type' TEXT, 'origin' TEXT, 'date' TEXT, 'time' TEXT, 'text' TEXT, 'html' TEXT);");
+	QSqlQuery tquery1("CREATE TABLE 'DATE_" + j + "' ('id' TEXT,'date' TEXT);");
+	QSqlQuery tquery2("CREATE TABLE '" + j + "' ('type' TEXT, 'origin' TEXT, 'date' TEXT, 'time' TEXT, 'text' TEXT, 'html' TEXT);");
 	QSqlQuery tnquery("INSERT INTO tablesList VALUES ('" + j +"')");
 	tablesList_ = tablesList();
 }
@@ -138,6 +139,7 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 		MessageEvent *me = (MessageEvent *)e;
 		const Message &m = me->message();
 		QString html("");
+		ensureDate(j, m.timeStamp().date());
 		if (m.containsHTML())
 			html = m.htmlString();
 		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" + html + "')");
@@ -146,11 +148,13 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 	{
 		FileEvent *fe = (FileEvent *)e;
 		XMPP::FileTransfer *ft = fe->fileTransfer();
+		ensureDate(j, fe->timeStamp().date());
 		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('file','" + (e->originLocal() ? "to" : "from") + "','" + fe->timeStamp().date().toString() + "','" + fe->timeStamp().time().toString() + "',' Transfering file : " + ft->fileName() + QString("\n Size: %1").arg(ft->fileSize()) + "','')");
 	}
 	else if(e->type() == PsiEvent::Auth) 
 	{
 		AuthEvent *ae = (AuthEvent *)e;	
+		ensureDate(j,ae->timeStamp().date());
 		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('" + ae->authType() + "','" + (e->originLocal() ? "to" : "from") + "','" + ae->timeStamp().date().toString() + "','" + ae->timeStamp().time().toString() + "','" + "" + "','" + "" + "')");
 	}
 	return true;
@@ -163,6 +167,31 @@ QString HistoryDB::getTableName(QString j)
 	return "JID"+j;
 }
 
+void HistoryDB::ensureDate(const QString &j, const QDate &date)
+{
+	QSqlQueryModel query;
+	query.setQuery("SELECT date FROM 'DATE_"+j+"' WHERE date='"+date.toString()+"';");
+	if(query.rowCount()==0) {
+		QSqlQuery squery("INSERT INTO 'DATE_"+j+"' VALUES('"+date.toString(Qt::ISODate)+"','"+date.toString()+"');");
+	}
+}
+
+void HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, int from, int count)
+{
+	QSqlQueryModel query;
+	QString tableName;
+	tableName = getTableName(j);
+	query.setQuery("SELECT date FROM 'DATE_"+tableName+"' ORDER BY id DESC LIMIT "+QString("%1").arg(from)+","+QString("%1").arg(from+count)+"");
+//	QColor red(255,0,0);
+	for(int i=0; i< query.rowCount(); i++)
+	{
+		QDate date = QDate::fromString(query.record(i).value("date").toString());
+		DateItem *item = new DateItem(date);
+		connect(dateTree,SIGNAL(itemClicked(QTreeWidgetItem *, int)),dlg,SLOT(dateSelected(QTreeWidgetItem*,int)));
+		dateTree->addTopLevelItem(item);
+	}
+}
+/*
 QTreeWidgetItem *HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QDate selected, QString searchFor)
 {
 	QSqlQueryModel query;
@@ -192,7 +221,7 @@ QTreeWidgetItem *HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QSt
 	}
 	return NULL;
 }
-
+*/
 QTreeWidgetItem *HistoryDB::getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QString searchFor)
 {
 	QSqlQueryModel query;
