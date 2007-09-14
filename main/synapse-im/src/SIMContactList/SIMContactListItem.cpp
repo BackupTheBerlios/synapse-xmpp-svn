@@ -240,13 +240,8 @@ int SIMContactListItem::compare(SIMContactListItem *it1, SIMContactListItem *it2
 				return 1;
 			else if (it1_rank < it2_rank)
 				return -1;
-			else if (it1_name < it2_name)
-				return -1;
-			else if (it1_name > it2_name)
-				 return 1;
-			else {
-				return 0;
-			}
+			else
+				return it1_name.compare(it2_name, Qt::CaseInsensitive);
 		}
 		else if (!it1_name.isEmpty()) {
 			return -1;
