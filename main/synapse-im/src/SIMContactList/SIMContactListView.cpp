@@ -282,10 +282,14 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 
 void SIMContactListView::scActionDefault(SIMContactListItem *item)
 {
-	if (item->type() == SIMContactListItem::Contact)
+	if (item->type() == SIMContactListItem::Meta)
+		item = item->child(0);
+	
+	if (item->type() == SIMContactListItem::Contact) {
 		item->account()->actionDefault((static_cast<SIMContactListContact*>(item))->jid());
-	else if (item->type() == SIMContactListItem::Meta)
+	} else if (item->type() == SIMContactListItem::Meta) {
 		item->account()->actionDefault((static_cast<SIMContactListMeta*>(item))->jid());
+	}
 }
 
 void SIMContactListView::resizeColumns()

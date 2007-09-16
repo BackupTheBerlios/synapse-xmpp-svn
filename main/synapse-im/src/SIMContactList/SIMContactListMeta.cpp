@@ -18,7 +18,8 @@ QString SIMContactListMeta::name()
 
 XMPP::Jid SIMContactListMeta::jid()
 {
-	return (dynamic_cast<SIMContactListContact*>(child(0)))->jid();
+	if (child(0))
+		return (dynamic_cast<SIMContactListContact*>(child(0)))->jid();
 }
 
 QPixmap SIMContactListMeta::state()
