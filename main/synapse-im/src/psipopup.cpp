@@ -447,7 +447,7 @@ void PsiPopup::show()
 
 	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic") {
 		printf("basic\n");
-		d->psi->mainWin()->showMessage(d->titleText_, d->jid.bare(),QSystemTrayIcon::MessageIcon(0), 5000);
+		d->psi->mainWin()->showMessage(d->titleText_, d->name_/*jid.bare()*/,QSystemTrayIcon::MessageIcon(0), 5000);
 	}
 }
 
