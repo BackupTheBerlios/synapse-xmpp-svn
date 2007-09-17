@@ -2078,13 +2078,15 @@ bool S5BServer::isActive() const
 
 bool S5BServer::start(int port)
 {
+	d->serv.stop();
 #ifdef USE_UPNP
-	d->upnp->setLocalPort((quint16)port);
-	d->upnp->setExternalPort((quint16)port);
-	d->upnp->rebind();
+//	d->upnp->setLocalPort((quint16)port);
+//	d->upnp->setExternalPort((quint16)port);
+//	d->upnp->rebind();
+	int p = d->upnp->getPort(QAbstractSocket::TcpSocket);
+	d->serv.listen((p!=0)? p : port, true);
 	return true;
 #else
-	d->serv.stop();
 	return d->serv.listen(port, true);
 #endif
 }
@@ -2092,10 +2094,11 @@ bool S5BServer::start(int port)
 void S5BServer::stop()
 {
 #ifdef USE_UPNP
-	d->upnp->unbind();
-#else
-	d->serv.stop();
+	d->upnp->freePort(QAbstractSocket::TcpSocket, d->serv.port());
 #endif
+//#else
+	d->serv.stop();
+//#endif
 }
 
 void S5BServer::setHostList(const QStringList &list)

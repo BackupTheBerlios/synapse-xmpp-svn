@@ -1,4 +1,6 @@
 #include "upnp.h"
+#include "upnp_device.h"
+#include "upnp_port.h"
 
 #include <QHttp>
 #include <QDataStream>
@@ -10,203 +12,13 @@ bool isLocal(quint32 ip) {
 	return ((ip & 0xff000000) == 0x0a000000 || (ip & 0xfff00000) == 0xac100000 || (ip & 0xffff0000) == 0xc0a80000);
 }
 
-class SIMUPNP::Device : QObject {
-	Q_OBJECT
-public:
-	Device(SIMUPNP *upnp) : upnp_(upnp)
-	{
-		sock = new QTcpSocket();
-	}
-	~Device() {};
-
-	void get() {
-		QString get = QString("GET ") + url + QString(" HTTP/1.1\r\n") + QString("Host: ") + hostname + ":" + QString("%1").arg(port) + "\r\n" + QString("User-Agent: Synapse-IM\r\nConnection: close\r\n\r\n");
-		sock->disconnect();
-		connect(sock, SIGNAL(disconnected()), this, SLOT(on_upnp_xml()));
-		serviceType = "";
-		sock->connectToHost(hostname, port);
-
-		sock->waitForConnected(10000);
-		upnp_->setListenAddress(sock->localAddress());
-		sock->write(get.toUtf8());
-	}
-
-	void post(QString &soap, QString &soapAction) {
-		QString header = QString("POST ") + controlUrl + QString(" HTTP/1.1\r\n") + QString("Host: ") + hostname + QString(":") + QString("%1").arg(port) + QString("\r\n") + QString("User-Agent: Synapse-IM\r\n")  + QString("Content-Type: text/xml; charset=\"utf-8\"\r\n") + QString("Content-Length: ") + QString("%1").arg(soap.size()) + QString("\r\nConnection: close\r\n") + QString("Soapaction: \"") + serviceType + QString("#") + soapAction + QString("\"\r\n\r\n") + soap;
-
-		sock->waitForConnected(10000);
-		sock->write(header.toUtf8());
-	}
-
-	void mapPort() {
-		sock->connectToHost(hostname, port);
-		connect(sock, SIGNAL(disconnected()), this, SLOT(on_upnp_map_response()));
-		QString soap_action = "AddPortMapping";
-		QString soap;
-		soap = QString( "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" " ) + QString( "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n") + QString("<s:Body><u:") + soap_action + QString(" xmlns:u=\"") + serviceType + QString("\">\n");
-
-		soap = soap + "<NewRemoteHost></NewRemoteHost>\n" + "<NewExternalPort>" + QString("%1").arg(upnp_->externalPort()) + "</NewExternalPort>\n" + "<NewProtocol>" + upnp_->protocol() + "</NewProtocol>\n" + "<NewInternalPort>" + QString("%1").arg(upnp_->localPort()) + "</NewInternalPort>\n" + "<NewInternalClient>" + upnp_->listenAddress().toString() + "</NewInternalClient>\n" + "<NewEnabled>1</NewEnabled>\n" + "<NewPortMappingDescription>" + upnp_->userAgent() + "</NewPortMappingDescription>\n" + "<NewLeaseDuration>" + upnp_->leaseDuration() + "</NewLeaseDuration>\n";
-		soap = soap + "</u:" + soap_action + ">\n</s:Body>\n</s:Envelope>\r\n";
-
-		post(soap,soap_action);
-	}
-
-	void unmapPort() {
-		sock->connectToHost(hostname, port);
-		connect(sock, SIGNAL(disconnected()), this, SLOT(on_upnp_map_response()));
-		QString soap_action = "DeletePortMapping";
-
-		QString soap = QString("<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" ") + "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" + "<s:Body><u:" + soap_action + " xmlns:u=\"" + serviceType + "\">";
-
-		soap = soap + "<NewRemoteHost></NewRemoteHost>" + "<NewExternalPort>" + QString("%1").arg(upnp_->externalPort()) + "</NewExternalPort>" + "<NewProtocol>" + upnp_->protocol() + "</NewProtocol>";
-		soap = soap + "</u:" + soap_action + "></s:Body></s:Envelope>";
-
-		post(soap, soap_action);
-	}
-
-public slots:
-	void getExternalIP() {
-		connect(sock, SIGNAL(disconnected()), this, SLOT(on_upnp_get_external_ip_response()));
-		if (externIPtry_ == 0) {
-			sock->connectToHost(hostname, port);
-			QString soap_action = "GetExternalIPAddress";
-			QString soap;
-
-			soap = QString( "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" " ) + QString( "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n") + QString("<s:Body><u:") + soap_action + QString(" xmlns:u=\"") + serviceType + QString("\">\n");
-
-			soap = soap + "</u:" + soap_action + ">\n</s:Body>\n</s:Envelope>\r\n";
-			post(soap,soap_action);
-		} else if (externIPtry_ == 1) {
-			sock->connectToHost("checkip.dyndns.org", 80);
-
-			sock->waitForConnected(10000);
-			QString header("GET / HTTP/1.1\r\nHost: checkip.dyndns.org\r\nConnection: close\r\n\r\n");
-			sock->write(header.toUtf8());
-		}
-	}
-
-	void on_upnp_xml()
-	{
-		QString doc(sock->readAll());
-		//delete sock;
-		sock->disconnect();
-
-		if (doc.left(15).compare("HTTP/1.1 200 OK") != 0) {
-			qDebug("UPNP::Device::on_upnp_xml() : Bad response\n");
-			return;
-		}
-
-		int i = doc.find( UPNP_WANIP );
-		if(i!=-1) {
-			serviceType = UPNP_WANIP;
-		} else {
-			qWarning("UPNP::Device::on_upnp_xml() : No WANIP service type.\n");
-			i = doc.find( UPNP_WANIP );
-
-			if (i!=-1) {
-				serviceType = UPNP_WANPPP;
-			} else {
-				qWarning("UPNP::Device::on_upnp_xml() : No WANPPP service type.\n");
-				return;
-			}
-		}
-		int j = doc.find("<controlURL>", i) + sizeof("<controlURL>");
-		i = doc.find("</controlURL>",j);
-		controlUrl = doc.mid(j-1, i - j +1);
-
-		mapPort();
-	}
-
-	void on_upnp_get_external_ip_response()
-	{
-		QString doc(sock->readAll());
-		sock->disconnect();
-
-		QString externIP;
-		externIPtry_++;
-
-		if (doc.left(15).compare("HTTP/1.1 200 OK") != 0) {
-			qWarning("UPNP::Device::on_upnp_get_external_ip_response() : Bad response\n");
-			if ( externIPtry_ > 2 ) {
-				upnp_->server()->listen(upnp_->externalPort(),true);
-				return;
-			}
-		} else {
-
-			if (externIPtry_ == 1) {
-				int j = doc.find("<NewExternalIPAddress>") + sizeof("<NewExternalIPAddress>");
-				int i = doc.find("</NewExternalIPAddress>",j-2);
-				externIP = doc.mid(j-1, i - j +1);
-			} else if (externIPtry_ == 2) {
-				int j = doc.find("Address: ") + sizeof("Address: ");
-				int i = doc.find("</body>",j);
-				externIP = doc.mid(j-1, i - j +1);
-			}
-		}
-
-		if (externIP.isEmpty()) {
-			if (externIPtry_ == 2)
-				upnp_->server()->listen(upnp_->externalPort(),true);
-			else {
-				getExternalIP();
-			}
-		} else {
-			upnp_->setExternalIP(externIP);
-		}
-	}
-
-	void on_upnp_map_response()
-	{
-		QString doc(sock->readAll());
-		sock->disconnect();
-
-		if (doc.left(15).compare("HTTP/1.1 200 OK") != 0) {
-			qDebug("UPNP::Device::on_upnp_map_resonse() : Bad response\n");
-			upnp_->server()->listen(upnp_->externalPort(),true);
-			return;
-		}
-
-		if (doc.find("UPnPError") != -1)
-		{
-			//Error
-			int j = doc.find("<errorCode>") + sizeof("<errorCode>");
-			int i = doc.find("</errorCode>",j);
-			int errorCode = doc.mid(j-1, i - j +1).toInt();
-			if (errorCode == 725) {
-				// only permanent leases supported
-				qWarning("UPNP::Device::on_upnp_map_resonse() : Only permanent leases supported\n");
-			} else if (errorCode == 718) {
-				// conflict in mapping, try next external port
-				qWarning("UPNP::Device::on_upnp_map_resonse() : Port already used\n");
-				upnp_->setExternalPort(upnp_->externalPort() + 1);
-				upnp_->setLocalPort(upnp_->localPort() + 1);
-				mapPort();
-				return;
-			} else if (errorCode == 0) {
-				qDebug("UPNP::Device::on_upnp_map_resonse() : unknown error\n");
-			}
-		}
-		externIPtry_ = 0;
-		QTimer::singleShot(1000, this, SLOT(getExternalIP()));
-		upnp_->server()->listen(upnp_->externalPort(),true);
-	}
-
-public:
-	QString url;
-	QString hostname;
-	int port;
-	QHttp http;
-	QTcpSocket *sock;
-	QString controlUrl;
-	QString serviceType;
-	SIMUPNP *upnp_;
-	int externIPtry_;
-};
-
-SIMUPNP::SIMUPNP(SocksServer *_serv) : localPort_(8200), externalPort_(8200), protocol_("TCP")
+SIMUPNP::SIMUPNP(SocksServer *_serv)// : localPort_(8200), externalPort_(8200), protocol_("TCP")
 {
 	upnp = new QUdpSocket();
 	serv = _serv;
+	SIMUPNP::instance_  = this;
+	devices.clear();
+	rebind();
 };
 
 SIMUPNP::~SIMUPNP()
@@ -241,7 +53,7 @@ void SIMUPNP::unbind()
 	serv->stop();
 	for (int i = 0; i < devices.count(); ++i)
 	{
-		devices.takeAt(i)->unmapPort();
+//		devices.takeAt(i)->unmapPort();
 	}
 }
 
@@ -275,16 +87,20 @@ void SIMUPNP::send_request()
 
 void SIMUPNP::timeout()
 {
-	if (!devices.isEmpty())
+	if (!devices.isEmpty() && ports_.count() != 0)
 		return;
-	serv->listen(externalPort_,true);
+
+	new Port(NULL, "TCP"); // fix for main port of file transfer
+	new Port(NULL, "TCP");
+	new Port(NULL, "UDP");
+	//serv->listen(8200,true);
 }
 
 void SIMUPNP::on_reply()
 {
-	mutex.lock();
+//	mutex.lock();
 	if (discoveryDone) {
-		mutex.unlock();
+//		mutex.unlock();
 		return;
 	}
 
@@ -300,35 +116,39 @@ void SIMUPNP::on_reply()
 	int x = resp.find("http://",6);
 	if (x == -1) {
 		qDebug("UPNP::on_reply() : Bad response\n");
-		mutex.unlock();
-		if( retry_ == 9)
-			serv->listen(externalPort_,true);
+//		mutex.unlock();
+//		if( retry_ == 9)
+			//serv->listen(externalPort_,true);
 		
 		return;
 	}
 	int y = resp.find("\n",x);
 
-	dev->url = resp.mid(x, y-(x+1));
-	if (dev->url.isEmpty()) {
+	dev->setUrl(resp.mid(x, y-(x+1)));
+	if (dev->url().isEmpty()) {
+		printf("delete dev\n");
 		delete dev;
-		mutex.unlock();
-		if( retry_ == 9)
-			serv->listen(externalPort_,true);
+//		mutex.unlock();
+//		if( retry_ == 9)
+//			serv->listen(externalPort_,true);
 		return;
 	}
 
 	bool inList = false;
 	//check if it is not already on a list
 	for (int i = 0; i < devices.count(); ++i)
-		if (devices.takeAt(i)->url.compare(dev->url) == 0)
+		if (devices.takeAt(i)->url().compare(dev->url()) == 0)
 			inList = true;
 
 	if (!inList) {
-		x = dev->url.find(":",6);
-		y = dev->url.find("/",x);
-		dev->port = (dev->url.mid(x+1, y-(x+1))).toInt();
-		dev->hostname = dev->url.mid(7, x-7);
-		devices.append(dev);
+		QString url(dev->url());
+		x = url.find(":",6);
+		y = url.find("/",x);
+		dev->setPort((url.mid(x+1, y-(x+1))).toInt());
+		dev->setHostname(url.mid(7, x-7));
+//		devices.append(dev);
+		dev->get();
+		devices.push_back(dev);
 	}
 
 	if (retry_ >= 4 && !devices.isEmpty() && !discoveryDone)
@@ -336,12 +156,32 @@ void SIMUPNP::on_reply()
 		discoveryDone = true;
 		for (int i = 0; i < devices.count(); ++i)
 		{
-			devices.takeAt(i)->get();
+			dev = devices.takeAt(i);
+			new Port(dev, "TCP"); // fix for main port of file transfer
+			new Port(dev, "TCP");
+			new Port(dev, "UDP");
 		}
-	}  else if (retry_ == 9 && devices.isEmpty()) {
-		serv->listen(externalPort_,true);
+	}//  else if (retry_ == 9 && devices.isEmpty()) {
+//		serv->listen(externalPort_,true);
+//	}
+//	mutex.unlock();
+}
+
+void SIMUPNP::registerPort(SIMUPNP::Port *port)
+{
+	ports_.append(port);
+	if((ports_.count()==1) && (port->type().compare("TCP")==0)) {
+//		setExternalPort(port->port());
+//		setLocalPort(port->port());
+		serv->stop();
+		serv->listen(port->port(),true);
 	}
-	mutex.unlock();
+	printf("allocated ports: %d\n", ports_.count());
+}
+
+void SIMUPNP::unregisterPort(SIMUPNP::Port *port)
+{
+	ports_.remove(port);
 }
 
 SocksServer *SIMUPNP::server()
@@ -349,12 +189,66 @@ SocksServer *SIMUPNP::server()
 	return serv;
 }
 
-void SIMUPNP::setExternalPort(quint16 port)
+/*void SIMUPNP::setExternalPort(quint16 port)
 {
 	externalPort_ = port;
+}*/
+
+quint16 SIMUPNP::getPort(int protocol)
+{
+	while(!discoveryDone) {
+		//usleep(100);
+		printf("error.. - should not happend\n");
+		return 0;
+	}
+
+	QString proto;
+	if (protocol == QAbstractSocket::TcpSocket)
+		proto = "TCP";
+	else if (protocol == QAbstractSocket::UdpSocket)
+		proto = "UDP";
+
+	Device *dev = devices.takeAt(0);
+	printf("devices : %d\n", devices.count());
+	if(dev) {
+		printf("dev->url()\n", dev->url());
+	}
+	new Port(dev,proto);
+
+	Port *p1 = NULL;
+	for (int i = 0; i < ports_.count(); ++i)
+	{
+		if(!ports_.takeAt(i)->inUse() && ports_.takeAt(i)->mapped() && ports_.takeAt(i)->type().compare(proto) == 0) {
+			p1 = ports_.takeAt(i);
+			p1->setInUse(true);
+			break;
+		}
+	}
+
+	if(p1) {
+		return p1->port();
+	} else
+		return 0;
 }
 
-quint16 SIMUPNP::externalPort()
+void SIMUPNP::freePort(int protocol, quint16 port)
+{
+	QString proto;
+	if (protocol == QAbstractSocket::TcpSocket)
+		proto = "TCP";
+	else if (protocol == QAbstractSocket::UdpSocket)
+		proto = "UDP";
+
+	for (int i = 0; i < ports_.count(); ++i)
+	{
+		if(!ports_.takeAt(i)->inUse() && ports_.takeAt(i)->mapped() && ports_.takeAt(i)->port() == port && ports_.takeAt(i)->type().compare(proto) == 0) {
+			ports_.takeAt(i)->unmap();
+			break;
+		}
+	}
+}
+
+/*quint16 SIMUPNP::externalPort()
 {
 	return externalPort_;
 }
@@ -377,7 +271,7 @@ void SIMUPNP::setLocalPort(quint16 port)
 quint16 SIMUPNP::localPort()
 {
 	return localPort_;
-}
+}*/
 
 void SIMUPNP::setListenAddress(QHostAddress addr)
 {
@@ -409,5 +303,27 @@ QString SIMUPNP::externalIP()
 {
 	return externalIP_;
 }
+
+SIMUPNP *SIMUPNP::instance()
+{
+//	if ( !instance_ )
+//		instance_ = new PsiOptions();
+	return instance_;
+}
+
+quint16 SIMUPNP::randomPort()
+{
+	quint16 ret = (quint16)rand();
+	
+	for (int i = 0; i < ports_.count(); ++i)
+	{
+		if(ports_.takeAt(i)->port() == ret)
+			return randomPort();
+	}
+	
+	return ret;
+}
+
+SIMUPNP* SIMUPNP::instance_ = NULL;
 
 #include "upnp.moc"

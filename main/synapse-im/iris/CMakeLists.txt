@@ -64,10 +64,14 @@ set(idn_SRCS
 ADD_DEFINITIONS(-DUSE_UPNP)
 set(upnp_SRCS
 	../iris/upnp/upnp.cpp
+	../iris/upnp/upnp_device.cpp
+	../iris/upnp/upnp_port.cpp
 )
 
 set(upnp_H
 	../iris/upnp/upnp.h
+	../iris/upnp/upnp_device.h
+	../iris/upnp/upnp_port.h
 )
 
 set(iris_H
