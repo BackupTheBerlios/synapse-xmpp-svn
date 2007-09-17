@@ -144,7 +144,7 @@ static int audioCallback( void *inputBuffer, void *outputBuffer, // {{{
 }
 
 
-bool MediaStream::start(uint32_t ip, int port, int codecPayload )
+bool MediaStream::start(uint32_t ip, int port, int localPort, int codecPayload )
 {
     if ( isRunning() )
         stop();
@@ -154,7 +154,7 @@ bool MediaStream::start(uint32_t ip, int port, int codecPayload )
     d->outBufferPos = 0;
     d->outBufferTime = 0;
 
-    int localPort = 3000;
+//    int localPort = 3000;
 printf("getFactory(%d)\n", codecPayload);
     VoiceCodecFactory *factory = CodecsManager::instance()->codecFactory(codecPayload);
     if ( !factory ) {

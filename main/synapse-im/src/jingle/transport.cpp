@@ -1,9 +1,13 @@
 #include <QString>
+#include <QAbstractSocket>
 #include "transport.h"
 #include "udp.h"
+#include "upnp.h"
 
 Transport::Transport()
 {
+	firewallPort_ = SIMUPNP::instance()->getPort(QAbstractSocket::UdpSocket);
+	firewallAddr_ = SIMUPNP::instance()->externalIP();
 	std::string srv = "stun.l.google.com";
 	stunParseServerName((char*)srv.data(), stunSrvAddr);
 //	stunSrvAddr.port = 3489;
@@ -15,6 +19,7 @@ Transport::Transport()
 
 Transport::~Transport()
 {
+	SIMUPNP::instance()->freePort(QAbstractSocket::UdpSocket,firewallPort_);
 }
 
 bool Transport::getStunInfo()
@@ -65,7 +70,9 @@ int Transport::firewallPort()
 
 QDomElement Transport::info(QDomElement &candidate)
 {
-	getStunInfo();
+	if(firewallPort_ == 0)
+		getStunInfo();
+
 	candidate.setAttribute("component", "1");
 	candidate.setAttribute("foundation", "1");
 	candidate.setAttribute("generation", "0");
