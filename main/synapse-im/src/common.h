@@ -184,6 +184,16 @@ struct Options
 	int dtPort;
 	QString dtExternal;
 
+	//History SQL backend configuration
+	int historyDBBackend;
+	QString historyDBName;
+	QString historyDBUser;
+	QString historyDBPassword;
+	QString historyDBHost;
+	int historyDBPort;
+	bool historyLogMessages;
+	bool historyLogFileTransfers;
+
 	// Last used path remembering
 	QString lastPath;
 	QString lastSavePath;

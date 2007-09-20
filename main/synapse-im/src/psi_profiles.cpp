@@ -768,6 +768,16 @@ void UserProfile::reset()
 	prefs.dtPort = 8010;
 	prefs.dtExternal = "";
 
+	// history SQL backend configuration
+	prefs.historyDBBackend = 0;
+	prefs.historyDBName = "";
+	prefs.historyDBUser = "";
+	prefs.historyDBPassword = "";
+	prefs.historyDBHost = "";
+	prefs.historyDBPort = 0;
+	prefs.historyLogMessages = true;
+	prefs.historyLogFileTransfers = true;
+
 	// advanced widget
 	GAdvancedWidget::setStickEnabled( false ); //until this is bugless
 	GAdvancedWidget::setStickToWindows( false ); //again
@@ -1295,6 +1305,20 @@ bool UserProfile::toFile(const QString &fname)
 		p.appendChild(p_dt);
 		p_dt.appendChild( textTag(doc, "port", prefs.dtPort ) );
 		p_dt.appendChild( textTag(doc, "external", prefs.dtExternal ) );
+	}
+
+	{
+		// history SQL backend settings
+		QDomElement p_sql = doc.createElement("historyDB");
+		p.appendChild(p_sql);
+		p_sql.appendChild( textTag(doc, "backend", prefs.historyDBBackend ) );
+		p_sql.appendChild( textTag(doc, "name", prefs.historyDBName ) );
+		p_sql.appendChild( textTag(doc, "user", prefs.historyDBUser ) );
+		p_sql.appendChild( textTag(doc, "password", prefs.historyDBPassword ) );
+		p_sql.appendChild( textTag(doc, "host", prefs.historyDBHost ) );
+		p_sql.appendChild( textTag(doc, "port", prefs.historyDBPort ) );
+		p_sql.appendChild( textTag(doc, "logMessages", prefs.historyLogMessages ) );
+		p_sql.appendChild( textTag(doc, "logFileTransfers", prefs.historyLogFileTransfers ) );
 	}
 
 	{
@@ -1905,6 +1929,18 @@ bool UserProfile::fromFile(const QString &fname)
 		if (found) {
 			readNumEntry(p_dt, "port", &prefs.dtPort);
 			readEntry(p_dt, "external", &prefs.dtExternal);
+		}
+
+		QDomElement p_sql = findSubTag(p, "historyDB", &found);
+		if (found) {
+			readNumEntry(p_sql, "backend", &prefs.historyDBBackend);
+			readEntry(p_sql, "name", &prefs.historyDBName);
+			readEntry(p_sql, "user", &prefs.historyDBUser);
+			readEntry(p_sql, "password", &prefs.historyDBPassword);
+			readEntry(p_sql, "host", &prefs.historyDBHost);
+			readNumEntry(p_sql, "port", &prefs.historyDBPort);
+			readBoolEntry(p_sql, "logMessages", &prefs.historyLogMessages);
+			readBoolEntry(p_sql, "logFileTransfers", &prefs.historyLogFileTransfers);
 		}
 
 		QDomElement p_globalAccel = findSubTag(p, "globalAccel", &found);

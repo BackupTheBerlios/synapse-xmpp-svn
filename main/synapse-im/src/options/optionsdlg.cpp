@@ -28,6 +28,7 @@
 #include "opt_iconset.h"
 #include "opt_groupchat.h"
 #include "opt_sound.h"
+#include "opt_history.h"
 #include "opt_advanced.h"
 #include "opt_shortcuts.h"
 
@@ -329,6 +330,7 @@ void OptionsDlg::Private::createTabs()
 	tabs.append( new OptionsTabPlugins(this) );
 #endif
 	tabs.append( new OptionsTabShortcuts(this) );
+	tabs.append( new OptionsTabHistory(this) );
 	tabs.append( new OptionsTabAdvanced(this) );
 	tabs.append( new OptionsTabAntiEvil(this) );
 

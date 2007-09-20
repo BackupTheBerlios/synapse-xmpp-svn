@@ -22,8 +22,13 @@ class HistoryDB : public QObject
 {
 	Q_OBJECT
 public:
+	enum Backend {
+		SQLITE,
+		POSTGRES,
+		MYSQL,
+		ODBC
+	};
 	void getDates(HistoryDlg *dlg,QTreeWidget *dateTree,QString j,int from, int count);
-//	QTreeWidgetItem *getDates(HistoryDlg *dlg,QTreeWidget *dateTree,QString j, QDate selected, QString searchFor="");
 	QTreeWidgetItem *getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QString searchFor);
 
 	HistoryItem *getEvents(QTreeWidget *eventsTree,QString j, QDate date, QString searchFor="");
@@ -32,6 +37,10 @@ public:
 	void exportHistory(PsiAccount *pa, XMPP::Jid jid, QString path, QDate selectedDate);
 
 	void deleteEvents(QString j,QDate date,QTime time);
+
+public slots:
+	void optionsUpdate();
+
 private:
 	HistoryDB();
 	~HistoryDB();

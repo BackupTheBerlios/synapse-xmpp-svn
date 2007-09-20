@@ -4284,16 +4284,7 @@ void PsiAccount::chatMessagesRead(const Jid &j)
 void PsiAccount::logEvent(const Jid &j, PsiEvent *e)
 {
 	HistoryDB::instance()->logEvent(j.bare(),e);
-/*	EDBHandle *h = new EDBHandle(d->psi->edb());
-	connect(h, SIGNAL(finished()), SLOT(edb_finished()));
-	h->append(j, e);*/
 }
-
-/*void PsiAccount::edb_finished()
-{
-	EDBHandle *h = (EDBHandle *)sender();
-	delete h;
-}*/
 
 void PsiAccount::openGroupChat(const Jid &j)
 {

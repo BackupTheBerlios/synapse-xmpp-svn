@@ -84,6 +84,7 @@
 #include "shortcutmanager.h"
 #include "globalshortcutmanager.h"
 #include "desktoputil.h"
+#include "historydb.h"
 
 #ifdef Q_WS_MAC
 #include "mac_dock.h"
@@ -1117,6 +1118,7 @@ void PsiCon::slotApplyOptions(const Options &opt)
 	d->mainwin->setWindowOpts(option.alwaysOnTop, (option.useDock && option.dockToolMW));
 	d->mainwin->setUseDock(option.useDock);
 
+	HistoryDB::instance()->optionsUpdate();
 	// notify about options change
 	emitOptionsUpdate();
 

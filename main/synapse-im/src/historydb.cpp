@@ -21,6 +21,7 @@
 #include "psiaccount.h"
 #include "userlist.h"
 #include "filetransfer.h"
+#include "common.h"
 
 static QString getNext(QString *str)
 {
@@ -80,20 +81,7 @@ static QStringList wrapString(const QString &str, int wid)
 HistoryDB::HistoryDB()
 : QObject(0)
 {
-	db = QSqlDatabase::addDatabase("QSQLITE");
-	db.setDatabaseName(pathToProfile(activeProfile) + "/history_v2.db");
-	if (!db.open()) {
-		QMessageBox::critical(0, tr("Cannot open database"),
-		tr("Unable to establish a database connection.\n"
-			"This example needs SQLite support. Please read "
-			"the Qt SQL driver documentation for information how "
-			"to build it.\n\n"
-			"Click Cancel to exit."), QMessageBox::Cancel);
-	} else {
-		tablesList_ = tablesList();
-		if (!tablesList_.contains("tablesList"))
-			createIndex();
-	}
+	optionsUpdate();
 }
 
 HistoryDB::~HistoryDB()
@@ -101,10 +89,55 @@ HistoryDB::~HistoryDB()
 	db.close();
 }
 
+void HistoryDB::optionsUpdate()
+{
+	db.close();
+		
+	switch ( option.historyDBBackend ) {
+		case POSTGRES:
+			db = QSqlDatabase::addDatabase("QPSQL");
+			break;
+		case MYSQL:
+			db = QSqlDatabase::addDatabase("QMYSQL");
+			break;
+		case ODBC:
+			db = QSqlDatabase::addDatabase("QODBC");
+			break;
+		default:
+			option.historyDBBackend = SQLITE;
+			db = QSqlDatabase::addDatabase("QSQLITE");
+			db.setDatabaseName(pathToProfile(activeProfile) + "/history_v2.db");
+			break;
+	}
+
+	if (option.historyDBBackend > SQLITE) {
+		db.setDatabaseName(option.historyDBName);
+		db.setUserName(option.historyDBUser);
+		db.setPassword(option.historyDBPassword);
+		db.setPort(option.historyDBPort);
+		db.setHostName(option.historyDBHost);
+	}
+
+	if (!db.open()) {
+		QMessageBox::critical(0, tr("Cannot open database"),
+		tr("Unable to establish a database connection.\n"
+			"Possible selected database backend is not available or misconfigured.\nPlease read "
+			"the Qt SQL driver documentation for information how "
+			"to build it.\n\n"
+			"Click Cancel to exit."), QMessageBox::Cancel);
+	} else {
+		tablesList_ = tablesList();
+		if (!tablesList_.contains("tablesList"))
+			createIndex();
+
+	}
+	
+}
+
 void HistoryDB::createIndex()
 {
-	QSqlQuery inquery("CREATE TABLE tablesList ('name' TEXT)");
-	QSqlQuery tnquery("INSERT INTO tablesList VALUES ('tablesList')");
+	QSqlQuery inquery("CREATE TABLE tablesList (name TEXT);", db);
+	QSqlQuery tnquery("INSERT INTO tablesList VALUES ('tablesList');", db);
 	tablesList_ = tablesList();
 }
 
@@ -112,7 +145,7 @@ QStringList HistoryDB::tablesList()
 {
 	QStringList tl;
 	QSqlQueryModel query;
-	query.setQuery("SELECT name FROM tablesList");
+	query.setQuery("SELECT name FROM tablesList", db);
 	for(int i=0; i< query.rowCount(); i++)
 	{
 		tl << query.record(i).value("name").toString();
@@ -122,9 +155,9 @@ QStringList HistoryDB::tablesList()
 
 void HistoryDB::createJidTable(QString j)
 {
-	QSqlQuery tquery1("CREATE TABLE 'DATE_" + j + "' ('id' TEXT,'date' TEXT);");
-	QSqlQuery tquery2("CREATE TABLE '" + j + "' ('type' TEXT, 'origin' TEXT, 'date' TEXT, 'time' TEXT, 'text' TEXT, 'html' TEXT);");
-	QSqlQuery tnquery("INSERT INTO tablesList VALUES ('" + j +"')");
+	QSqlQuery tquery1("CREATE TABLE DATE_" + j + " (id TEXT,date TEXT);", db);
+	QSqlQuery tquery2("CREATE TABLE " + j + " (type TEXT, origin TEXT, date TEXT, time TEXT, text TEXT, html TEXT);", db);
+	QSqlQuery tnquery("INSERT INTO tablesList VALUES ('" + j +"')", db);
 	tablesList_ = tablesList();
 }
 
@@ -134,7 +167,7 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 	if(!tablesList_.contains(j))
 		createJidTable(j);
 
-	if(e->type() == PsiEvent::Message) 
+	if(e->type() == PsiEvent::Message && option.historyLogMessages) 
 	{
 		MessageEvent *me = (MessageEvent *)e;
 		const Message &m = me->message();
@@ -142,20 +175,21 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 		ensureDate(j, m.timeStamp().date());
 		if (m.containsHTML())
 			html = m.htmlString();
-		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" + html + "')");
+		QSqlQuery query("INSERT INTO " + j + " VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" + html + "')", db);
+		printf("# : %s\n", query.lastError().databaseText().toAscii().data());
 	}
-	else if(e->type() == PsiEvent::File)
+	else if(e->type() == PsiEvent::File && option.historyLogFileTransfers)
 	{
 		FileEvent *fe = (FileEvent *)e;
 		XMPP::FileTransfer *ft = fe->fileTransfer();
 		ensureDate(j, fe->timeStamp().date());
-		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('file','" + (e->originLocal() ? "to" : "from") + "','" + fe->timeStamp().date().toString() + "','" + fe->timeStamp().time().toString() + "',' Transfering file : " + ft->fileName() + QString("\n Size: %1").arg(ft->fileSize()) + "','')");
+		QSqlQuery query("INSERT INTO " + j + " VALUES ('file','" + (e->originLocal() ? "to" : "from") + "','" + fe->timeStamp().date().toString() + "','" + fe->timeStamp().time().toString() + "',' Transfering file : " + ft->fileName() + QString("\n Size: %1").arg(ft->fileSize()) + "','')", db);
 	}
-	else if(e->type() == PsiEvent::Auth) 
+	else if(e->type() == PsiEvent::Auth && option.historyLogMessages) 
 	{
 		AuthEvent *ae = (AuthEvent *)e;	
 		ensureDate(j,ae->timeStamp().date());
-		QSqlQuery query("INSERT INTO '" + j + "' VALUES ('" + ae->authType() + "','" + (e->originLocal() ? "to" : "from") + "','" + ae->timeStamp().date().toString() + "','" + ae->timeStamp().time().toString() + "','" + "" + "','" + "" + "')");
+		QSqlQuery query("INSERT INTO " + j + " VALUES ('" + ae->authType() + "','" + (e->originLocal() ? "to" : "from") + "','" + ae->timeStamp().date().toString() + "','" + ae->timeStamp().time().toString() + "','" + "" + "','" + "" + "')", db);
 	}
 	return true;
 }
@@ -164,15 +198,16 @@ QString HistoryDB::getTableName(QString j)
 {
 	j = j.replace(QChar('@'),"_");
 	j = j.replace(QChar('.'),"_");
-	return "JID"+j;
+	j = j.replace(QChar('-'),"_");
+	return j;
 }
 
 void HistoryDB::ensureDate(const QString &j, const QDate &date)
 {
 	QSqlQueryModel query;
-	query.setQuery("SELECT date FROM 'DATE_"+j+"' WHERE date='"+date.toString()+"';");
+	query.setQuery("SELECT date FROM DATE_"+j+" WHERE date='"+date.toString()+"';", db);
 	if(query.rowCount()==0) {
-		QSqlQuery squery("INSERT INTO 'DATE_"+j+"' VALUES('"+date.toString(Qt::ISODate)+"','"+date.toString()+"');");
+		QSqlQuery squery("INSERT INTO DATE_"+j+" VALUES('"+date.toString(Qt::ISODate)+"','"+date.toString()+"');", db);
 	}
 }
 
@@ -181,7 +216,7 @@ void HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, int 
 	QSqlQueryModel query;
 	QString tableName;
 	tableName = getTableName(j);
-	query.setQuery("SELECT date FROM 'DATE_"+tableName+"' ORDER BY id DESC LIMIT "+QString("%1").arg(from)+","+QString("%1").arg(from+count)+"");
+	query.setQuery("SELECT date FROM DATE_"+tableName+" ORDER BY id DESC LIMIT "+QString("%1").arg(from)+","+QString("%1").arg(from+count)+"", db);
 //	QColor red(255,0,0);
 	for(int i=0; i< query.rowCount(); i++)
 	{
@@ -191,43 +226,13 @@ void HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, int 
 		dateTree->addTopLevelItem(item);
 	}
 }
-/*
-QTreeWidgetItem *HistoryDB::getDates(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QDate selected, QString searchFor)
-{
-	QSqlQueryModel query;
-	QString tableName;
-	tableName = getTableName(j);
- 	query.setQuery(QString("SELECT date") + ((searchFor.isEmpty())?"":",text") +" FROM " + tableName + " WHERE date LIKE '%" + selected.shortMonthName(selected.month()) + "%" + QVariant(selected.year()).toString() +"%' ORDER BY date");
-	while (query.canFetchMore())
-     		query.fetchMore();
-	DateItem *last = NULL;
-	QColor red(255,0,0);
-	for(int i=0; i< query.rowCount(); i++)
-	{
-		QDate date;
-		date = date.fromString(query.record(i).value("date").toString());
-		if ((last == NULL) || (last->date() != date))
-		{
-			DateItem *item = new DateItem(date);
-			connect(dateTree,SIGNAL(itemClicked(QTreeWidgetItem *, int)),dlg,SLOT(dateSelected(QTreeWidgetItem*,int)));
-			dateTree->addTopLevelItem(item);
-			if(date == selected)
-				dateTree->setCurrentItem(item);
-			
-			last = item;
-		}
-		if(!searchFor.isEmpty() && query.record(i).value("text").toString().contains(searchFor))
-			last->setTextColor(0, red);
-	}
-	return NULL;
-}
-*/
+
 QTreeWidgetItem *HistoryDB::getDatesMatching(HistoryDlg *dlg, QTreeWidget *dateTree, QString j, QString searchFor)
 {
 	QSqlQueryModel query;
 	QString tableName;
 	tableName = getTableName(j);
-	query.setQuery("SELECT date,text FROM " + tableName + " WHERE text LIKE '%"+searchFor+"%' ORDER BY date LIMIT 50");
+	query.setQuery("SELECT date,text FROM " + tableName + " WHERE text LIKE '%"+searchFor+"%' ORDER BY date LIMIT 50", db);
 	while (query.canFetchMore())
 		query.fetchMore();
 
@@ -255,7 +260,7 @@ HistoryItem *HistoryDB::getEvents(QTreeWidget *eventsTree, QString j, QDate date
 	QString tableName;
 	tableName = getTableName(j);
 	QSqlQueryModel query;
-	query.setQuery("SELECT type,origin,time,text,html FROM " + tableName + " WHERE date='"+date.toString()+"' ORDER BY time");
+	query.setQuery("SELECT type,origin,time,text,html FROM " + tableName + " WHERE date='"+date.toString()+"' ORDER BY time", db);
 	for(int i=0; i< query.rowCount(); i++)
 	{
 		QString icon;
@@ -291,7 +296,7 @@ HistoryItem *HistoryDB::getEvents(QTreeWidget *eventsTree, QString j, QDate date
 
 void HistoryDB::deleteEvents(QString j,QDate date,QTime time)
 {
-	QSqlQuery query(QString("DELETE FROM '") + getTableName(j) + "' WHERE date='" + date.toString() + ((time.isValid()) ? (QString("' and time='") + time.toString()) : "") + "'");
+	QSqlQuery query(QString("DELETE FROM ") + getTableName(j) + " WHERE date='" + date.toString() + ((time.isValid()) ? (QString("' and time='") + time.toString()) : "") + "'", db);
 }
 
 void HistoryDB::exportHistory(PsiAccount *pa, XMPP::Jid jid, QString path, QDate date)
@@ -328,10 +333,10 @@ void HistoryDB::exportHistory(PsiAccount *pa, XMPP::Jid jid, QString path, QDate
 	QSqlQueryModel query;
 	if(!date.isNull())
 	{
-		query.setQuery("SELECT type,origin,date,time,text,html FROM " + tableName + " WHERE date='"+date.toString()+"' ORDER BY time");
+		query.setQuery("SELECT type,origin,date,time,text,html FROM " + tableName + " WHERE date='"+date.toString()+"' ORDER BY time", db);
 	}
 	else
-		query.setQuery("SELECT * FROM " + tableName + " ORDER BY date AND time");
+		query.setQuery("SELECT * FROM " + tableName + " ORDER BY date AND time", db);
 	for(int i=0; i< query.rowCount(); i++)
 	{
 		date = date.fromString(query.record(i).value("date").toString());

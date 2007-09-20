@@ -39,6 +39,7 @@ set(options_noMOC_SRCS
 	options/opt_shortcuts.cpp
 	options/opt_sound.cpp
 	options/opt_status.cpp
+	options/opt_history.cpp
 )
 
 set(options_H
@@ -56,6 +57,7 @@ set(options_H
 	options/opt_advanced.h
 	options/opt_shortcuts.h
 	options/opt_antievil.h
+	options/opt_history.h
 )
 
 set(options_UIS
@@ -76,6 +78,7 @@ set(options_UIS
 	options/opt_general_groupchat.ui
 	options/opt_shortcuts.ui
 	options/opt_antievil.ui
+	options/opt_history.ui
 )
 
 MY_AUTOMOC(options_SRCS)
