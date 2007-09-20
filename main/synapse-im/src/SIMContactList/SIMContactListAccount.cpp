@@ -124,6 +124,7 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 				parent = item->parent();
 				parent->removeChild(item);
 				parent->appendChild(item);
+				parent->updateParent();
 			}
 			contactList()->dataChanged();
 			return;
