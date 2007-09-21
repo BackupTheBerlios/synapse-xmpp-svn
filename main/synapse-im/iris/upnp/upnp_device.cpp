@@ -138,7 +138,7 @@ void SIMUPNP::Device::on_upnp_get_external_ip_response()
 	}
 }
 
-QString SIMUPNP::Device::url()
+const QString &SIMUPNP::Device::url()
 {
 	return url_;
 }
@@ -148,7 +148,7 @@ void SIMUPNP::Device::setUrl(const QString &_url)
 	url_ = _url;
 }
 
-QString SIMUPNP::Device::controlUrl()
+const QString &SIMUPNP::Device::controlUrl()
 {
 	return controlUrl_;
 }
@@ -163,7 +163,7 @@ void SIMUPNP::Device::setPort(int _port)
 	port_ = _port;
 }
 
-QString SIMUPNP::Device::hostname()
+const QString SIMUPNP::Device::hostname()
 {
 	return hostname_;
 }
@@ -173,7 +173,7 @@ void SIMUPNP::Device::setHostname(const QString &_host)
 	hostname_ = _host;
 }
 
-QString SIMUPNP::Device::serviceType()
+const QString SIMUPNP::Device::serviceType()
 {
 	return serviceType_;
 }

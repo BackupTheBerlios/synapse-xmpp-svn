@@ -8,7 +8,7 @@
 #include <QTimer>
 #include <QTcpSocket>
 
-bool isLocal(quint32 ip) {
+static bool isLocal(quint32 ip) {
 	return ((ip & 0xff000000) == 0x0a000000 || (ip & 0xfff00000) == 0xac100000 || (ip & 0xffff0000) == 0xc0a80000);
 }
 
@@ -148,7 +148,7 @@ void SIMUPNP::on_reply()
 		QList<Device*>::iterator it2;
 		for ( it2 = devices.begin(); it2 != devices.end(); ++it2) {
 			Device *dev2 = *it2;
-			printf("dev: %s\n", dev2->url().toAscii().data());
+			//printf("dev: %s\n", dev2->url().toAscii().data());
 			new Port(dev2, "TCP"); // fix for main port of file transfer
 			new Port(dev2, "TCP");
 			new Port(dev2, "UDP");
@@ -204,9 +204,9 @@ quint16 SIMUPNP::getPort(int protocol)
 	for( it1=devices.begin(); it1 != devices.end(); ++it1)
 		dev = *it1;
 
-	if(dev) {
-		printf("dev->url()\n", dev->url());
-	}
+//	if(dev) {
+//		printf("dev->url()\n", dev->url());
+//	}
 	new Port(dev,proto);
 
 	QList<Port*>::iterator it2;
@@ -269,7 +269,7 @@ void SIMUPNP::setExternalIP(QString &externIP)
 	externalIP_ = externIP;
 }
 
-QString SIMUPNP::externalIP()
+QString &SIMUPNP::externalIP()
 {
 	return externalIP_;
 }

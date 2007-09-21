@@ -31,7 +31,7 @@ public:
 	void setInUse(bool);
 
 	quint16 port();
-	QString type();
+	const QString &type();
 
 public slots:
 	void map();

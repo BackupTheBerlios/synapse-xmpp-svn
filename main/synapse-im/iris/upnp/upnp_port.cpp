@@ -72,7 +72,7 @@ void SIMUPNP::Port::map()
 	soap += QString("</u:%1></s:Body></s:Envelope>\r\n").arg(soap_action);
 
 	post(soap,soap_action);
-}
+s}
 
 void SIMUPNP::Port::unmap()
 {
@@ -154,7 +154,7 @@ quint16 SIMUPNP::Port::port()
 	return port_;
 }
 
-QString SIMUPNP::Port::type()
+const QString &SIMUPNP::Port::type()
 {
 	return type_;
 }

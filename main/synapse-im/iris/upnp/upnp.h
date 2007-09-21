@@ -43,7 +43,7 @@ public:
 	QString leaseDuration();
 	QString userAgent();
 	void setExternalIP(QString &);
-	QString externalIP();
+	QString &externalIP();
 
 	quint16 getPort(int protocol);
 	void freePort(int protocol, quint16 port);

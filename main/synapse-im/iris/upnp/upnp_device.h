@@ -26,15 +26,15 @@ public:
 
 	bool isReady();
 
-	QString url();
+	const QString &url();
 	void setUrl(const QString &);
 
-	QString controlUrl();
+	const QString &controlUrl();
 	int port();
 	void setPort(int);
-	QString hostname();
+	const QString hostname();
 	void setHostname(const QString &);
-	QString serviceType();
+	const QString serviceType();
 	
 
 public slots:
