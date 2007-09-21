@@ -2,6 +2,7 @@
 #define SIMCONTACTLISTVIEW_H
 
 #include <QTreeView>
+#include <QComboBox>
 #include "xmpp_jid.h"
 #include "xmpp_status.h"
 
@@ -22,7 +23,7 @@ class SIMContactListView : public QTreeView
 	};
 
 public:
-	SIMContactListView(QWidget* parent = 0);
+	SIMContactListView(QWidget* parent = 0, QComboBox *seach = 0);
 
 
 	// Reimplemented
@@ -54,6 +55,7 @@ private:
 	void resizeColumns();
 
 	int showIcons_;
+	QComboBox *search_;
 };
 
 #endif

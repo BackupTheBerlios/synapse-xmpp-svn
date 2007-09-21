@@ -1,6 +1,7 @@
 #include <QTreeView>
 #include <QHeaderView>
 #include <QContextMenuEvent>
+#include <QLineEdit>
 
 #include <QScrollBar>
 
@@ -16,16 +17,19 @@
 #include "psiaccount.h"
 #include "common.h"
 
-SIMContactListView::SIMContactListView(QWidget* parent) : QTreeView(parent)
+SIMContactListView::SIMContactListView(QWidget* parent, QComboBox *search) : QTreeView(parent)
 {
 	setUniformRowHeights(false);
 	setRootIsDecorated(false);
 	setDragEnabled(true);
+	setAcceptDrops(true);
 	setDragDropMode(DragDrop);
+	setAutoScroll(true);
 	setSelectionMode(NoSelection);
-	setEditTriggers(QAbstractItemView::EditKeyPressed|QAbstractItemView::AnyKeyPressed);
+	setEditTriggers(QAbstractItemView::EditKeyPressed);
 	setIndentation(0);
 	updateOptions();
+	search_ = search;
 	header()->hide();
 	header()->setStretchLastSection(false);
 	connect(this, SIGNAL(doubleClicked(const QModelIndex&)), SLOT(qlv_doubleclick(const QModelIndex&)));
@@ -85,6 +89,21 @@ bool SIMContactListView::event(QEvent *event)
 		const QModelIndex index = indexAt(helpEvent->pos());
 		QPoint pos = mapToGlobal(helpEvent->pos());
 		return model()->setData(index,QVariant(pos),Qt::ToolTipRole);
+	}
+	else if (event->type() == QEvent::KeyPress) {
+		QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+		if ((ke->modifiers() == Qt::NoModifier) || (ke->modifiers() == Qt::ShiftModifier)) {
+			if (ke->key() == Qt::Key_Backspace) {
+				QString tmp = search_->lineEdit()->text();
+				tmp = tmp.left(tmp.size()-1);
+				search_->setEditText(tmp);
+				return true;
+			} else if (!ke->text().isEmpty()) {
+				QString tmp = search_->lineEdit()->text() + ke->text();
+				search_->setEditText(tmp);
+				return true;
+			}
+		}
 	}
 	else if (event->type() == QEvent::Wheel) {
 		QWheelEvent *ew= static_cast<QWheelEvent *>(event);

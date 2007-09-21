@@ -1,5 +1,3 @@
-//#include "SIMContactListItem.h"
-
 #ifndef SIMCONTACTLISTITEM_H
 #define SIMCONTACTLISTITEM_H
 
@@ -51,15 +49,12 @@ public:
 	void updateParents();
 	void updateParent();
 	void updateOptions();
-//signals:
-//	void dataChanged();
 
 private:
 	static int compare_invisible(SIMContactListItem *it1, SIMContactListItem *it2);
 	static int compare(SIMContactListItem *it1, SIMContactListItem *it2);
 
 	QList<SIMContactListItem*> childItems;
-//	QList<QVariant> itemData;
 	int type_;
 	SIMContactListItem *parentItem;
 	SIMContactListItem *defaultParent_;

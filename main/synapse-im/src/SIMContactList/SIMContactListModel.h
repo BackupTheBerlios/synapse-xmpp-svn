@@ -30,7 +30,7 @@ public:
 	virtual bool setData(const QModelIndex&, const QVariant&, int role);
 	Qt::ItemFlags flags(const QModelIndex &index) const;
 	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
-	QModelIndex index( int row, int column, SIMContactListItem *parent) const;
+	QModelIndex index( int row, int column, SIMContactListItem *item) const;
 	virtual QModelIndex index( int row, int column, const QModelIndex &parent) const;
 	virtual QModelIndex parent(const QModelIndex &index) const;
 	virtual int rowCount(const QModelIndex &parent) const;

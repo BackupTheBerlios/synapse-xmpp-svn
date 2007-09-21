@@ -280,7 +280,11 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	setCentralWidget ( center );
 
 	d->vb_main = new QVBoxLayout(center);
-	cvlist = new SIMContactListView(center);
+
+	d->cb_search = new QComboBox(center);
+	d->cb_search->setEditable(true);
+
+	cvlist = new SIMContactListView(center,d->cb_search);
 	cvlist->setItemDelegate(new SIMContactDelegate);
 	((SIMContactList *)d->psi->contactList())->setContactListView(cvlist);
 	SIMContactListModel *model = new SIMContactListModel(d->psi->contactList());
@@ -297,8 +301,6 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	d->vb_main->setMargin(layoutMargin);
 	d->vb_main->setSpacing(layoutMargin);
 
-	d->cb_search = new QComboBox(center);
-	d->cb_search->setEditable(true);
 	d->blockString = false;
 	d->vb_main->addWidget(d->cb_search);
 	connect(d->cb_search, SIGNAL(editTextChanged(const QString&)), this, SLOT(searchRoster(const QString&)));
