@@ -371,7 +371,6 @@ bool PsiCon::init()
 	connect(d->mainwin, SIGNAL(doGroupChat()), SLOT(doGroupChat()));
 	connect(d->mainwin, SIGNAL(blankMessage()), SLOT(doNewBlankMessage_old()));
 	connect(d->mainwin, SIGNAL(statusChanged(int)), SLOT(statusMenuChanged(int)));
-	connect(d->mainwin, SIGNAL(getLastStatus(int)), SLOT(getLastStatus(int)));
 	connect(d->mainwin, SIGNAL(statusLastChanged(int)), SLOT(setLastStatusGlobal(int)));
 	connect(d->mainwin, SIGNAL(doOptions()), SLOT(doOptions()));
 	connect(d->mainwin, SIGNAL(doToolbars()), SLOT(doToolbars()));

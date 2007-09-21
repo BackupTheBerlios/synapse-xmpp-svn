@@ -86,7 +86,6 @@ protected:
 
 signals:
 	void statusChanged(int);
-	LastStatus *getLastStatus(int);
 	void statusLastChanged(int);
 	void changeProfile();
 	void blankMessage();

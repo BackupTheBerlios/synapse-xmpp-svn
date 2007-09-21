@@ -592,7 +592,7 @@ void MainWin::updateStatusLastMenu()
 	LastStatus *ls = NULL;
 	for(int i=0; i<5; i++)
 	{
-		ls = getLastStatus(i);
+		ls = d->psi->getLastStatus(i);
 		if(ls == NULL)
 			return;
 		QString t;
