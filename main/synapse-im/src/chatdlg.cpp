@@ -240,7 +240,10 @@ public:
 			lb_keyIcon->show();
 			lb_key->setText(QString("<qt><font color=\"#2A993B\">") + *key + "</font></qt>");
 		}
-		rs_statusString->setStatusString(statusString, size.width()-8);
+		QString status = TextUtil::plain2rich(*statusString);
+		if ( option.useEmoticons )
+			status = TextUtil::emoticonify(status);
+		rs_statusString->setStatusString(&status, size.width()-8);
 		repaint();
 	}
 	

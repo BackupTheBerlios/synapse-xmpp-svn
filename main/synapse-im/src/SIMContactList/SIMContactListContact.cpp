@@ -139,7 +139,7 @@ void SIMContactListContact::setUserListItem(const UserListItem &_u)
 		if(fnt.italic())
 			s += "<i>";
 		if(PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool())
-			s += TextUtil::emoticonify(description());
+			s += TextUtil::emoticonify(TextUtil::plain2rich(description()));
 		else
 			s += TextUtil::plain2rich(description());
 		if(fnt.bold())
