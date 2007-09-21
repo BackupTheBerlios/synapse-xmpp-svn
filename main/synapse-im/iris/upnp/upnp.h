@@ -59,7 +59,7 @@ private:
 	int retry_;
 	int error_;
 	QUdpSocket *upnp;
-	QList<SIMUPNP::Device*> devices;
+	QList<Device*> devices;
 //	int localPort_;
 //	int externalPort_;
 	QHostAddress local_addr_;
@@ -68,7 +68,7 @@ private:
 //	QString protocol_;
 	QString externalIP_;
 	QMutex mutex;
-	QList<SIMUPNP::Port*> ports_;
+	QList<Port*> ports_;
 	static SIMUPNP* instance_;
 };
 

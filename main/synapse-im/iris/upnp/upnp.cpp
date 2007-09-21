@@ -14,8 +14,10 @@ bool isLocal(quint32 ip) {
 
 SIMUPNP::SIMUPNP(SocksServer *_serv)// : localPort_(8200), externalPort_(8200), protocol_("TCP")
 {
+	printf("SIMUPNP\n");
 	upnp = new QUdpSocket();
 	serv = _serv;
+	ports_.clear();
 	SIMUPNP::instance_  = this;
 	devices.clear();
 	rebind();
@@ -51,10 +53,6 @@ void SIMUPNP::rebind(QHostAddress listen_addr)
 void SIMUPNP::unbind()
 {
 	serv->stop();
-	for (int i = 0; i < devices.count(); ++i)
-	{
-//		devices.takeAt(i)->unmapPort();
-	}
 }
 
 void SIMUPNP::discoverDevice()
@@ -81,26 +79,23 @@ void SIMUPNP::send_request()
 		upnp->writeDatagram(msearch, sizeof(msearch) - 1, QHostAddress("239.255.255.250"), 1900);
 		QTimer::singleShot( 250*retry_, this, SLOT(send_request()));
 	} else if (retry_ == 9) {
-		QTimer::singleShot( 10000, this, SLOT(timeout()));
+		QTimer::singleShot( 20000, this, SLOT(timeout()));
 	}
 }
 
 void SIMUPNP::timeout()
 {
-	if (!devices.isEmpty() && ports_.count() != 0)
+	if (ports_.begin() != ports_.end())
 		return;
 
 	new Port(NULL, "TCP"); // fix for main port of file transfer
 	new Port(NULL, "TCP");
 	new Port(NULL, "UDP");
-	//serv->listen(8200,true);
 }
 
 void SIMUPNP::on_reply()
 {
-//	mutex.lock();
 	if (discoveryDone) {
-//		mutex.unlock();
 		return;
 	}
 
@@ -116,10 +111,6 @@ void SIMUPNP::on_reply()
 	int x = resp.find("http://",6);
 	if (x == -1) {
 		qDebug("UPNP::on_reply() : Bad response\n");
-//		mutex.unlock();
-//		if( retry_ == 9)
-			//serv->listen(externalPort_,true);
-		
 		return;
 	}
 	int y = resp.find("\n",x);
@@ -128,17 +119,17 @@ void SIMUPNP::on_reply()
 	if (dev->url().isEmpty()) {
 		printf("delete dev\n");
 		delete dev;
-//		mutex.unlock();
-//		if( retry_ == 9)
-//			serv->listen(externalPort_,true);
 		return;
 	}
 
 	bool inList = false;
 	//check if it is not already on a list
-	for (int i = 0; i < devices.count(); ++i)
-		if (devices.takeAt(i)->url().compare(dev->url()) == 0)
+	QList<Device*>::iterator it1;
+	for ( it1 = devices.begin(); it1 != devices.end(); ++it1) {
+		Device *dev1 = *it1;
+		if (dev1->url().compare(dev->url()) == 0)
 			inList = true;
+	}
 
 	if (!inList) {
 		QString url(dev->url());
@@ -146,37 +137,42 @@ void SIMUPNP::on_reply()
 		y = url.find("/",x);
 		dev->setPort((url.mid(x+1, y-(x+1))).toInt());
 		dev->setHostname(url.mid(7, x-7));
-//		devices.append(dev);
+		devices.append(dev);
 		dev->get();
-		devices.push_back(dev);
 	}
 
-	if (retry_ >= 4 && !devices.isEmpty() && !discoveryDone)
+	if (retry_ >= 4 && (devices.begin() != devices.end() ) && !discoveryDone)
 	{
 		discoveryDone = true;
-		for (int i = 0; i < devices.count(); ++i)
-		{
-			dev = devices.takeAt(i);
-			new Port(dev, "TCP"); // fix for main port of file transfer
-			new Port(dev, "TCP");
-			new Port(dev, "UDP");
+
+		QList<Device*>::iterator it2;
+		for ( it2 = devices.begin(); it2 != devices.end(); ++it2) {
+			Device *dev2 = *it2;
+			printf("dev: %s\n", dev2->url().toAscii().data());
+			new Port(dev2, "TCP"); // fix for main port of file transfer
+			new Port(dev2, "TCP");
+			new Port(dev2, "UDP");
 		}
-	}//  else if (retry_ == 9 && devices.isEmpty()) {
-//		serv->listen(externalPort_,true);
-//	}
-//	mutex.unlock();
+	}
 }
 
 void SIMUPNP::registerPort(SIMUPNP::Port *port)
 {
-	ports_.append(port);
-	if((ports_.count()==1) && (port->type().compare("TCP")==0)) {
-//		setExternalPort(port->port());
-//		setLocalPort(port->port());
+	if((ports_.begin() == ports_.end()) && (port->type().compare("TCP")==0)) {
 		serv->stop();
 		serv->listen(port->port(),true);
+		port->setInUse(true);
 	}
-	printf("allocated ports: %d\n", ports_.count());
+	ports_.append(port);
+
+	QList<Port*>::iterator it;
+	int i=0;
+	for( it=ports_.begin(); it != ports_.end(); ++it) {
+		Port *p1 = *it;
+		i++;
+		if(p1)
+			printf("allocated ports: %d : %d : %s\n", i, p1->port(), p1->type().toAscii().data());
+	}
 }
 
 void SIMUPNP::unregisterPort(SIMUPNP::Port *port)
@@ -188,11 +184,6 @@ SocksServer *SIMUPNP::server()
 {
 	return serv;
 }
-
-/*void SIMUPNP::setExternalPort(quint16 port)
-{
-	externalPort_ = port;
-}*/
 
 quint16 SIMUPNP::getPort(int protocol)
 {
@@ -208,18 +199,21 @@ quint16 SIMUPNP::getPort(int protocol)
 	else if (protocol == QAbstractSocket::UdpSocket)
 		proto = "UDP";
 
-	Device *dev = devices.takeAt(0);
-	printf("devices : %d\n", devices.count());
+	Device *dev = NULL;
+	QList<Device*>::iterator it1;
+	for( it1=devices.begin(); it1 != devices.end(); ++it1)
+		dev = *it1;
+
 	if(dev) {
 		printf("dev->url()\n", dev->url());
 	}
 	new Port(dev,proto);
 
+	QList<Port*>::iterator it2;
 	Port *p1 = NULL;
-	for (int i = 0; i < ports_.count(); ++i)
-	{
-		if(!ports_.takeAt(i)->inUse() && ports_.takeAt(i)->mapped() && ports_.takeAt(i)->type().compare(proto) == 0) {
-			p1 = ports_.takeAt(i);
+	for( it2=ports_.begin(); it2 != ports_.end(); ++it2) {
+		p1 = *it2;
+		if(!p1->inUse() && p1->mapped() && p1->type().compare(proto) == 0) {
 			p1->setInUse(true);
 			break;
 		}
@@ -239,39 +233,16 @@ void SIMUPNP::freePort(int protocol, quint16 port)
 	else if (protocol == QAbstractSocket::UdpSocket)
 		proto = "UDP";
 
-	for (int i = 0; i < ports_.count(); ++i)
-	{
-		if(!ports_.takeAt(i)->inUse() && ports_.takeAt(i)->mapped() && ports_.takeAt(i)->port() == port && ports_.takeAt(i)->type().compare(proto) == 0) {
-			ports_.takeAt(i)->unmap();
+	QList<Port*>::iterator it;
+	Port *p1 = NULL;
+	for( it=ports_.begin(); it != ports_.end(); ++it) {
+		p1 = *it;
+		if(p1->mapped() && p1->port() == port && p1->type().compare(proto) == 0) {
+			p1->unmap();
 			break;
 		}
 	}
 }
-
-/*quint16 SIMUPNP::externalPort()
-{
-	return externalPort_;
-}
-
-void SIMUPNP::setProtocol(QString &_protocol)
-{
-	protocol_ = _protocol;
-}
-
-QString SIMUPNP::protocol()
-{
-	return protocol_;
-}
-
-void SIMUPNP::setLocalPort(quint16 port)
-{
-	localPort_ = port;
-}
-
-quint16 SIMUPNP::localPort()
-{
-	return localPort_;
-}*/
 
 void SIMUPNP::setListenAddress(QHostAddress addr)
 {
@@ -281,7 +252,6 @@ void SIMUPNP::setListenAddress(QHostAddress addr)
 QHostAddress SIMUPNP::listenAddress()
 {
 	return listen_addr_;
-	//return serv->address();
 }
 
 QString SIMUPNP::userAgent()
