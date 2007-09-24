@@ -11,6 +11,7 @@ set(widgets_SRCS
 	widgets/iconaction.cpp
 	widgets/psirichtext.cpp
 	widgets/psitooltip.cpp
+	widgets/hoverlabel.cpp
 )
 
 set(widgets_noMOC_SRCS
@@ -45,6 +46,7 @@ set(widgets_H
 #	widgets/psitooltip.h
 	widgets/psitabwidget.h
 	widgets/psitabbar.h
+	widgets/hoverlabel.h
 )
 
 #qt4_automoc(widgets_SRCS)

@@ -80,6 +80,7 @@
 #include <QPainter>
 #include <QAbstractTextDocumentLayout>
 #include "psirichtext.h"
+#include "hoverlabel.h"
 
 #include "ui_chatcontact.h"
 
@@ -315,6 +316,7 @@ public:
 	ChatState contactChatState;
 	ChatState lastChatState; 
 	ChatContactBoxUI *contactBox;
+	HoverLabel *hover;
 
 	bool showToolBox_;
 signals:
@@ -586,6 +588,8 @@ ChatDlg::ChatDlg(const Jid &jid, PsiAccount *pa)
 	connect(d->pa, SIGNAL(pgpKeyChanged()), SLOT(updatePGP()));
 	connect(d->pa, SIGNAL(encryptedMessageSent(int, bool, int)), SLOT(encryptedMessageSent(int, bool, int)));
 	ui_.mle->chatEdit()->setFocus();
+	d->hover = new HoverLabel(ui_.log,true);
+//	d->hover->hide();
 	resize(PsiOptions::instance()->getOption("options.ui.chat.size").toSize());
 
 	UserListItem *u = d->pa->findFirstRelevant(d->jid);
@@ -1653,12 +1657,21 @@ void ChatDlg::setContactChatState(ChatState state)
 	d->contactChatState = state;
 	if (state == StateGone) {
 		appendSysMsg(tr("%1 ended the conversation").arg(Qt::escape(d->dispNick)));
+		d->hover->setText(tr("%1 ended the conversation").arg(Qt::escape(d->dispNick)));
 	}
 	else {
 		// Activate ourselves
 		if (d->lastChatState == StateGone)
 			setChatState(StateActive);
 	}
+	if (d->contactChatState == StateComposing)
+		d->hover->setText(tr("%1 (Composing ...)").arg(Qt::escape(d->dispNick)));
+//s		tr("%1 (Composing ...)").arg(cap);
+	else if (d->contactChatState == StateInactive)
+		d->hover->setText(tr("%1 (Inactive)").arg(Qt::escape(d->dispNick)));
+	else d->hover->setText("");
+//		cap = tr("%1 (Inactive)").arg(cap);
+
 	emit contactStateChanged( state );
 	updateCaption();
 }
