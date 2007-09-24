@@ -59,7 +59,7 @@ const SIMContactName &SIMContactListMeta::contactName()
 	if (child(0))
 		return (dynamic_cast<SIMContactListContact*>(child(0)))->contactName();
 	else
-		return SIMContactName(name(), textColor());
+		return SIMContactName(name(), textColor(), 0);
 }
 
 const QColor &SIMContactListMeta::textColor()

@@ -15,9 +15,9 @@ public:
 	enum EditMode { Editable, ReadOnly };
 
 	SIMContactName();
-	SIMContactName(const QString &txt, const QColor &color);
+	SIMContactName(const QString &txt, const QColor &color, int width);
 	
-	void setText(const QString &txt, const QColor &color);
+	void setText(const QString &txt, const QColor &color, int width);
 
 	void paint(QPainter *painter, const QRect &rect, const QPalette &palette, EditMode mode) const;
 	QSize sizeHint( const QRect &rect) const;

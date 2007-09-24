@@ -33,6 +33,7 @@
 SIMContactListContact::SIMContactListContact(const UserListItem &_u, PsiAccount *_pa, SIMContactList *cl, SIMContactListItem *parent)
 :SIMContactListItem(SIMContactListItem::Contact, _pa, cl, parent), alertIcon_(NULL)
 {
+	printf("size(U) : %d\n", sizeof(_u));
 	setUserListItem(_u);
 }
 
@@ -149,7 +150,7 @@ void SIMContactListContact::setUserListItem(const UserListItem &_u)
 		s += "</font>";
 	}
 
-	contactName_.setText(s, textColor());
+	contactName_.setText(s, textColor(), contactList()->contactListView()->columnWidth(SIMContactListModel::NameColumn));
 }
 
 UserListItem *SIMContactListContact::u()

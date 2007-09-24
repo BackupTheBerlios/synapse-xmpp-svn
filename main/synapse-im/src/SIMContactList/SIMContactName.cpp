@@ -17,7 +17,7 @@ SIMContactName::SIMContactName()
 	}
 }
 
-SIMContactName::SIMContactName(const QString &txt, const QColor &color) : color_(color)
+SIMContactName::SIMContactName(const QString &txt, const QColor &color, int width) : color_(color)
 {
 	v_rt = new QTextDocument();
 	v_rt->setUndoRedoEnabled(false);
@@ -25,10 +25,10 @@ SIMContactName::SIMContactName(const QString &txt, const QColor &color) : color_
 	{
 		PsiRichText::install(v_rt);
 	}
-	setText(txt, color);
+	setText(txt, color, width);
 }
 
-void SIMContactName::setText(const QString &txt, const QColor &color)
+void SIMContactName::setText(const QString &txt, const QColor &color, int width)
 {
 	color_ = color;
 	if (PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool())
@@ -39,6 +39,7 @@ void SIMContactName::setText(const QString &txt, const QColor &color)
 	QFont fnt;
 	fnt.fromString(option.font[fRoster]);
 	v_rt->setDefaultFont(fnt);
+	PsiRichText::ensureTextLayouted(v_rt, width-2);
 }
 
 void SIMContactName::paint(QPainter *painter, const QRect &rect, const QPalette &palette, EditMode mode) const
