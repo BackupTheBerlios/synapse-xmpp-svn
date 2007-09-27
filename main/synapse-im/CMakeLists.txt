@@ -7,6 +7,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g0 -pipe -w -fomit-frame-pointer")
 #TEMPORARY
 #set(CMAKE_INSTALL_PREFIX "/usr")
 
+ADD_DEFINITIONS("-DUSE_XEP0091")
+#ADD_DEFINITIONS("-DUSE_XEP0022")
+
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
 set(EXECUTABLE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "Directory where program will installed")

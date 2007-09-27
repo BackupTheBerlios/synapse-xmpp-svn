@@ -98,7 +98,7 @@ namespace XMPP {
 		const QList<PubSubItem>& pubsubItems() const;
 		const QList<PubSubRetraction>& pubsubRetractions() const;
 
-		// JEP-0091
+		// JEP-0091 && XEP-203
 		QDateTime timeStamp() const;
 		void setTimeStamp(const QDateTime &ts, bool send = false);
 
@@ -116,12 +116,14 @@ namespace XMPP {
 		void urlsClear();
 		void setUrlList(const UrlList &list);
 
+#ifdef USE_XEP0022
 		// JEP-0022
 		QString eventId() const;
 		void setEventId(const QString& id);
 		bool containsEvents() const;
 		bool containsEvent(MsgEvent e) const;
 		void addEvent(MsgEvent e);
+#endif
 
 		// JEP-0085
 		ChatState chatState() const;
@@ -176,7 +178,7 @@ namespace XMPP {
 		QString invite() const;
 		void setInvite(const QString &s);
 
-		// for compatibility.  delete me later
+		// for compatibility.  delete me later ??
 		bool spooled() const;
 		void setSpooled(bool);
 		bool wasEncrypted() const;

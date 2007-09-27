@@ -312,7 +312,9 @@ public:
 	QTimer *composingTimer;
 	bool isComposing;
 	bool sendComposingEvents;
+#ifdef USE_XEP0022
 	QString eventId;
+#endif
 	ChatState contactChatState;
 	ChatState lastChatState; 
 	ChatContactBoxUI *contactBox;
@@ -1333,8 +1335,10 @@ void ChatDlg::doSend()
  	// Request events
  	if (option.messageEvents) {
 		// Only request more events when really necessary
+#ifdef USE_XEP0022
 		if (d->sendComposingEvents)
 			m.addEvent(ComposingEvent);
+#endif
 		m.setChatState(StateActive);
  	}
 
@@ -1387,11 +1391,13 @@ void ChatDlg::incomingMessage(const Message &m)
 	
 	if (m.body().isEmpty()) {
 		/* Event message */
+#ifdef USE_XEP0022
 		if (m.containsEvent(CancelEvent)) {
 			setContactChatState(StatePaused);
 		} else if (m.containsEvent(ComposingEvent)) {
 			setContactChatState(StateComposing);
 		}
+#endif
 		
 		if (m.chatState() != StateNone) {
 			setContactChatState(m.chatState());
@@ -1400,11 +1406,15 @@ void ChatDlg::incomingMessage(const Message &m)
 	else {
 		// Normal message
 		// Check if user requests event messages
+#ifdef USE_XEP0022
 		d->sendComposingEvents = m.containsEvent(ComposingEvent);
 		if (!m.eventId().isEmpty()) {
 			d->eventId = m.eventId();
 		}
 		if (m.containsEvents() || m.chatState() != StateNone) {
+#else
+		if (m.chatState() != StateNone) {
+#endif
 			setContactChatState(StateActive);
 		} else {
 			setContactChatState(StateNone);
@@ -1583,18 +1593,26 @@ void ChatDlg::updateIsComposing(bool b)
 
 void ChatDlg::setChatState(ChatState state)
 {
+#ifdef USE_XEP0022
 	if (option.messageEvents && (d->sendComposingEvents || (d->contactChatState != StateNone))) {
+#else
+	if (option.messageEvents && (d->contactChatState != StateNone)) {
+#endif
 		// Don't send to offline resource
 		QList<UserListItem*> ul = d->pa->findRelevant(d->jid);
 		if(ul.isEmpty()) {
+#ifdef USE_XEP0022
 			d->sendComposingEvents = false;
+#endif
 			d->lastChatState = StateNone;
 			return;
 		}
 
 		UserListItem *u = ul.first();
 		if(!u->isAvailable()) {
+#ifdef USE_XEP0022
 			d->sendComposingEvents = false;
+#endif
 			d->lastChatState = StateNone;
 			return;
 		}
@@ -1617,6 +1635,7 @@ void ChatDlg::setChatState(ChatState state)
 
 		// Build event message
 		Message m(d->jid);
+#ifdef USE_XEP0022
 		if (d->sendComposingEvents) {
 			m.setEventId(d->eventId);
 			if (state == StateComposing) {
@@ -1626,6 +1645,7 @@ void ChatDlg::setChatState(ChatState state)
 				m.addEvent(CancelEvent);
 			}
 		}
+#endif
 		if (d->contactChatState != StateNone) {
 			if (d->lastChatState != StateGone) {
 				if ((state == StateInactive && d->lastChatState == StateComposing) || (state == StateComposing && d->lastChatState == StateInactive)) {
@@ -1640,7 +1660,11 @@ void ChatDlg::setChatState(ChatState state)
 		}
 		
 		// Send event message
+#ifdef USE_XEP0022
 		if (m.containsEvents() || m.chatState() != StateNone) {
+#else
+		if (m.chatState() != StateNone) {
+#endif
 			m.setType("chat");
 			d->pa->dj_sendMessage(m, false);
 		}

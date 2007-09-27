@@ -1007,7 +1007,9 @@ public:
 	UrlList urlList;
 	AddressList addressList;
 	RosterExchangeItems rosterExchangeItems;
+#ifdef USE_XEP0022
 	QList<MsgEvent> eventList;
+#endif
 	QString pubsubNode;
 	QList<PubSubItem> pubsubItems;
 	QList<PubSubRetraction> pubsubRetractions;
@@ -1355,6 +1357,7 @@ void Message::setRosterExchangeItems(const RosterExchangeItems& items)
 	d->rosterExchangeItems = items;
 }
 
+#ifdef USE_XEP0022
 QString Message::eventId() const
 {
 	return d->eventId;
@@ -1383,6 +1386,7 @@ void Message::addEvent(MsgEvent e)
 		d->eventList += e;
 	}
 }
+#endif
 
 ChatState Message::chatState() const
 {
@@ -1581,8 +1585,15 @@ Stanza Message::toStanza(Stream *stream) const
 	}
 
 	// timestamp
+#ifdef USE_XEP0091
 	if(d->timeStampSend && !d->timeStamp.isNull()) {
 		QDomElement e = s.createElement("jabber:x:delay", "x");
+		e.setAttribute("stamp", TS2stamp(d->timeStamp.toUTC()));
+		s.appendChild(e);
+	}
+#endif
+	if(d->timeStampSend && !d->timeStamp.isNull()) {
+		QDomElement e = s.createElement("urn:xmpp:delay", "delay");
 		e.setAttribute("stamp", TS2stamp(d->timeStamp.toUTC()));
 		s.appendChild(e);
 	}
@@ -1596,6 +1607,7 @@ Stanza Message::toStanza(Stream *stream) const
 		s.appendChild(x);
 	}
 
+#ifdef USE_XEP0022
 	// events
 	if (!d->eventList.isEmpty()) {
 		QDomElement x = s.createElement("jabber:x:event", "x");
@@ -1628,6 +1640,7 @@ Stanza Message::toStanza(Stream *stream) const
 		}
 		s.appendChild(x);
 	} 
+#endif
 
 	// chat state
 	QString chatStateNS = "http://jabber.org/protocol/chatstates";
@@ -1815,13 +1828,23 @@ bool Message::fromStanza(const Stanza &s, int timeZoneOffset)
 		}
 	}
 
-	// timestamp
-	QDomElement t = root.elementsByTagNameNS("jabber:x:delay", "x").item(0).toElement();
+	// timestamp XEP-0203 && XEP-0091
+	QDomElement t = root.elementsByTagNameNS("urn:xmpp:delay", "delay").item(0).toElement();
+#ifdef USE_XEP0091
+	QDomElement t_old = root.elementsByTagNameNS("jabber:x:delay", "x").item(0).toElement();
+#endif
 	if(!t.isNull()) {
 		d->timeStamp = stamp2TS(t.attribute("stamp"));
 		d->timeStamp = d->timeStamp.addSecs(timeZoneOffset * 60);
 		d->spooled = true;
 	}
+#ifdef USE_XEP0091
+	else if(!t_old.isNull()) {
+		d->timeStamp = stamp2TS(t_old.attribute("stamp"));
+		d->timeStamp = d->timeStamp.addSecs(timeZoneOffset * 60);
+		d->spooled = true;
+	}
+#endif
 	else {
 		d->timeStamp = QDateTime::currentDateTime();
 		d->spooled = false;
@@ -1838,6 +1861,7 @@ bool Message::fromStanza(const Stanza &s, int timeZoneOffset)
 		d->urlList += u;
 	}
 	
+#ifdef USE_XEP0022
     // events
 	d->eventList.clear();
 	nl = root.elementsByTagNameNS("jabber:x:event", "x");
@@ -1858,6 +1882,7 @@ bool Message::fromStanza(const Stanza &s, int timeZoneOffset)
 		if (d->eventList.isEmpty())
 			d->eventList += CancelEvent;
 	}
+#endif
 
 	// Chat states
 	QString chatStateNS = "http://jabber.org/protocol/chatstates";

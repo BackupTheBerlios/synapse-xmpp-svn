@@ -1969,8 +1969,13 @@ void PsiAccount::client_messageReceived(const Message &m)
 void PsiAccount::processIncomingMessage(const Message &_m)
 {
 	// skip empty messages, but not if the message contains a data form
+#ifdef USE_XEP0022
 	if(_m.body().isEmpty() && _m.urlList().isEmpty() && _m.invite().isEmpty() && !_m.containsEvents() && _m.chatState() == StateNone && _m.subject().isEmpty() && _m.rosterExchangeItems().isEmpty() && _m.mucInvites().isEmpty() &&  _m.getForm().fields().empty() && _m.ampRules()->isEmpty())
 		return;
+#else
+	if(_m.body().isEmpty() && _m.urlList().isEmpty() && _m.invite().isEmpty() && _m.chatState() == StateNone && _m.subject().isEmpty() && _m.rosterExchangeItems().isEmpty() && _m.mucInvites().isEmpty() &&  _m.getForm().fields().empty() && _m.ampRules()->isEmpty())
+		return;
+#endif
 
 	// with Advanced Message Processing - XEP-0079
 	if(!_m.ampRules()->isEmpty() && _m.body().isEmpty())
@@ -3853,7 +3858,11 @@ void PsiAccount::handleEvent(PsiEvent *e)
 		Message m = me->message();
 
 		// Pass message events to chat window
+#ifdef USE_XEP0022
 		if ((m.containsEvents() || m.chatState() != StateNone) && m.body().isEmpty()) {
+#else
+		if ((m.chatState() != StateNone) && m.body().isEmpty()) {
+#endif
 			printf("Events pass\n");
 			if (option.messageEvents) {
 				ChatDlg *c = findDialog<ChatDlg*>(e->from());
@@ -4640,12 +4649,14 @@ void PsiAccount::pgp_encryptFinished()
 		mwrap.setBody(tr("[ERROR: This message is encrypted, and you are unable to decrypt it.]"));
 		mwrap.setXEncrypted(enc);
 		mwrap.setWasEncrypted(true);
+#ifdef USE_XEP0022
 		// FIXME: Should be done cleaner, with an extra method in Iris
 		if (m.containsEvent(OfflineEvent)) mwrap.addEvent(OfflineEvent);
 		if (m.containsEvent(DeliveredEvent)) mwrap.addEvent(DeliveredEvent);
 		if (m.containsEvent(DisplayedEvent)) mwrap.addEvent(DisplayedEvent);
 		if (m.containsEvent(ComposingEvent)) mwrap.addEvent(ComposingEvent);
 		if (m.containsEvent(CancelEvent)) mwrap.addEvent(CancelEvent);
+#endif
 		mwrap.setChatState(m.chatState());
 		dj_sendMessage(mwrap);
 	}

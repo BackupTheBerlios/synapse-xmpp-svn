@@ -696,7 +696,7 @@ bool JT_PushPresence::take(const QDomElement &e)
 		if(i.isNull())
 			continue;
 
-		if(i.tagName() == "x" && i.attribute("xmlns") == "jabber:x:delay") {
+		if(i.tagName() == "delay" && i.attribute("xmlns") == "urn:xmpp:delay") {
 			if(i.hasAttribute("stamp")) {
 				QDateTime dt;
 				if(stamp2TS(i.attribute("stamp"), &dt))
@@ -704,6 +704,16 @@ bool JT_PushPresence::take(const QDomElement &e)
 				p.setTimeStamp(dt);
 			}
 		}
+#ifdef USE_XEP0091
+		else if(i.tagName() == "x" && i.attribute("xmlns") == "jabber:x:delay") {
+			if(i.hasAttribute("stamp")) {
+				QDateTime dt;
+				if(stamp2TS(i.attribute("stamp"), &dt))
+					dt = dt.addSecs(client()->timeZoneOffset() * 60);
+				p.setTimeStamp(dt);
+			}
+		}
+#endif
 		else if(i.tagName() == "x" && i.attribute("xmlns") == "gabber:x:music:info") {
 			QDomElement t;
 			bool found;
