@@ -1,3 +1,5 @@
+#include "SIMContactListView.h"
+#include "SIMContactListModel.h"
 #include "SIMContactName.h"
 #include "psioptions.h"
 #include "psirichtext.h"
@@ -7,7 +9,7 @@
 
 #include <QPainter>
 
-SIMContactName::SIMContactName()
+SIMContactName::SIMContactName() : clv_(0)
 {
 	v_rt = new QTextDocument();
 	v_rt->setUndoRedoEnabled(false);
@@ -17,7 +19,7 @@ SIMContactName::SIMContactName()
 	}
 }
 
-SIMContactName::SIMContactName(const QString &txt, const QColor &color, int width) : color_(color)
+SIMContactName::SIMContactName(const QString &txt, const QColor &color, SIMContactListView *clv) : color_(color), clv_(clv)
 {
 	v_rt = new QTextDocument();
 	v_rt->setUndoRedoEnabled(false);
@@ -25,11 +27,12 @@ SIMContactName::SIMContactName(const QString &txt, const QColor &color, int widt
 	{
 		PsiRichText::install(v_rt);
 	}
-	setText(txt, color, width);
+	setText(txt, color, clv);
 }
 
-void SIMContactName::setText(const QString &txt, const QColor &color, int width)
+void SIMContactName::setText(const QString &txt, const QColor &color, SIMContactListView *clv)
 {
+	clv_ = clv;
 	color_ = color;
 	if (PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool())
 	{
@@ -39,12 +42,12 @@ void SIMContactName::setText(const QString &txt, const QColor &color, int width)
 	QFont fnt;
 	fnt.fromString(option.font[fRoster]);
 	v_rt->setDefaultFont(fnt);
-	PsiRichText::ensureTextLayouted(v_rt, width-2);
+	PsiRichText::ensureTextLayouted(v_rt, clv_->columnWidth(SIMContactListModel::NameColumn)-2);
 }
 
 void SIMContactName::paint(QPainter *painter, const QRect &rect, const QPalette &palette, EditMode mode) const
 {
-	PsiRichText::ensureTextLayouted(v_rt, rect.width()-2);
+//	PsiRichText::ensureTextLayouted(v_rt, rect.width()-2);
 	painter->save();
 
 	QSize size = v_rt->size().toSize();
@@ -69,5 +72,6 @@ void SIMContactName::paint(QPainter *painter, const QRect &rect, const QPalette 
 
 QSize SIMContactName::sizeHint(const QRect &rect) const
 {
+	PsiRichText::ensureTextLayouted(v_rt, clv_->columnWidth(SIMContactListModel::NameColumn)-2);
 	return v_rt->size().toSize();
 }

@@ -149,7 +149,7 @@ void SIMContactListContact::setUserListItem(const UserListItem &_u)
 		s += "</font>";
 	}
 
-	contactName_.setText(s, textColor(), contactList()->contactListView()->columnWidth(SIMContactListModel::NameColumn));
+	contactName_.setText(s, textColor(), contactList()->contactListView());
 }
 
 UserListItem *SIMContactListContact::u()

@@ -42,6 +42,8 @@ protected:
 	void dragMoveEvent(QDragMoveEvent *e);
 	void dropEvent(QDropEvent *e);
 
+	virtual void resizeEvent(QResizeEvent *e);
+
 	virtual void doItemsLayout();
 
 	void scActionDefault(SIMContactListItem *item);

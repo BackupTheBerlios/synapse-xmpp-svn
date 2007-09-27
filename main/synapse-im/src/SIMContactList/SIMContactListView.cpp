@@ -77,6 +77,14 @@ void SIMContactListView::resetExpandedState()
 	}
 }
 
+void SIMContactListView::resizeEvent(QResizeEvent *e)
+{
+	QTreeView::resizeEvent(e);
+	// hack to deal with QItemDelegate which needs to change width when scrollbar is in use.
+	if(model())
+		QTreeView::doItemsLayout();
+}
+
 void SIMContactListView::doItemsLayout()
 {
 	QTreeView::doItemsLayout();

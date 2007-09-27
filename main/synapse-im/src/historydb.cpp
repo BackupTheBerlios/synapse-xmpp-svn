@@ -177,7 +177,6 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 		if (m.containsHTML())
 			html = m.htmlString();
 		QSqlQuery query("INSERT INTO " + j + " VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" + html + "')", db);
-		printf("# : %s\n", query.lastError().databaseText().toAscii().data());
 	}
 	else if(e->type() == PsiEvent::File && option.historyLogFileTransfers)
 	{
@@ -197,9 +196,6 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 
 QString HistoryDB::getTableName(QString j)
 {
-//	j = j.replace(QChar('@'),"_");
-//	j = j.replace(QChar('.'),"_");
-//	j = j.replace(QChar('-'),"_");
 	return QCA::Hash("md5").hashToString(j.toLatin1());
 }
 
