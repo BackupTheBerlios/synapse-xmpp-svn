@@ -110,22 +110,7 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 		if ((clc->u()->groups() == u.groups() && clc->u()->metas() == u.metas()) || u.isSelf() || !clc->u()->inList()) {
 			clc->setUserListItem(u);
 			SIMContactListItem *parent = clc->parent();
-			clc->updateParents();
-			if(clc->parent() != parent) {
-				parent->updateParent();
-				parent = clc->parent();
-				parent->updateParent();
-			} else {
-				parent->removeChild(clc);
-				parent->appendChild(clc);
-			}
-			if(parent->type() == SIMContactListItem::Meta) {
-				SIMContactListItem *item = parent;
-				parent = item->parent();
-				parent->removeChild(item);
-				parent->appendChild(item);
-				parent->updateParent();
-			}
+			((SIMContactListItem *)clc)->updateParent(true);
 			contactList()->dataChanged();
 			return;
 		} else {
@@ -164,9 +149,8 @@ void SIMContactListAccount::updateEntry(const UserListItem &u)
 			SIMContactListMeta *meta = ensureMeta(metas.takeFirst(), group);
 			clc = new SIMContactListContact(u, account(), contactList(), meta);
 			meta->appendChild(clc);
-			meta->updateParents();
 		}
-		group->updateParents();
+		((SIMContactListItem *)clc)->updateParent(true);
 		contactList()->dataChanged();
 	}
 }

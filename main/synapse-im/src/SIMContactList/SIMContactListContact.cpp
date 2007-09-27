@@ -33,7 +33,6 @@
 SIMContactListContact::SIMContactListContact(const UserListItem &_u, PsiAccount *_pa, SIMContactList *cl, SIMContactListItem *parent)
 :SIMContactListItem(SIMContactListItem::Contact, _pa, cl, parent), alertIcon_(NULL)
 {
-	printf("size(U) : %d\n", sizeof(_u));
 	setUserListItem(_u);
 }
 

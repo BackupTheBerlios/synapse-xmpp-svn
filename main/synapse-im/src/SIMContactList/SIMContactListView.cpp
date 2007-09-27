@@ -26,6 +26,7 @@ SIMContactListView::SIMContactListView(QWidget* parent, QComboBox *search) : QTr
 	setDragDropMode(DragDrop);
 	setAutoScroll(true);
 	setSelectionMode(NoSelection);
+	setWordWrap(true);
 	setEditTriggers(QAbstractItemView::EditKeyPressed);
 	setIndentation(0);
 	updateOptions();
@@ -319,15 +320,15 @@ void SIMContactListView::resizeColumns()
 		headerView->setResizeMode(SIMContactListModel::NameColumn,QHeaderView::Stretch);
 	}
 	if (columns > SIMContactListModel::StateColumn) {
-		headerView->setResizeMode(SIMContactListModel::StateColumn,QHeaderView::Custom);
+		headerView->setResizeMode(SIMContactListModel::StateColumn,QHeaderView::Fixed);
 		headerView->resizeSection(SIMContactListModel::StateColumn,20);
 	}
 	if (columns >  SIMContactListModel::PixmapColumn) {
-		headerView->setResizeMode(SIMContactListModel::PixmapColumn,QHeaderView::Custom);
+		headerView->setResizeMode(SIMContactListModel::PixmapColumn,QHeaderView::Fixed);
 		headerView->resizeSection(SIMContactListModel::PixmapColumn,iconSize().width()+2);
 	}
 	if (columns > SIMContactListModel::AvatarColumn) {
-		headerView->setResizeMode(SIMContactListModel::AvatarColumn,QHeaderView::Custom);
+		headerView->setResizeMode(SIMContactListModel::AvatarColumn,QHeaderView::Fixed);
 		headerView->resizeSection(SIMContactListModel::AvatarColumn,iconSize().width());
 	}
 }

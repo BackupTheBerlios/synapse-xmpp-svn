@@ -72,11 +72,13 @@ void SIMContactListItem::appendChild(SIMContactListItem *item)
 	if (!inserted) {
 		childItems.push_back(item);
 	}
+	updateParent(true);
 }
 
 void SIMContactListItem::removeChild(SIMContactListItem *item)
 {
 	childItems.removeAll(item);
+	updateParent(true);
 }
 
 SIMContactListItem *SIMContactListItem::findItem(const QString &name, int _type)
@@ -281,7 +283,7 @@ int SIMContactListItem::compare(SIMContactListItem *it1, SIMContactListItem *it2
 	}
 }
 
-void SIMContactListItem::updateParent()
+void SIMContactListItem::updateParent(bool reload)
 {
 	SIMContactListItem *newParent = parent();
 
@@ -294,16 +296,20 @@ void SIMContactListItem::updateParent()
 				meta = dynamic_cast<SIMContactListMeta*>(this);
 				newParent = meta->updateParent();
 	} else if (type_ == Group) {
+				reload = false;
 				SIMContactListGroup *group;
 				group = dynamic_cast<SIMContactListGroup*>(this);
 				newParent = group->updateParent();
 	} else if (type_ == Account) {
+				reload = false;
 				SIMContactListAccount *account;
 				account = dynamic_cast<SIMContactListAccount*>(this);
 				newParent = account->updateParent();
+	} else if (type_ == Root) {
+				reload = false;
 	}
 
-	if (newParent != parentItem)
+	if (reload || newParent != parentItem)
 		setParent(newParent);
 }
 

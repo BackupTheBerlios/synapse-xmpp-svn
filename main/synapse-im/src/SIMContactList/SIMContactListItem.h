@@ -47,7 +47,7 @@ public:
 
 	void setParent(SIMContactListItem *parent);
 	void updateParents();
-	void updateParent();
+	void updateParent(bool reload = false);
 	void updateOptions();
 
 private:
