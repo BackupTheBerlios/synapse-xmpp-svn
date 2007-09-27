@@ -54,6 +54,7 @@ private:
 private:
 	QSqlDatabase db;
 	QStringList tablesList_;
+
 	static HistoryDB *instance_;
 };
 #endif

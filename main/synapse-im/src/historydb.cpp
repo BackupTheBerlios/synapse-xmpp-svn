@@ -22,6 +22,7 @@
 #include "userlist.h"
 #include "filetransfer.h"
 #include "common.h"
+#include "qca.h"
 
 static QString getNext(QString *str)
 {
@@ -196,10 +197,10 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 
 QString HistoryDB::getTableName(QString j)
 {
-	j = j.replace(QChar('@'),"_");
-	j = j.replace(QChar('.'),"_");
-	j = j.replace(QChar('-'),"_");
-	return j;
+//	j = j.replace(QChar('@'),"_");
+//	j = j.replace(QChar('.'),"_");
+//	j = j.replace(QChar('-'),"_");
+	return QCA::Hash("md5").hashToString(j.toLatin1());
 }
 
 void HistoryDB::ensureDate(const QString &j, const QDate &date)
