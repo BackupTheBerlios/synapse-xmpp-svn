@@ -62,33 +62,6 @@ public:
 	virtual IconAction *copy() const;
 };
 
-class EventNotifierAction : public IconAction
-{
-	Q_OBJECT
-public:
-	EventNotifierAction(QObject *parent, const char *name = 0);
-	~EventNotifierAction();
-
-	void setText(const QString &);
-	bool addTo (QWidget *w);
-
-	void hide();
-	void show();
-
-	virtual IconAction *copy() const;
-	virtual EventNotifierAction &operator=( const EventNotifierAction & );
-
-signals:
-	void clicked(int);
-
-private slots:
-	void objectDestroyed ();
-
-private:
-	class Private;
-	Private *d;
-};
-
 class PopupAction : public IconAction
 {
 	Q_OBJECT

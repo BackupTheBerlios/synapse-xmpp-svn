@@ -170,35 +170,7 @@ bool IconAction::addTo(QWidget *w)
 	supportedContainers << "QWidget";
 	if ( w->inherits("QToolBar") || w->inherits("Q3ToolBar") ||
 	     supportedContainers.contains(w->metaObject()->className()) ) {
-		QString bname = objectName() + "_action_button";
-		IconToolButton *btn = new IconToolButton ( w );
-		btn->setObjectName( bname );
-		d->buttons.append ( btn );
-
-		btn->setDefaultAction(this);
-		
-		btn->setText( text() );
-		btn->setPsiIcon( d->icon, false );
-
-		btn->setDefaultAction(this);
-
-		// need to explicitly update popupMode,
-		// because setDefaultAction resets it
-		btn->setPopupMode( QToolButton::InstantPopup );
-
-		btn->setToolTip(toolTipFromMenuText());
-
-		btn->setAutoRaise(true);
-		btn->setFocusPolicy(Qt::NoFocus);
-
-		if ( supportedContainers.contains(w->metaObject()->className()) )
-			if ( w->layout() )
-				w->layout()->addWidget( btn );
-
-		connect(btn, SIGNAL(toggled(bool)), this, SLOT(setChecked(bool)));
-		connect(btn, SIGNAL(destroyed()), SLOT(objectDestroyed()));
-
-		addingToolButton(btn);
+		w->addAction(this);
 	}
 	else
 		w->addAction(this);

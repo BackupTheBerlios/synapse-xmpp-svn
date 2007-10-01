@@ -45,7 +45,7 @@
 #include "common.h"
 #include "showtextdlg.h"
 #include "psicon.h"
-//#include "contactview.h"
+#include "hoverlabel.h"
 #include "psiiconset.h"
 #include "serverinfomanager.h"
 #include "applicationinfo.h"
@@ -108,7 +108,7 @@ public:
 
 	PopupAction *optionsButton, *statusButton;
 	IconActionGroup *statusGroup;
-	EventNotifierAction *eventNotifier;
+	HoverLabel *eventNotifier;
 	PsiCon *psi;
 	MainWin *mainWin;
 
@@ -135,7 +135,6 @@ MainWin::Private::Private(PsiCon *_psi, MainWin *_mainWin)
 	mainWin = _mainWin;
 
 	statusGroup   = (IconActionGroup *)getAction("status_all");
-	eventNotifier = (EventNotifierAction *)getAction("event_notifier");
 
 	optionsButton = (PopupAction *)getAction("button_options");
 	statusButton  = (PopupAction *)getAction("button_status");
@@ -237,7 +236,7 @@ void MainWin::Private::updateMenu(QStringList actions, QMenu *menu)
 #endif
 
 MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
-:AdvancedWidget<Q3MainWindow>(0, (_onTop ? Qt::WStyle_StaysOnTop : Qt::Widget) | (_asTool ? (Qt::WStyle_Tool |TOOLW_FLAGS) : Qt::Widget))
+:AdvancedWidget<QMainWindow>(0, (_onTop ? Qt::WStyle_StaysOnTop : Qt::Widget) | (_asTool ? (Qt::WStyle_Tool |TOOLW_FLAGS) : Qt::Widget))
 //: Q3MainWindow(0,name,(_onTop ? Qt::WStyle_StaysOnTop : Qt::Widget) | (_asTool ? (Qt::WStyle_Tool |TOOLW_FLAGS) : Qt::Widget))
 {
 	setObjectName(name);
@@ -285,6 +284,9 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	d->cb_search->setEditable(true);
 
 	cvlist = new SIMContactListView(center,d->cb_search);
+	d->eventNotifier = new HoverLabel(cvlist, false);
+ 	connect(cvlist, SIGNAL(resizeEventNotifier(QWidget*)), d->eventNotifier,  SLOT(resizeEvent(QWidget*)));
+	connect(d->eventNotifier, SIGNAL(clicked()), SLOT(doRecvNextEvent()));
 	cvlist->setItemDelegate(new SIMContactDelegate);
 	((SIMContactList *)d->psi->contactList())->setContactListView(cvlist);
 	SIMContactListModel *model = new SIMContactListModel(d->psi->contactList());
@@ -461,9 +463,6 @@ void MainWin::registerAction( IconAction *action )
 		{ "menu_play_sounds",    toggled,   this, SLOT( actPlaySoundsActivated(bool) ) },
 		{ "publish_tune",        toggled,   this, SLOT( actPublishTuneActivated(bool) ) },
 		{ "publish_mood",        activated,   this, SLOT( actPublishMood() ) },
-
-		{ "event_notifier", SIGNAL( clicked(int) ), this, SLOT( statusClicked(int) ) },
-		{ "event_notifier", activated, this, SLOT( doRecvNextEvent() ) },
 
 		{ "help_readme",      activated, this, SLOT( actReadmeActivated() ) },
 		{ "help_tip",         activated, this, SLOT( actTipActivated() ) },
@@ -717,12 +716,13 @@ void MainWin::buildToolbars()
 			delete tb;
 
 		tb = new PsiToolBar(tbPref.name, this, d->psi);
-		moveDockWindow ( tb, tbPref.dock, tbPref.nl, tbPref.index, tbPref. extraOffset );
-
 		tb->setGroup( "mainWin", i );
 		tb->setType( PsiActionList::Actions_MainWin );
+		tb->setIconSize(QSize(16,16));
+		tb->layout()->setSpacing(1);
 		//connect( tb, SIGNAL( registerAction( IconAction * ) ), SLOT( registerAction( IconAction * ) ) );
 		tb->initialize( tbPref, false );
+		addToolBar((tbPref.dock == Qt::DockTop)? Qt::TopToolBarArea : Qt::BottomToolBarArea, tb);
 
 		if ( i < toolbars.count() )
 			toolbars.removeAt(i);
@@ -734,7 +734,7 @@ void MainWin::saveToolbarsPositions()
 {
 	for (int i = 0; i < toolbars.count(); i++) {
 		Options::ToolbarPrefs &tbPref = option.toolbars["mainWin"][i];
-		getLocation ( toolbars.at(i), tbPref.dock, tbPref.index, tbPref.nl, tbPref.extraOffset );
+		//getLocation ( toolbars.at(i), tbPref.dock, tbPref.index, tbPref.nl, tbPref.extraOffset );
 		tbPref.on = toolbars.at(i)->isVisible();
 	}
 }
@@ -1180,7 +1180,7 @@ void MainWin::updateReadNext(PsiIcon *anim, int amount)
 		d->eventNotifier->setText("");
 	}
 	else {
-		d->eventNotifier->setText(QString("<b>") + numEventsString(d->nextAmount) + "</b>");
+		d->eventNotifier->setText(numEventsString(d->nextAmount));
 		d->eventNotifier->show();
 		// make sure it shows
 		//qApp->processEvents();
@@ -1264,7 +1264,7 @@ void MainWin::setWindowIcon(const QPixmap&)
 #else
 void MainWin::setWindowIcon(const QPixmap& p)
 {
-	Q3MainWindow::setWindowIcon(p);
+	QMainWindow::setWindowIcon(p);
 }
 #endif
 

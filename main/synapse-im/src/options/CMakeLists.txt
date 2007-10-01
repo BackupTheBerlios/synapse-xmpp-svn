@@ -81,6 +81,18 @@ set(options_UIS
 	options/opt_history.ui
 )
 
+if(PLUGINS)
+    set(options_SRCS ${options_SRCS}
+	options/opt_plugins.cpp
+    )
+    set(options_H ${options_H}
+	options/opt_plugins.h
+    )
+    set(options_UIS ${options_UIS}
+	options/opt_plugins.ui
+    )
+endif(PLUGINS)
+
 MY_AUTOMOC(options_SRCS)
 QT4_WRAP_CPP(options_moc_SRCS ${options_H})
 QT4_WRAP_UI(options_UIS_H ${options_UIS})

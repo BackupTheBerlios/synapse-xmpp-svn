@@ -116,7 +116,6 @@ public:
 	PsiActionList *actionList() const;
 
 	void buildToolbars();
-	bool getToolbarLocation(Q3DockWindow* dw, Qt::Dock& dock, int& index, bool& nl, int& extraOffset) const;
 
 	IconSelectPopup *iconSelectPopup() const;
 	void processEvent(PsiEvent *);

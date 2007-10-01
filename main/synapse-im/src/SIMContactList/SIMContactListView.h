@@ -31,6 +31,9 @@ public:
 
 	void updateOptions();
 
+signals:
+	void resizeEventNotifier(QWidget* w);
+
 private slots:
 	void qlv_doubleclick(const QModelIndex&);
 

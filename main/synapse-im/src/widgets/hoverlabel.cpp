@@ -67,6 +67,11 @@ bool HoverLabel::top()
 	return top_;
 }
 
+void HoverLabel::mousePressEvent(QMouseEvent *e)
+{
+	emit clicked();
+}
+
 void HoverLabel::paintEvent(QPaintEvent *e)
 {
 	QPainter p(this);
@@ -92,7 +97,7 @@ void HoverLabel::paintEvent(QPaintEvent *e)
 			path.lineTo(r.topLeft());
 		} else {
 			QRect r(-1, 0, size.width(), size.height()+2);
-			path.moveTo(r.right(), r.top());
+			path.moveTo(r.left(), r.top());
 			path.lineTo(r.right()-roundness, r.top());
 			path.cubicTo(r.right(), r.top(), r.right(), r.top(), r.right(), r.top()+roundness);
 			path.lineTo(r.bottomRight());
@@ -126,6 +131,12 @@ QSize HoverLabel::interpolate(const QSize &src, const QSize &dst, qreal percent)
 	int widthDiff  = int((dst.width() - src.width())  * percent);
 	int heightDiff = int((dst.height() - src.height()) * percent);
 	return QSize(src.width()  + widthDiff, src.height() + heightDiff);
+}
+
+void HoverLabel::resizeEvent(QWidget *w)
+{
+	QSize hs = sizeHint();
+	setGeometry(0, w->height() - hs.height(), 300, hs.height());
 }
 
 #include "hoverlabel.moc"

@@ -23,13 +23,13 @@
 
 #include <qapplication.h>
 #include <qstyle.h>
-#include <q3toolbar.h>
+#include <QToolBar>
 #include <qtimer.h>
 #include <qsignalmapper.h>
 #include <qobject.h>
 #include <qpixmapcache.h>
 #include <QPixmap>
-#include <Q3Button>
+//#include <Q3Button>
 #include <Q3PtrList>
 #include <QFrame>
 #include <QLabel>
@@ -292,8 +292,10 @@ void PopupAction::setText (const QString &text)
 bool PopupAction::addTo (QWidget *w)
 {
 	if ( w->inherits("QToolBar") || w->inherits("Q3ToolBar") ) {
+		printf("QToolbar: %s\n", objectName().toAscii().data());
 		QByteArray bname((const char*) (QString(name()) + QString("_action_button")));
-		PopupActionButton *btn = new PopupActionButton ( (Q3ToolBar*)w, bname );
+		printf("Q : %s\n", bname.data());
+		PopupActionButton *btn = new PopupActionButton ( (QToolBar*)w, bname );
 		d->buttons.append ( btn );
 		btn->setMenu ( menu() );
 		btn->setLabel ( text() );
@@ -302,6 +304,7 @@ bool PopupAction::addTo (QWidget *w)
 		btn->setEnabled ( isEnabled() );
 
 		connect( btn, SIGNAL( destroyed() ), SLOT( objectDestroyed() ) );
+		((QToolBar*)w)->addWidget(btn);
 	}
 	else
 		return IconAction::addTo(w);
@@ -566,122 +569,6 @@ bool SeparatorAction::addTo(QWidget *w)
 IconAction *SeparatorAction::copy() const
 {
 	return new SeparatorAction(0);
-}
-
-//----------------------------------------------------------------------------
-// EventNotifierAction
-//----------------------------------------------------------------------------
-
-class EventNotifierAction::Private
-{
-public:
-	Private() { }
-
-	Q3PtrList<MLabel> labels;
-	bool hide;
-};
-
-EventNotifierAction::EventNotifierAction(QObject *parent, const char *name)
-: IconAction(parent, name)
-{
-	d = new Private;
-	setMenuText(tr("<Event notifier>"));
-	d->hide = true;
-}
-
-EventNotifierAction::~EventNotifierAction()
-{
-	delete d;
-}
-
-bool EventNotifierAction::addTo(QWidget *w)
-{
-	if ( w->inherits("QToolBar") || w->inherits("Q3ToolBar") ) {
-		MLabel *label = new MLabel(w, "EventNotifierAction::MLabel");
-		label->setText(text());
-		d->labels.append(label);
-		connect(label, SIGNAL(destroyed()), SLOT(objectDestroyed()));
-		connect(label, SIGNAL(doubleClicked()), SIGNAL(activated()));
-		connect(label, SIGNAL(clicked(int)), SIGNAL(clicked(int)));
-
-		if ( d->hide )
-			hide();
-
-		return true;
-	}
-
-	return false;
-}
-
-void EventNotifierAction::setText(const QString &t)
-{
-	IconAction::setText("<nobr>" + t + "</nobr>");
-
-	Q3PtrListIterator<MLabel> it ( d->labels );
-	for ( ; it.current(); ++it) {
-		MLabel *label = it.current();
-		label->setText(text());
-	}
-}
-
-void EventNotifierAction::objectDestroyed()
-{
-	MLabel *label = (MLabel *)sender();
-	d->labels.removeRef(label);
-}
-
-void EventNotifierAction::hide()
-{
-	d->hide = true;
-
-	Q3PtrListIterator<MLabel> it ( d->labels );
-	for ( ; it.current(); ++it) {
-		MLabel *label = it.current();
-		label->hide();
-		Q3ToolBar *toolBar = (Q3ToolBar *)label->parent();
-
-		QObjectList l = toolBar->queryList( "QWidget" );
-		int found = 0;
-
-		for ( QObjectList::ConstIterator it = l.begin(); it != l.end(); ++it) {
-			if ( QString((*it)->name()).left(3) != "qt_" ) // misc internal Qt objects
-				found++;
-		}
-
-		if ( found == 1 ) // only MLabel is on ToolBar
-			toolBar->hide();
-	}
-}
-
-void EventNotifierAction::show()
-{
-	d->hide = false;
-
-	Q3PtrListIterator<MLabel> it ( d->labels );
-	for ( ; it.current(); ++it) {
-		MLabel *label = it.current();
-		Q3ToolBar *toolBar = (Q3ToolBar *)label->parent();
-		label->show();
-		toolBar->show();
-	}
-}
-
-IconAction *EventNotifierAction::copy() const
-{
-	EventNotifierAction *act = new EventNotifierAction( 0 );
-
-	*act = *this;
-
-	return act;
-}
-
-EventNotifierAction &EventNotifierAction::operator=( const EventNotifierAction &from )
-{
-	*( (IconAction *)this ) = from;
-
-	d->hide = from.d->hide;
-
-	return *this;
 }
 
 #include "mainwin_p.moc"

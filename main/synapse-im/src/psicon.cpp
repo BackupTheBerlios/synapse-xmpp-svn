@@ -1485,11 +1485,6 @@ void PsiCon::buildToolbars()
 	d->mainwin->buildToolbars();
 }
 
-bool PsiCon::getToolbarLocation(Q3DockWindow* dw, Qt::Dock& dock, int& index, bool& nl, int& extraOffset) const
-{
-	return d->mainwin->getLocation(dw, dock, index, nl, extraOffset);
-}
-
 PsiActionList *PsiCon::actionList() const
 {
 	return d->actionList;

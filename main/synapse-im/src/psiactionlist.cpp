@@ -164,13 +164,9 @@ void PsiActionList::Private::createMainWin()
 		statusButton->setWhatsThis (tr("Provides a convenient way to change and to get information about current status"));
 		statusButton->setSizePolicy ( QSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding ) );
 
-		IconAction *eventNotifier = new EventNotifierAction(this, "EventNotifierAction");
-		eventNotifier->setWhatsThis (tr("Special item that displays number of pending events"));
-
 		ActionNames actions[] = {
 			{ "button_options", optionsButton },
 			{ "button_status",  statusButton  },
-			{ "event_notifier", eventNotifier },
 			{ "", 0 }
 		};
 

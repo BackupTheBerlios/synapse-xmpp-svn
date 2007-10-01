@@ -301,7 +301,7 @@ void OptionsTabToolbars::applyOptions(Options *o)
 		//	continue;
 
 		Options::ToolbarPrefs &tbPref = opt->toolbars["mainWin"][i];
-		psi->getToolbarLocation(toolbars.at(i), tbPref.dock, tbPref.index, tbPref.nl, tbPref.extraOffset);
+		//psi->getToolbarLocation(toolbars.at(i), tbPref.dock, tbPref.index, tbPref.nl, tbPref.extraOffset);
 	}
 
 	// apply options

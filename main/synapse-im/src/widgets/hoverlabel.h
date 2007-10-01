@@ -10,6 +10,9 @@ class HoverLabel : public QWidget {
 public:
 	HoverLabel(QWidget *parent=0, bool _top=true);
 
+signals:
+	void clicked();
+
 public slots:
 	void setText(const QString &text);
 	QSize sizeForFont() const;
@@ -18,8 +21,10 @@ public slots:
 	void resetAnimation();
 
 	bool top();
+	void resizeEvent(QWidget *w);
 
 protected:
+	void mousePressEvent(QMouseEvent *e);
 	void paintEvent(QPaintEvent *e);
 
 private:
