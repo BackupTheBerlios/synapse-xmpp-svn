@@ -3584,6 +3584,17 @@ void PsiAccount::dj_sendMessage(const Message &m, bool log)
 		}
 	}
 
+#ifdef PSI_PLUGINS
+        if (! nm.htmlString().isEmpty()) {
+                nm.setHTMLString(PluginManager::instance()->outgoingMessage(this, nm.to(), nm.htmlString()));
+        }
+        if (! nm.body().isEmpty()) {
+                nm.setBody(PluginManager::instance()->outgoingMessage(this, nm.to(), nm.body()));
+        }
+#endif
+
+
+
 	d->client->sendMessage(nm);
 
 	// only toggle if not an invite or body is not empty
@@ -3855,7 +3866,29 @@ void PsiAccount::handleEvent(PsiEvent *e)
 
 	if(e->type() == PsiEvent::Message) {
 		MessageEvent *me = (MessageEvent *)e;
-		Message m = me->message();
+ 		Message m = me->message();
+#ifdef PSI_PLUGINS
+/*		Error using containsHTML()???????
+		if (m1.containsHTML() && ! m1.html().text().isEmpty() ) {
+			printf(" do we?\n");
+			HTMLElement htmlPart = PluginManager::instance()->incomingMessage(this,
+				m1.from(),
+				m1.html());
+			m1.setHTML(htmlPart, m1.lang());
+			m1.setBody(htmlPart.text());
+		}*/
+		if (! m.htmlString().isEmpty()) {
+                 	m.setHTMLString( PluginManager::instance()->incomingMessage(this, 
+							      m.from(),
+							      m.htmlString()));
+		}
+        	if (! m.body().isEmpty()) {
+                 	m.setBody( PluginManager::instance()->incomingMessage(this, 
+							      m.from(),
+							      m.body()));
+        	}
+		me->setMessage(m);
+#endif
 
 		// Pass message events to chat window
 #ifdef USE_XEP0022
@@ -3924,13 +3957,7 @@ void PsiAccount::handleEvent(PsiEvent *e)
 			// FIXME: handle message errors
 			//msg.text = QString(tr("<big>[Error Message]</big><br>%1").arg(plain2rich(msg.text)));
 		}
-#ifdef PSI_PLUGINS
-		UserListItem *ulItem=NULL;
-		if ( !ul.isEmpty() )
-			ulItem=ul.first();
-		PluginManager::instance()->message(this,e->from(),ulItem,((MessageEvent*)e)->message().body());
-#endif
-	}
+}
 	else if(e->type() == PsiEvent::HttpAuth) {
 		playSound(option.onevent[eSystem]);
 	}

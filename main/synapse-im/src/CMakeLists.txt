@@ -41,6 +41,10 @@ INCLUDE_DIRECTORIES(
 
 add_definitions(-DUSE_PEP)
 
+if(PLUGINS)
+    ADD_DEFINITIONS("-DPSI_PLUGINS")
+endif(PLUGINS)
+
 include(SIMContactList/CMakeLists.txt)
 
 include(tools/CMakeLists.txt)
@@ -312,6 +316,17 @@ set(res_RC
     ../psi.qrc
     ../iconsets.qrc
 )
+
+if(PLUGINS)
+#    ADD_DEFINITIONS("-DPSI_PLUGINS")
+    set(synapse-im_SRCS ${synapse-im_SRCS}
+	pluginmanager.cpp
+	)
+    set(synapse-im_H ${synapse-im_H}
+	pluginmanager.h
+	)
+    ADD_SUBDIRECTORY(plugins)
+endif(PLUGINS)
 
 MY_AUTOMOC(synapse-im_SRCS)
 

@@ -7,6 +7,7 @@
 
 #include "userlist.h"
 #include "optionstree.h"
+#include "../iris/include/im.h"
 
 class PsiPlugin;
 
@@ -21,6 +22,8 @@ namespace QCA {
 
 class QPluginLoader;
 
+using namespace XMPP;
+
 class PluginManager : public QObject
 {
 	Q_OBJECT
@@ -30,8 +33,10 @@ public:
 	QStringList availablePlugins();
 
 	void addAccount( const PsiAccount* account, XMPP::Client* client);
-	void message( PsiAccount* account, const XMPP::Jid& from, 
-	const UserListItem*, const QString& message );
+	QString incomingMessage( PsiAccount* account, const XMPP::Jid& from, QString message );
+	HTMLElement incomingMessage( PsiAccount* account, const XMPP::Jid& from, HTMLElement htmlMessage );
+	QString outgoingMessage( PsiAccount* account, const XMPP::Jid& from, QString message );
+				
 	bool loadPlugin( const QString& file );
 	void loadEnabledPlugins();
 	bool unloadPlugin( const QString& file );
@@ -79,6 +84,8 @@ private slots:
 	void optionChanged(const QString& option);
 	void sendStanza( const PsiAccount* account, const QDomElement& stanza);
 	void sendStanza( const PsiAccount* account, const QString& stanza);
+	void sendStanza(const QString& fromJid, const QString& stanza);
+	void getHomeDir(QString&);
 };
 
 #endif

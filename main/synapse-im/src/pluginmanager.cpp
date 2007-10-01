@@ -1,12 +1,12 @@
 #include <QtCore>
 #include <QPluginLoader>
-#include <QDebug>
 
 #include "pluginmanager.h"
 #include "psiplugin.h"
 #include "userlist.h"
 #include "applicationinfo.h"
 #include "psioptions.h"
+#include "psiaccount.h"
 #include <QtCrypto>
 
 
@@ -103,27 +103,30 @@ void PluginManager::loadAllPlugins()
  */ 
 bool PluginManager::loadPlugin( const QString& file )
 {
-  	qDebug() << "Loading Plugin " << file;
+  	qDebug(qPrintable(QString("Loading Plugin %1").arg(file)));
 	//we can safely take the first key, as we won't have the same
 	// file belonging to multiple plugins
 	QList<QString> names = files_.keys(file);
 	if (! names.isEmpty() ) {
 		QString name = names.first();
 		if ( plugins_.contains(name) ) {
-			qWarning() << QString("Plugin %1 is already active, but this should never be.").arg(file);
+			qWarning( qPrintable( QString("Plugin %1 is already active, but this should never be.").arg(file) ) );
 			return false;
 		}
 	}
 	QPluginLoader* loader=NULL;
 	if ( loaders_.contains(file) ) {
+		qDebug("1a");
 		loader=loaders_[file];
 	}
 	else {
+		qDebug("1b");
 		loader=new QPluginLoader( file );
 		loaders_.insert( file , loader);
 	}
 	QObject* plugin = loader->instance();
 	if ( !loader->isLoaded() ) {
+		qDebug(QString("%1").arg(loader->errorString()));
 		delete loader;
 		loaders_.remove( loaders_.keys(loader).first() );
 		return false;
@@ -160,16 +163,24 @@ bool PluginManager::loadPlugin( QObject* pluginObject )
 	if ( !plugin ) {
 		return false;
 	}
-	qDebug() << "loading plugin " << plugin->name();
+	qDebug( qPrintable( QString("loading plugin %1").arg(plugin->name() )));
 	plugins_.insert( plugin->name(), plugin );
-	
-	qDebug() << "connecting to plugin " << plugin->name();
+	 
+	qDebug(qPrintable(QString("connecting to plugin %1").arg(plugin->name())));
+	connect( plugin, SIGNAL(sendStanza(const QString&, const QString&)),
+		this, SLOT(sendStanza(const QString&, const QString&)));
 	connect( plugin, SIGNAL(sendStanza(const PsiAccount*, const QDomElement&)), this, SLOT(sendStanza(const PsiAccount*, const QDomElement&)));
 	connect( plugin, SIGNAL(sendStanza(const PsiAccount*, const QString&)), this, SLOT(sendStanza(const PsiAccount*, const QString&)));
 	connect( plugin, SIGNAL(setPluginOption( const QString&, const QVariant& )), this, SLOT( setPluginOption( const QString&, const QVariant& )));
 	connect( plugin, SIGNAL(getPluginOption( const QString&, QVariant&)), this, SLOT( getPluginOption( const QString&, QVariant&)));
 	connect( plugin, SIGNAL(setGlobalOption( const QString&, const QVariant& )), this, SLOT( setGlobalOption( const QString&, const QVariant& )));
-	connect( plugin, SIGNAL(getGlobalOption( const QString&, QVariant&)), this, SLOT( getGlobalOption( const QString&, QVariant&)));
+	
+	connect(plugin, SIGNAL(getGlobalOption( const QString&, QVariant&)),
+		this, SLOT( getGlobalOption( const QString&, QVariant&)));
+	
+	connect(plugin, SIGNAL(getHomeDir(QString&)),
+		this, SLOT(getHomeDir(QString&)));
+	plugin->init();
 	return true;
 }
 
@@ -203,7 +214,7 @@ bool PluginManager::unloadPlugin(const QString& plugin)
 	  	qWarning( qPrintable( QString("Plugin %1 wasn't found when trying to unload").arg(plugin) ) );
 		return false;
 	}
-	qDebug() << "attempting to disconnect " << plugins_[plugin]->name();
+	qDebug(qPrintable(QString("attempting to disconnect %1").arg(plugins_[plugin]->name())));
 	plugins_[plugin]->disconnect();
 	QString file=files_[plugin];
 	if ( !loaders_.contains(file) ) {
@@ -274,6 +285,9 @@ QStringList PluginManager::availablePlugins()
 		QDir dir(d);
 		foreach(QString file, dir.entryList()) {
 		  	file=dir.absoluteFilePath(file);
+		  	if (file.endsWith("..") || file.endsWith(".") ) {
+		  		continue;
+		  	}
 			qWarning(qPrintable(QString("Found plugin: %1").arg(file)));
 			if ( !loaders_.contains(file) ) { 
 				loadPlugin(file);
@@ -374,13 +388,60 @@ void PluginManager::getGlobalOption( const QString& option, QVariant& value)
 		qDebug("not valid option");
 }
 	
-void PluginManager::message(PsiAccount* account, const XMPP::Jid& from, const UserListItem* ul, const QString& message)
-{
-	QString fromString=QString("%1").arg(from.full());
-	qDebug() << "message from %1" << fromString;
+/**
+ * incomingMessage. Function is only for non-HTML messages.
+ */
+QString PluginManager::incomingMessage(PsiAccount* account, const XMPP::Jid& from, 
+	QString message) {
+	const QString toString = QString("%1").arg(account->jid().full());
+	const QString fromString=QString("%1").arg(from.full());
+	//qDebug() << "pluginmanager: incomming message from " << fromString 
+	//	 << " to " << toString;
+	printf("bbbb1 : %s\n", message.toAscii().data());
 	foreach(PsiPlugin* plugin, plugins_.values() ) {
-		plugin->message( account, message , fromString , from.full() );
+		QString msg = plugin->incomingMessage(fromString, toString, message );
+		printf("bbbb2 : %s\n", msg.toAscii().data());
+		if(!msg.isEmpty())
+			message = msg;
+		//qDebug() << plugin->shortName() << " returned: " << endl
+		//	<< message << "\n--\n";
 	}
+	printf("bbbb3 : %s\n", message.toAscii().data());
+	//qDebug() << "PluginManager::incomingMessage:\n" << message << endl << "--";
+	return message;
+}
+
+/**
+ * incommingMessage with HTML content.
+ */
+HTMLElement PluginManager::incomingMessage( PsiAccount* account, const XMPP::Jid& from,
+						HTMLElement htmlMessage ) {
+	const QString toString = QString("%1").arg(account->jid().full());
+	const QString fromString=QString("%1").arg(from.full());
+	//qDebug() << "pluginmanager: incomming message from " << fromString 
+	//	 << " to " << toString;
+	QDomElement body = htmlMessage.body();
+
+	//QString str;
+	//QTextStream ts( &str, IO_WriteOnly );
+	//body.save(ts, 8);
+	//qDebug() << "--\n" << str << "\n--\n\n";
+
+	foreach(PsiPlugin* plugin, plugins_.values() ) {
+		QDomElement b = plugin->incomingMessage(fromString, toString, body );
+		if(!b.text().isEmpty())
+			body = b;
+		//qDebug() << plugin->shortName() << " returned: " << endl
+		//	<< message << "\n--\n";
+	}
+	
+	//QString str;
+	//QTextStream ts( &str, IO_WriteOnly );
+	//body.save(ts, 2);
+	//qDebug() << "pluginmanager: modified message:\n" << str << "\n--\n";
+		
+	htmlMessage.setBody(body);
+	return htmlMessage;
 }
 
 /**
@@ -423,11 +484,31 @@ void PluginManager::sendStanza( const PsiAccount* account, const QDomElement& st
  */ 
 void PluginManager::sendStanza( const PsiAccount* account, const QString& stanza)
 {
-	qDebug() << "Want to send stanza to account " << (void*)account;
+	//qDebug(qPrintable(QString("Want to send stanza  to account %2").arg((int)account)));
 	if (!clients_.contains(account) || !verifyStanza(stanza))
 		return;
 	clients_[account]->send(stanza);
 }
+
+
+/**
+ * Sends a stanza from the account spezified with fromJid.
+ *
+ */
+void PluginManager::sendStanza(const QString& fromJid, const QString& stanza) {
+	//qDebug() << "pluginmanager: sending stanza from account " << fromJid 
+	//	<< endl << stanza << "\n--";
+	QMapIterator<const PsiAccount*, XMPP::Client*> iterator(clients_);
+	while (iterator.hasNext()) {
+		iterator.next();
+		const PsiAccount* account = iterator.key();
+		if ( ! QString::compare(account->jid().full(), fromJid, Qt::CaseInsensitive)) {
+			clients_.value(account)->send(stanza);
+			break;
+		}
+	}
+}
+
 
 /**
  * Tells the plugin manager about an XMPP::Client and the owning PsiAccount
@@ -446,6 +527,30 @@ bool PluginManager::verifyStanza(const QString& stanza)
 	Q_UNUSED(stanza);
 	return true;
 }
+
+
+/**
+ * process an outgoing message
+ */
+QString PluginManager::outgoingMessage( PsiAccount* account, const XMPP::Jid& to, QString message ) {
+	const QString toString=QString("%1").arg(to.full());
+	const QString fromString = QString("%1").arg(account->jid().full());
+	//qDebug() << "pluginmanager: outgoing message from " << fromString << " to "
+	//	<< toString;
+	foreach(PsiPlugin* plugin, plugins_.values() ) {
+		message = plugin->outgoingMessage( fromString, toString, message );
+	}
+	return message;
+
+}
+
+/**
+ * Get the home-directory used by psi.
+ */
+void PluginManager::getHomeDir(QString& dir) {
+	dir = ApplicationInfo::homeDir();
+}
+
 
 PluginManager* PluginManager::instance_ = NULL;
 const QString PluginManager::loadOptionPrefix = "plugins.auto-load";

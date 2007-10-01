@@ -28,6 +28,7 @@
 
 #include <QObject>
 #include <QtCore>
+#include <QtXml>
 
 class PsiAccount;
 class QDomElement;
@@ -52,6 +53,7 @@ public:
 	 * \return Plugin name
 	 */
 	virtual QString name() const = 0;
+
 	/** \brief Short name for the plugin
 	 *	This is the short name of the plugin, used for options structures. 
 	 * It must consist of only alphanumerics (no spaces or punctuation).
@@ -66,8 +68,29 @@ public:
 	 */
 	virtual QString version() const = 0; 
 	
-	virtual void message( const PsiAccount* account, const QString& message, const QString& fromJid, const QString& fromDisplay) 
-	{Q_UNUSED(account);Q_UNUSED(message);Q_UNUSED(fromJid);Q_UNUSED(fromDisplay);}
+	/**
+	 * process incoming message
+	 */
+	virtual QString incomingMessage( const QString& fromJid,
+			      const QString& toJid, 
+			      const QString& message) 
+	{Q_UNUSED(fromJid);Q_UNUSED(toJid);Q_UNUSED(message);return NULL;}
+
+	/**
+	 * process incoming HTML message
+	 */
+	virtual QDomElement incomingMessage( const QString& fromJid,
+			      const QString& toJid, 
+			      const QDomElement& html) 
+	{Q_UNUSED(fromJid);Q_UNUSED(toJid);Q_UNUSED(html);return QDomElement();}
+
+	/** 
+	 * process outgoing message
+	 */
+	virtual QString outgoingMessage(const QString& fromJid, 
+					const QString& toJid, 
+					const QString& message)
+	{Q_UNUSED(fromJid);Q_UNUSED(toJid);Q_UNUSED(message); return NULL;}
 
 	/**
 	 * \brief Plugin options widget
@@ -80,10 +103,17 @@ public:
 	virtual QWidget* options() {return NULL;} 
 	
 
-	virtual bool processEvent( const PsiAccount* account, QDomNode &event ) {Q_UNUSED(account);Q_UNUSED(event);return true;}
+	/**
+	 * 
+	 *
+	 */
+	virtual bool processEvent( const PsiAccount* account, QDomNode &event ) 
+	{Q_UNUSED(account);Q_UNUSED(event);return true;}
+
 
 	/**
-	 * Convenience method for plugins, allowing them to convert a QDomElement to a QString
+	 * Convenience method for plugins, allowing them to convert a QDomElement 
+	 * to a QString
 	 */
 	static QString toString(const QDomNode& xml)
 	{
@@ -92,6 +122,9 @@ public:
 		xml.save(stream, 0);
 		return QString(*stream.string());
 	}
+
+	/* initialize the plugin. called from the pluginmanager after loading */
+	virtual void init() {return;}
 	
 signals:
 	/**
@@ -100,7 +133,7 @@ signals:
 	 * \param account The account name, as used by the plugin interface.
 	 * \param stanza The stanza to be sent.
 	 */
-	//void sendStanza( const PsiAccount* account, const QDomElement& stanza);
+	void sendStanza( const PsiAccount* account, const QDomElement& stanza);
 
 	/**
 	 *	\brief Signals that the plugin wants to send a stanza.
@@ -109,6 +142,13 @@ signals:
 	 * \param stanza The stanza to be sent.
 	 */
 	void sendStanza( const PsiAccount* account, const QString& stanza);
+	
+	
+	/**
+	 * Send a stanza from the account with the jid fromJid.
+	 *
+	 */
+	void sendStanza( const QString& fromJid, const QString& stanza);
 	
 	/**
 	 * \brief Requests an item in the Psi menu for the plugin
@@ -161,6 +201,11 @@ signals:
 	 */
 	void getGlobalOption( const QString& option, QVariant& value);
 	
+	/**
+	 * Returns the home-directory used by psi
+	 */
+	void getHomeDir(QString& dir);
+
 //protected:
 
 	
