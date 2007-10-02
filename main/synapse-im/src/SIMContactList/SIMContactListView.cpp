@@ -81,7 +81,7 @@ void SIMContactListView::resizeEvent(QResizeEvent *e)
 {
 	QTreeView::resizeEvent(e);
 	// hack to deal with QItemDelegate which needs to change width when scrollbar is in use.
-	if(model())
+	if(model() && (e->oldSize().width() != e->size().width()))
 		QTreeView::doItemsLayout();
 	emit resizeEventNotifier((QWidget*)this);
 }
