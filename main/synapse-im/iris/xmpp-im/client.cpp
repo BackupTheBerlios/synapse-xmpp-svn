@@ -863,11 +863,7 @@ void Client::updatePresence(LiveRosterItem *i, const Jid &j, const Status &s)
 		}
 		else {
 			Resource r = Resource(j.resource(), s);
-			i->resourceList() += r;
-			resourceAvailable(j, r);
 			resourceUnavailable(j, r);
-			ResourceList::Iterator rit1 = i->resourceList().find(j.resource());
-			i->resourceList().erase(rit1);
 			i->setLastUnavailableStatus(s);
 		}
 	}

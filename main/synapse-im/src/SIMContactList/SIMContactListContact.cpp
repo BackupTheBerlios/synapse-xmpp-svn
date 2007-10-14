@@ -84,7 +84,10 @@ QPixmap SIMContactListContact::avatar()
 
 QString SIMContactListContact::description()
 {
-	return status().status();
+	if(u_.isAvailable())
+		return status().status();
+	else
+		return u_.lastUnavailableStatus().status();
 }
 
 const SIMContactName &SIMContactListContact::contactName()
@@ -127,7 +130,7 @@ void SIMContactListContact::setUserListItem(const UserListItem &_u)
 
 	if (u_.isSelf())
 		s = account()->name();
-	if(!status().status().isEmpty()) {
+	if(!description().isEmpty()) {
 		QFont fnt;
 		QFont fnt2;
 		fnt2.fromString(option.font[fRoster]);

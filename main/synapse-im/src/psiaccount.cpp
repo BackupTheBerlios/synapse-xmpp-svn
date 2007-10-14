@@ -1876,8 +1876,8 @@ void PsiAccount::client_resourceUnavailable(const Jid &j, const Resource &r)
 		// remove resource
 		UserResourceList::Iterator rit = u->userResourceList().find(j.resource());
 		bool found = (rit == u->userResourceList().end()) ? false: true;
+		u->setLastUnavailableStatus(r.status());
 		if(found) {
-			u->setLastUnavailableStatus(r.status());
 			u->userResourceList().remove(rit);
 
 			if(!u->isAvailable())
