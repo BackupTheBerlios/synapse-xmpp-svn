@@ -108,12 +108,12 @@ void SIMUPNP::on_reply()
         upnp->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
 	
 	QString resp(datagram);
-	int x = resp.find("http://",6);
+	int x = resp.indexOf("http://",6);
 	if (x == -1) {
 		qDebug("UPNP::on_reply() : Bad response\n");
 		return;
 	}
-	int y = resp.find("\n",x);
+	int y = resp.indexOf("\n",x);
 
 	dev->setUrl(resp.mid(x, y-(x+1)));
 	if (dev->url().isEmpty()) {
@@ -133,8 +133,8 @@ void SIMUPNP::on_reply()
 
 	if (!inList) {
 		QString url(dev->url());
-		x = url.find(":",6);
-		y = url.find("/",x);
+		x = url.indexOf(":",6);
+		y = url.indexOf("/",x);
 		dev->setPort((url.mid(x+1, y-(x+1))).toInt());
 		dev->setHostname(url.mid(7, x-7));
 		devices.append(dev);
@@ -159,9 +159,16 @@ void SIMUPNP::on_reply()
 void SIMUPNP::registerPort(SIMUPNP::Port *port)
 {
 	if((ports_.begin() == ports_.end()) && (port->type().compare("TCP")==0)) {
+		printf("TCP server port: %d\n", port->port());
 		serv->stop();
-		serv->listen(port->port(),true);
+		printf("  : %d\n", serv->listen(port->port(),true) ? 1 : 0);
 		port->setInUse(true);
+		Device *dev = NULL;
+		QList<Device*>::iterator it1;
+		for( it1=devices.begin(); it1 != devices.end(); ++it1)
+			dev = *it1;
+		Port *p = new Port(dev, "UDP", port->port());
+		p->setInUse(true);
 	}
 	ports_.append(port);
 
@@ -177,7 +184,7 @@ void SIMUPNP::registerPort(SIMUPNP::Port *port)
 
 void SIMUPNP::unregisterPort(SIMUPNP::Port *port)
 {
-	ports_.remove(port);
+	ports_.removeAll(port);
 }
 
 SocksServer *SIMUPNP::server()

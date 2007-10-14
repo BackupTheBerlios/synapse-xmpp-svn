@@ -79,12 +79,12 @@ void SIMUPNP::Device::on_upnp_xml()
 		return;
 	}
 
-	int i = doc.find( UPNP_WANIP );
+	int i = doc.indexOf( UPNP_WANIP );
 	if(i!=-1) {
 		serviceType_ = UPNP_WANIP;
 	} else {
 		qWarning("UPNP::Device::on_upnp_xml() : No WANIP service type.\n");
-		i = doc.find( UPNP_WANIP );
+		i = doc.indexOf( UPNP_WANIP );
 			if (i!=-1) {
 			serviceType_ = UPNP_WANPPP;
 		} else {
@@ -92,8 +92,8 @@ void SIMUPNP::Device::on_upnp_xml()
 			return;
 		}
 	}
-	int j = doc.find("<controlURL>", i) + sizeof("<controlURL>");
-	i = doc.find("</controlURL>",j);
+	int j = doc.indexOf("<controlURL>", i) + sizeof("<controlURL>");
+	i = doc.indexOf("</controlURL>",j);
 	controlUrl_ = doc.mid(j-1, i - j +1);
 
 	QTimer::singleShot(100, this, SLOT(getExternalIP()));
@@ -116,12 +116,12 @@ void SIMUPNP::Device::on_upnp_get_external_ip_response()
 	} else {
 
 		if (externIPtry_ == 1) {
-			int j = doc.find("<NewExternalIPAddress>") + sizeof("<NewExternalIPAddress>");
-			int i = doc.find("</NewExternalIPAddress>",j-2);
+			int j = doc.indexOf("<NewExternalIPAddress>") + sizeof("<NewExternalIPAddress>");
+			int i = doc.indexOf("</NewExternalIPAddress>",j-2);
 			externIP = doc.mid(j-1, i - j +1);
 		} else if (externIPtry_ == 2) {
-			int j = doc.find("Address: ") + sizeof("Address: ");
-			int i = doc.find("</body>",j);
+			int j = doc.indexOf("Address: ") + sizeof("Address: ");
+			int i = doc.indexOf("</body>",j);
 			externIP = doc.mid(j-1, i - j +1);
 		}
 	}

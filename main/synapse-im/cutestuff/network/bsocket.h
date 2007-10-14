@@ -24,6 +24,7 @@
 #include <QAbstractSocket>
 
 #include "bytestream.h"
+#include "qjdns.h"
 
 class QString;
 class QObject;
@@ -54,6 +55,8 @@ public:
 	int bytesAvailable() const;
 	int bytesToWrite() const;
 
+	void tryNext();
+
 	// local
 	QHostAddress address() const;
 	quint16 port() const;
@@ -73,8 +76,10 @@ private slots:
 	void qs_readyRead();
 	void qs_bytesWritten(qint64);
 	void qs_error(QAbstractSocket::SocketError);
-	void srv_done();
-	void ndns_done();
+	void jdns_done(int, const QJDns::Response &);
+	void jdns_error(int id, QJDns::Error e);
+	void srv_done(int, const QJDns::Response &);
+	void ndns_done(int, const QJDns::Response &);
 	void do_connect();
 
 private:

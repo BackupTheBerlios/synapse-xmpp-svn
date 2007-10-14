@@ -24,7 +24,6 @@
 #include <qobject.h>
 #include <qdom.h>
 #include <qstring.h>
-#include <q3ptrlist.h>
 #include "bytestream.h"
 #include "im.h"
 
@@ -76,8 +75,8 @@ namespace XMPP
 		void takeIncomingData(const QByteArray &, bool close);
 	};
 
-	typedef Q3PtrList<IBBConnection> IBBConnectionList;
-	typedef Q3PtrListIterator<IBBConnection> IBBConnectionListIt;
+	typedef QList<IBBConnection*> IBBConnectionList;
+	typedef QList<IBBConnection*>::iterator IBBConnectionListIt;
 	class IBBManager : public QObject
 	{
 		Q_OBJECT

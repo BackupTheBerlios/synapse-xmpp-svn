@@ -26,7 +26,6 @@
 #include <qstring.h>
 #include <qhostaddress.h>
 #include <qstring.h>
-#include <q3cstring.h>
 #include <qxml.h>
 #include <qdom.h>
 
@@ -34,6 +33,8 @@
 #include "xmpp_stanza.h"
 #include "xmpp_stream.h"
 #include "xmpp_clientstream.h"
+
+#include "qjdns.h"
 
 namespace QCA
 {
@@ -82,7 +83,7 @@ namespace XMPP
 		bool useSSL() const;
 		bool havePeerAddress() const;
 		QHostAddress peerAddress() const;
-		Q_UINT16 peerPort() const;
+		quint16 peerPort() const;
 
 	signals:
 		void connected();
@@ -91,13 +92,13 @@ namespace XMPP
 	protected:
 		void setUseSSL(bool b);
 		void setPeerAddressNone();
-		void setPeerAddress(const QHostAddress &addr, Q_UINT16 port);
+		void setPeerAddress(const QHostAddress &addr, quint16 port);
 
 	private:
 		bool ssl;
 		bool haveaddr;
 		QHostAddress addr;
-		Q_UINT16 port;
+		quint16 port;
 	};
 
 	class AdvancedConnector : public Connector
@@ -117,28 +118,28 @@ namespace XMPP
 
 			int type() const;
 			QString host() const;
-			Q_UINT16 port() const;
+			quint16 port() const;
 			QString url() const;
 			QString user() const;
 			QString pass() const;
 			int pollInterval() const;
 
-			void setHttpConnect(const QString &host, Q_UINT16 port);
-			void setHttpPoll(const QString &host, Q_UINT16 port, const QString &url);
-			void setSocks(const QString &host, Q_UINT16 port);
+			void setHttpConnect(const QString &host, quint16 port);
+			void setHttpPoll(const QString &host, quint16 port, const QString &url);
+			void setSocks(const QString &host, quint16 port);
 			void setUserPass(const QString &user, const QString &pass);
 			void setPollInterval(int secs);
 
 		private:
 			int t;
 			QString v_host, v_url;
-			Q_UINT16 v_port;
+			quint16 v_port;
 			QString v_user, v_pass;
 			int v_poll;
 		};
 
 		void setProxy(const Proxy &proxy);
-		void setOptHostPort(const QString &host, Q_UINT16 port);
+		void setOptHostPort(const QString &host, quint16 port);
 		void setOptProbe(bool);
 		void setOptSSL(bool);
 
@@ -157,8 +158,10 @@ namespace XMPP
 		void httpSyncFinished();
 
 	private slots:
-		void dns_done();
-		void srv_done();
+		void jdns_done(int, const QJDns::Response &);
+		void jdns_error(int id, QJDns::Error e);
+		void dns_done(int, const QJDns::Response &);
+		void srv_done(int, const QJDns::Response &);
 		void bs_connected();
 		void bs_error(int);
 		void http_syncStarted();

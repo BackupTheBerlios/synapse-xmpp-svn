@@ -22,7 +22,7 @@ ENDMACRO(MY_AUTOMOC)
 
 include(${QT_USE_FILE})
 ADD_DEFINITIONS(-DQT_NO_DEBUG)
-ADD_DEFINITIONS(-DQT3_SUPPORT)
+#ADD_DEFINITIONS(-DQT3_SUPPORT)
 
 include_directories(
 ../iris/include
@@ -31,6 +31,7 @@ include_directories(
 ../iris/jabber
 ../iris/upnp
 ../iris
+../iris/irisnet/jdns
 ${QT_INCLUDE_DIR}
 ${QT_CORE_INCLUDE_DIR}
 ${QT_QTNETWORK_INCLUDE_DIR}
@@ -39,12 +40,12 @@ ${QT_QTXML_INCLUDE_DIR}
 ${QT_QT3SUPPORT_INCLUDE_DIR}
 ../src/tools/zip/minizip/win32
 ${CMAKE_CURRENT_BINARY_DIR}
-#../third-party/qca/qca/include/QtCrypto
-#${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/iris.dir/irisnet
 ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/iris.dir/xmpp-core
 ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/iris.dir/xmpp-im
 ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/iris.dir/jabber
 )
+
+include(../iris/irisnet/jdns/CMakeLists.txt)
 
 if (irisnet)
     include(../iris/irisnet/CMakeLists.txt)
@@ -76,6 +77,7 @@ set(upnp_H
 
 set(iris_H
 	${upnp_H}
+	${jdns_H}
 	../iris/xmpp-core/securestream.h
 	../iris/xmpp-core/parser.h
 	../iris/xmpp-core/xmlprotocol.h
@@ -158,7 +160,7 @@ set(iris_H ${iris_H} ${linklocal_H})
 endif(AVAHI_FOUND)
 endif(QT_QTDBUS_FOUND)
 
-set(iris_SRCS ${cutestuff_SRCS} ${idn_SRCS} ${linklocal_SRCS} ${upnp_SRCS}
+set(iris_SRCS ${cutestuff_SRCS} ${idn_SRCS} ${linklocal_SRCS} ${upnp_SRCS} ${jdns_SRCS}
 	../iris/xmpp-core/securestream.cpp
 	../iris/xmpp-core/connector.cpp
 	../iris/jabber/s5b.cpp
@@ -191,13 +193,6 @@ qt4_wrap_cpp(cutestuff_MOC_SRCS ${cutestuff_H})
 
 MY_AUTOMOC(iris_SRCS)
 
-#add_library(iris ${iris_SRCS} ${iris_mocFix_SRCS})
-#add_library(iris SHARED ${iris_SRCS} ${iris_MOC_SRCS} ${cutestuff_MOC_SRCS})
-
-#set(iris_S ${iris_SRCS})
-
-#set(iris_HS ${iris_H} ${cutestuff_H})
-
 if(WIN32)
 add_library(iris ${iris_SRCS} ${iris_MOC_SRCS} ${cutestuff_MOC_SRCS})
 TARGET_LINK_LIBRARIES(iris
@@ -214,7 +209,6 @@ target_link_libraries(iris
 	${QT_LIBRARIES}
 	${QT_QTNETWORK_LIBRARIES}
 	${QT_QTXML_LIBRARIES}
-	${QT_QT3SUPPORT_LIBRARIES}
 	${QT_QTDBUS_LIBRARIES}
 	qca
 )

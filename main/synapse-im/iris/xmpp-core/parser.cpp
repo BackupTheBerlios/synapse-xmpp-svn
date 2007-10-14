@@ -50,7 +50,6 @@
 #include "parser.h"
 
 #include <qtextcodec.h>
-#include <q3ptrlist.h>
 #include <string.h>
 
 using namespace XMPP;
@@ -160,7 +159,7 @@ public:
 
 	QByteArray unprocessed() const
 	{
-		QByteArray a(in.size() - at);
+		QByteArray a(in.size() - at,'\0');
 		memcpy(a.data(), in.data() + at, a.size());
 		return a;
 	}
@@ -232,17 +231,17 @@ private:
 
 		if(mightChangeEncoding) {
 			while(1) {
-				int n = out.find('<');
+				int n = out.indexOf('<');
 				if(n != -1) {
 					// we need a closing bracket
-					int n2 = out.find('>', n);
+					int n2 = out.indexOf('>', n);
 					if(n2 != -1) {
 						++n2;
 						QString h = out.mid(n, n2-n);
 						QString enc = processXmlHeader(h);
 						QTextCodec *codec = 0;
 						if(!enc.isEmpty())
-							codec = QTextCodec::codecForName(enc.latin1());
+							codec = QTextCodec::codecForName(enc.toLatin1());
 
 						// changing codecs
 						if(codec) {
@@ -278,8 +277,8 @@ private:
 		if(h.left(5) != "<?xml")
 			return "";
 
-		int endPos = h.find(">");
-		int startPos = h.find("encoding");
+		int endPos = h.indexOf(">");
+		int startPos = h.indexOf("encoding");
 		if(startPos < endPos && startPos != -1) {
 			QString encoding;
 			do {
@@ -335,7 +334,7 @@ private:
 
 	bool checkForBadChars(const QString &s)
 	{
-		int len = s.find('<');
+		int len = s.indexOf('<');
 		if(len == -1)
 			len = s.length();
 		else
@@ -366,7 +365,8 @@ namespace XMPP
 
 		~ParserHandler()
 		{
-			eventList.setAutoDelete(true);
+			while(!eventList.isEmpty())
+				delete eventList.takeFirst();
 			eventList.clear();
 		}
 
@@ -518,8 +518,8 @@ namespace XMPP
 				needMore = false;
 
 				// there should have been a pending event
-				Parser::Event *e = eventList.getFirst();
-				if(e) {
+				Parser::Event *e = eventList.first();
+				if(!eventList.isEmpty()) {
 					e->setActualString(e->actualString() + '>');
 					in->resetLastData();
 				}
@@ -533,8 +533,8 @@ namespace XMPP
 			if(eventList.isEmpty())
 				return 0;
 
-			Parser::Event *e = eventList.getFirst();
-			eventList.removeRef(e);
+			Parser::Event *e = eventList.first();
+			eventList.removeFirst();
 			in->pause(false);
 			return e;
 		}
@@ -544,7 +544,7 @@ namespace XMPP
 		int depth;
 		QStringList nsnames, nsvalues;
 		QDomElement elem, current;
-		Q3PtrList<Parser::Event> eventList;
+		QList<Parser::Event*> eventList;
 		bool needMore;
 	};
 };

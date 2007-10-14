@@ -2,7 +2,6 @@
 #include <QtCore/QByteRef>
 #include <QString>
 #include <QMap>
-#include <Q3PtrList>
 #include <QList>
 #include "xmpp_client.h"
 #include "xmpp_rosteritem.h"
@@ -81,7 +80,7 @@ public:
 	const QString service_;
 	const QString root_;
 	QMap<QString,ContactData*> contacts_;
-	Q3PtrList<Stream> streams_;
+	QList<Stream*> streams_;
 	ServSock c2c;
 };
 
@@ -133,7 +132,7 @@ private:
 	Jid jidLocal_;
 	Jid jidRemote_;
 	CoreProtocol *proto;
-	Q3PtrList<Stanza> in;
+	QList<Stanza*> in;
 	QList<Stanza> waiting;
 	bool active_;
 	Task *root;
@@ -151,7 +150,7 @@ public:
 	PresenceData presence;
 public slots:
 	void setAddress(int, int,const QString&, int, const QString &address, uint) {
-		printf("address: %s\n",  address.ascii());
+		printf("address: %s\n",  address.toAscii().data());
 		addr = QHostAddress(address);
 	}
 };

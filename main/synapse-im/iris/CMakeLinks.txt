@@ -5,6 +5,7 @@ include_directories(
 ../iris/xmpp-im
 ../iris/jabber
 ../iris/libidn
+../iris/irisnet/jdns
 )
 
 #if (irisnet)

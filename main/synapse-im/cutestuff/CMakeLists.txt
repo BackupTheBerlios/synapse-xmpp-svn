@@ -28,16 +28,12 @@ include_directories(
 
 set(cutestuff_SRCS ${cutestuff_SRCS}
 	../cutestuff/legacy/safedelete.cpp
-	../cutestuff/legacy/ndns.cpp
-	../cutestuff/legacy/srvresolver.cpp
 	../cutestuff/legacy/servsock.cpp
 )
 
 set(cutestuff_H
 	${cutestuff_H}
 	../cutestuff/legacy/safedelete.h
-	../cutestuff/legacy/ndns.h
-	../cutestuff/legacy/srvresolver.h
 	../cutestuff/legacy/servsock.h
 )
 

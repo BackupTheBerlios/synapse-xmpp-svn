@@ -24,13 +24,7 @@
 
 #include "bsocket.h"
 
-//#include "safedelete.h"
-#ifndef NO_NDNS
-#include "ndns.h"
-#endif
-#include "srvresolver.h"
-
-//#define BS_DEBUG
+#include "qjdns.h"
 
 #ifdef BS_DEBUG
 #include <stdio.h>
@@ -109,24 +103,24 @@ public:
 	QTcpSocketSignalRelay *qsock_relay;
 	int state;
 
-#ifndef NO_NDNS
-	NDns ndns;
-#endif
-	SrvResolver srv;
+	QJDns jdns;
+	QList<QJDns::Record> servers;
+	QHash<int,int> type;
 	QString host;
 	int port;
-	//SafeDelete sd;
 };
 
 BSocket::BSocket(QObject *parent)
 :ByteStream(parent)
 {
 	d = new Private;
-#ifndef NO_NDNS
-	connect(&d->ndns, SIGNAL(resultsReady()), SLOT(ndns_done()));
-#endif
-	connect(&d->srv, SIGNAL(resultsReady()), SLOT(srv_done()));
 
+	if(!d->jdns.init(QJDns::Unicast, QHostAddress::Any))
+		qDebug("Could not bind to DNS\n");
+	connect(&d->jdns, SIGNAL(resultsReady(int, const QJDns::Response &)), SLOT(jdns_done(int, const QJDns::Response &)));
+	connect(&d->jdns, SIGNAL(error(int, QJDns::Error)), SLOT(jdns_error(int, QJDns::Error)));
+	d->jdns.setNameServers(QJDns::systemInfo().nameServers);
+	
 	reset();
 }
 
@@ -142,16 +136,6 @@ void BSocket::reset(bool clear)
 		delete d->qsock_relay;
 		d->qsock_relay = 0;
 
-		/*d->qsock->disconnect(this);
-
-		if(!clear && d->qsock->isOpen() && d->qsock->isValid()) {*/
-			// move remaining into the local queue
-			QByteArray block(d->qsock->bytesAvailable(), 0);
-			d->qsock->read(block.data(), block.size());
-			appendRead(block);
-		//}
-
-		//d->sd.deleteLater(d->qsock);
 		delete d->qsock;
 		d->qsock = 0;
 	}
@@ -160,12 +144,7 @@ void BSocket::reset(bool clear)
 			clearReadBuffer();
 	}
 
-	if(d->srv.isBusy())
-		d->srv.stop();
-#ifndef NO_NDNS
-	if(d->ndns.isBusy())
-		d->ndns.stop();
-#endif
+	d->servers.clear();
 	d->state = Idle;
 }
 
@@ -191,26 +170,23 @@ void BSocket::connectToHost(const QString &host, quint16 port)
 	reset(true);
 	d->host = host;
 	d->port = port;
-#ifdef NO_NDNS
-	d->state = Connecting;
-	do_connect();
-#else
 	QHostAddress addr;
 	if(addr.setAddress(host)) {
+		printf("con1\n");
 		d->state = Connecting;
 		do_connect();
 	} else {
+		printf("con2\n");
 		d->state = HostLookup;
-		d->ndns.resolve(d->host);
+		d->type[d->jdns.queryStart( d->host.toLatin1(), QJDns::A)] = QJDns::A;
 	}
-#endif
 }
 
 void BSocket::connectToServer(const QString &srv, const QString &type)
 {
 	reset(true);
 	d->state = HostLookup;
-	d->srv.resolve(srv, type, "tcp");
+	d->type[d->jdns.queryStart( QString("_%1._tcp.%2").arg(type).arg(d->host).toLatin1(), QJDns::A)] = QJDns::A;
 }
 
 int BSocket::socket() const
@@ -336,40 +312,51 @@ quint16 BSocket::peerPort() const
 		return 0;
 }
 
-void BSocket::srv_done()
+void BSocket::jdns_done(int id, const QJDns::Response &resp)
 {
-	if(d->srv.failed()) {
-#ifdef BS_DEBUG
-		fprintf(stderr, "BSocket: Error resolving hostname.\n");
-#endif
-		error(ErrHostNotFound);
-		return;
+	if(d->type[id] == QJDns::Srv) {
+		srv_done(id, resp);
+	} else if((d->type[id] == QJDns::A) || (d->type[id] == QJDns::Aaaa)) {
+		ndns_done(id, resp);
 	}
-
-	d->host = d->srv.resultAddress().toString();
-	d->port = d->srv.resultPort();
-	do_connect();
-	//QTimer::singleShot(0, this, SLOT(do_connect()));
-	//hostFound();
 }
 
-void BSocket::ndns_done()
+void BSocket::jdns_error(int id, QJDns::Error e)
 {
-#ifndef NO_NDNS
-	if(!d->ndns.result().isNull()) {
-		d->host = d->ndns.resultString();
-		d->state = Connecting;
-		do_connect();
-		//QTimer::singleShot(0, this, SLOT(do_connect()));
-		//hostFound();
-	}
-	else {
+	QString str;
+	if(e == QJDns::ErrorGeneric)
+		str = "Generic";
+	else if(e == QJDns::ErrorNXDomain) {
+		str = "NXDomain";
+	} else if(e == QJDns::ErrorTimeout)
+		str = "Timeout";
+	else if(e == QJDns::ErrorConflict)
+		str = "Conflict";
 #ifdef BS_DEBUG
-		fprintf(stderr, "BSocket: Error resolving hostname.\n");
+	fprintf(stderr, "BSocket[%d]: Error resolving hostname : %s\n", id, qPrintable(str));
 #endif
-		error(ErrHostNotFound);
-	}
-#endif
+	error(ErrHostNotFound);
+}
+
+void BSocket::srv_done(int id, const QJDns::Response &resp)
+{
+	d->servers = resp.answerRecords;
+	tryNext();
+}
+
+void BSocket::ndns_done(int id, const QJDns::Response &resp)
+{
+	d->host = resp.answerRecords[0].address.toString();
+	d->state = Connecting;
+	do_connect();
+}
+
+void BSocket::tryNext()
+{
+	d->host = d->servers.first().name;
+	d->port = d->servers.first().port;
+	d->servers.removeFirst();
+	do_connect();
 }
 
 void BSocket::do_connect()
@@ -383,7 +370,6 @@ void BSocket::do_connect()
 
 void BSocket::qs_hostFound()
 {
-	//SafeDeleteLock s(&d->sd);
 }
 
 void BSocket::qs_connected()
@@ -392,7 +378,6 @@ void BSocket::qs_connected()
 #ifdef BS_DEBUG
 	fprintf(stderr, "BSocket: Connected.\n");
 #endif
-	//SafeDeleteLock s(&d->sd);
 	connected();
 }
 
@@ -403,7 +388,6 @@ void BSocket::qs_closed()
 #ifdef BS_DEBUG
 		fprintf(stderr, "BSocket: Delayed Close Finished.\n");
 #endif
-		//SafeDeleteLock s(&d->sd);
 		reset();
 		delayedCloseFinished();
 	}
@@ -411,7 +395,6 @@ void BSocket::qs_closed()
 
 void BSocket::qs_readyRead()
 {
-	//SafeDeleteLock s(&d->sd);
 	readyRead();
 }
 
@@ -421,7 +404,6 @@ void BSocket::qs_bytesWritten(qint64 x64)
 #ifdef BS_DEBUG
 	fprintf(stderr, "BSocket: BytesWritten [%d].\n", x);
 #endif
-	//SafeDeleteLock s(&d->sd);
 	bytesWritten(x);
 }
 
@@ -431,7 +413,6 @@ void BSocket::qs_error(QAbstractSocket::SocketError x)
 #ifdef BS_DEBUG
 		fprintf(stderr, "BSocket: Connection Closed.\n");
 #endif
-		//SafeDeleteLock s(&d->sd);
 		reset();
 		connectionClosed();
 		return;
@@ -440,11 +421,10 @@ void BSocket::qs_error(QAbstractSocket::SocketError x)
 #ifdef BS_DEBUG
 	fprintf(stderr, "BSocket: Error.\n");
 #endif
-	//SafeDeleteLock s(&d->sd);
 
 	// connection error during SRV host connect?  try next
 	if(d->state == HostLookup && (x == QTcpSocket::ConnectionRefusedError || x == QTcpSocket::HostNotFoundError)) {
-		d->srv.next();
+		tryNext();
 		return;
 	}
 

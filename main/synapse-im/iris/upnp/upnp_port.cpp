@@ -8,14 +8,14 @@
 #include <QTimer>
 #include <QTcpSocket>
 
-SIMUPNP::Port::Port(Device *_dev, const QString &_type)
+SIMUPNP::Port::Port(Device *_dev, const QString &_type, int _port)
 {
 	mapped_ = (_dev == NULL);
 	type_ = _type;
 	sock_ = new QTcpSocket();
 	inUse_ = false;
 	dev = _dev;
-	port_ = SIMUPNP::instance()->randomPort();
+	port_ = (_port) ? _port : SIMUPNP::instance()->randomPort();
 	if(!mapped_)
 		map();
 	else
@@ -108,11 +108,11 @@ void SIMUPNP::Port::on_map_response()
 		return;
 	}
 
-	if (doc.find("UPnPError") != -1)
+	if (doc.indexOf("UPnPError") != -1)
 	{
 		//Error
-		int j = doc.find("<errorCode>") + sizeof("<errorCode>");
-		int i = doc.find("</errorCode>",j);
+		int j = doc.indexOf("<errorCode>") + sizeof("<errorCode>");
+		int i = doc.indexOf("</errorCode>",j);
 		int errorCode = doc.mid(j-1, i - j +1).toInt();
 		if (errorCode == 725) {
 			// only permanent leases supported

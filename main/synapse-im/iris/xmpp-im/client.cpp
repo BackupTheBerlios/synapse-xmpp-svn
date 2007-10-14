@@ -331,7 +331,7 @@ bool Client::groupChatJoin(const QString &host, const QString &room, const QStri
 		if(i.j.compare(jid, false)) {
 			// if this room is shutting down, then free it up
 			if(i.status == GroupChat::Closing)
-				it = d->groupChatList.remove(it);
+				it = d->groupChatList.erase(it);
 			else
 				return false;
 		}
@@ -753,7 +753,7 @@ void Client::ppPresence(const Jid &j, const Status &s)
 				case GroupChat::Connecting:
 					if(us && s.hasError()) {
 						Jid j = i.j;
-						d->groupChatList.remove(it);
+						d->groupChatList.erase(it);
 						groupChatError(j, s.errorCode(), s.errorString());
 					}
 					else {
@@ -771,7 +771,7 @@ void Client::ppPresence(const Jid &j, const Status &s)
 				case GroupChat::Closing:
 					if(us && !s.isAvailable()) {
 						Jid j = i.j;
-						d->groupChatList.remove(it);
+						d->groupChatList.erase(it);
 						groupChatLeft(j);
 					}
 					break;
@@ -826,7 +826,7 @@ void Client::updateSelfPresence(const Jid &j, const Status &s)
 			debug(QString("Client: Removing self resource: name=[%1]\n").arg(j.resource()));
 			(*rit).setStatus(s);
 			resourceUnavailable(j, *rit);
-			d->resourceList.remove(rit);
+			d->resourceList.erase(rit);
 		}
 	}
 	// available?  add/update the resource
@@ -858,7 +858,7 @@ void Client::updatePresence(LiveRosterItem *i, const Jid &j, const Status &s)
 			(*rit).setStatus(s);
 			debug(QString("Client: Removing resource from [%1]: name=[%2]\n").arg(i->jid().full()).arg(j.resource()));
 			resourceUnavailable(j, *rit);
-			i->resourceList().remove(rit);
+			i->resourceList().erase(rit);
 			i->setLastUnavailableStatus(s);
 		}
 		else {
@@ -867,7 +867,7 @@ void Client::updatePresence(LiveRosterItem *i, const Jid &j, const Status &s)
 			resourceAvailable(j, r);
 			resourceUnavailable(j, r);
 			ResourceList::Iterator rit1 = i->resourceList().find(j.resource());
-			i->resourceList().remove(rit1);
+			i->resourceList().erase(rit1);
 			i->setLastUnavailableStatus(s);
 		}
 	}
@@ -938,7 +938,7 @@ void Client::slotRosterRequestFinished()
 			LiveRosterItem &i = *it;
 			if(i.flagForDelete()) {
 				rosterItemRemoved(i);
-				it = d->roster.remove(it);
+				it = d->roster.erase(it);
 			}
 			else
 				++it;
@@ -998,7 +998,7 @@ void Client::importRosterItem(const RosterItem &item)
 	}
 
 	QString dstr, str;
-	str.sprintf("  %s %-32s", substr.latin1(), item.jid().full().latin1());
+	str.sprintf("  %s %-32s", substr.toLatin1().data(), item.jid().full().toLatin1().data());
 	if(!item.name().isEmpty())
 		str += QString(" [") + item.name() + "]";
 	str += '\n';
@@ -1008,7 +1008,7 @@ void Client::importRosterItem(const RosterItem &item)
 		LiveRoster::Iterator it = d->roster.find(item.jid());
 		if(it != d->roster.end()) {
 			rosterItemRemoved(*it);
-			d->roster.remove(it);
+			d->roster.erase(it);
 		}
 		dstr = "Client: (Removed) ";
 	}

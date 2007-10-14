@@ -106,7 +106,7 @@ void IBBConnection::connectToJid(const Jid &peer, const QDomElement &comment)
 	d->peer = peer;
 	d->comment = comment;
 
-	QString dstr; dstr.sprintf("IBBConnection[%d]: initiating request to %s\n", d->id, peer.full().latin1());
+	QString dstr; dstr.sprintf("IBBConnection[%d]: initiating request to %s\n", d->id, peer.full().toLatin1().data());
 	d->m->client()->debug(dstr);
 
 	d->j = new JT_IBB(d->m->client()->rootTask());
@@ -120,7 +120,7 @@ void IBBConnection::accept()
 	if(d->state != WaitingForAccept)
 		return;
 
-	QString dstr; dstr.sprintf("IBBConnection[%d]: accepting %s [%s]\n", d->id, d->peer.full().latin1(), d->sid.latin1());
+	QString dstr; dstr.sprintf("IBBConnection[%d]: accepting %s [%s]\n", d->id, d->peer.full().toLatin1().data(), d->sid.toLatin1().data());
 	d->m->client()->debug(dstr);
 
 	d->m->doAccept(this, d->iq_id);
@@ -254,7 +254,7 @@ void IBBConnection::ibb_finished()
 		if(j->mode() == JT_IBB::ModeRequest) {
 			d->sid = j->streamid();
 
-			QString dstr; dstr.sprintf("IBBConnection[%d]: %s [%s] accepted.\n", d->id, d->peer.full().latin1(), d->sid.latin1());
+			QString dstr; dstr.sprintf("IBBConnection[%d]: %s [%s] accepted.\n", d->id, d->peer.full().toLatin1().data(), d->sid.toLatin1().data());
 			d->m->client()->debug(dstr);
 
 			d->state = Active;
@@ -275,7 +275,7 @@ void IBBConnection::ibb_finished()
 	}
 	else {
 		if(j->mode() == JT_IBB::ModeRequest) {
-			QString dstr; dstr.sprintf("IBBConnection[%d]: %s refused.\n", d->id, d->peer.full().latin1());
+			QString dstr; dstr.sprintf("IBBConnection[%d]: %s refused.\n", d->id, d->peer.full().toLatin1().data());
 			d->m->client()->debug(dstr);
 
 			reset(true);
@@ -359,7 +359,8 @@ IBBManager::IBBManager(Client *parent)
 
 IBBManager::~IBBManager()
 {
-	d->incomingConns.setAutoDelete(true);
+	while(!d->incomingConns.isEmpty())
+		delete d->incomingConns.takeFirst();
 	d->incomingConns.clear();
 	delete d->ibb;
 	delete d;
@@ -375,8 +376,8 @@ IBBConnection *IBBManager::takeIncoming()
 	if(d->incomingConns.isEmpty())
 		return 0;
 
-	IBBConnection *c = d->incomingConns.getFirst();
-	d->incomingConns.removeRef(c);
+	IBBConnection *c = d->incomingConns.first();
+	d->incomingConns.removeFirst();
 	return c;
 }
 
@@ -440,15 +441,24 @@ void IBBManager::link(IBBConnection *c)
 
 void IBBManager::unlink(IBBConnection *c)
 {
-	d->activeConns.removeRef(c);
+	int i = 0;
+	IBBConnectionListIt it;
+	for(it = d->activeConns.begin(); it != d->activeConns.end(); ++it)
+	{
+		if(c == *it) {
+			d->activeConns.removeAt(i);
+		}
+		i++;
+	}
 }
 
 IBBConnection *IBBManager::findConnection(const QString &sid, const Jid &peer) const
 {
-	IBBConnectionListIt it(d->activeConns);
-	for(IBBConnection *c; (c = it.current()); ++it) {
-		if(c->streamid() == sid && (peer.isEmpty() || c->peer().compare(peer)) )
-			return c;
+	IBBConnectionListIt it;
+	for(it = d->activeConns.begin(); it != d->activeConns.end(); ++it)
+	{
+		if((*it)->streamid() == sid && (peer.isEmpty() || (*it)->peer().compare(peer)) )
+			return *it;
 	}
 	return 0;
 }

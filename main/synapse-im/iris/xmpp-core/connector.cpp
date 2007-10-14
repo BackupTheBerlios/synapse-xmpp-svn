@@ -38,17 +38,13 @@
 #include "safedelete.h"
 #include <libidn/idna.h>
 
-#ifdef NO_NDNS
-#include <q3dns.h>
-#else
-#include "ndns.h"
-#endif
+#include <QHash>
+#include "jdns.h"
 
 #include "bsocket.h"
 #include "httpconnect.h"
 #include "httppoll.h"
 #include "socks.h"
-#include "srvresolver.h"
 
 //#define XMPP_DEBUG
 
@@ -83,7 +79,7 @@ QHostAddress Connector::peerAddress() const
 	return addr;
 }
 
-Q_UINT16 Connector::peerPort() const
+quint16 Connector::peerPort() const
 {
 	return port;
 }
@@ -100,7 +96,7 @@ void Connector::setPeerAddressNone()
 	port = 0;
 }
 
-void Connector::setPeerAddress(const QHostAddress &_addr, Q_UINT16 _port)
+void Connector::setPeerAddress(const QHostAddress &_addr, quint16 _port)
 {
 	haveaddr = true;
 	addr = _addr;
@@ -131,7 +127,7 @@ QString AdvancedConnector::Proxy::host() const
 	return v_host;
 }
 
-Q_UINT16 AdvancedConnector::Proxy::port() const
+quint16 AdvancedConnector::Proxy::port() const
 {
 	return v_port;
 }
@@ -156,14 +152,14 @@ int AdvancedConnector::Proxy::pollInterval() const
 	return v_poll;
 }
 
-void AdvancedConnector::Proxy::setHttpConnect(const QString &host, Q_UINT16 port)
+void AdvancedConnector::Proxy::setHttpConnect(const QString &host, quint16 port)
 {
 	t = HttpConnect;
 	v_host = host;
 	v_port = port;
 }
 
-void AdvancedConnector::Proxy::setHttpPoll(const QString &host, Q_UINT16 port, const QString &url)
+void AdvancedConnector::Proxy::setHttpPoll(const QString &host, quint16 port, const QString &url)
 {
 	t = HttpPoll;
 	v_host = host;
@@ -171,7 +167,7 @@ void AdvancedConnector::Proxy::setHttpPoll(const QString &host, Q_UINT16 port, c
 	v_url = url;
 }
 
-void AdvancedConnector::Proxy::setSocks(const QString &host, Q_UINT16 port)
+void AdvancedConnector::Proxy::setSocks(const QString &host, quint16 port)
 {
 	t = Socks;
 	v_host = host;
@@ -199,12 +195,7 @@ class AdvancedConnector::Private
 public:
 	int mode;
 	ByteStream *bs;
-#ifdef NO_NDNS
-	Q3Dns *qdns;
-#else
-	NDns dns;
-#endif
-	SrvResolver srv;
+	QJDns jdns;
 
 	QString server;
 	QString opt_host;
@@ -214,7 +205,8 @@ public:
 
 	QString host;
 	int port;
-	QList<Q3Dns::Server> servers;
+	QList<QJDns::Record> servers;
+	QHash<int, int> type;
 	int errorCode;
 
 	bool multi, using_srv;
@@ -230,15 +222,14 @@ AdvancedConnector::AdvancedConnector(QObject *parent)
 {
 	d = new Private;
 	d->bs = 0;
-#ifdef NO_NDNS
-	d->qdns = 0;
-#else
-	connect(&d->dns, SIGNAL(resultsReady()), SLOT(dns_done()));
-#endif
-	connect(&d->srv, SIGNAL(resultsReady()), SLOT(srv_done()));
 	d->opt_probe = false;
 	d->opt_ssl = false;
 	cleanup();
+	if(!d->jdns.init(QJDns::Unicast, QHostAddress::Any))
+		qDebug("Could not bind to DNS\n");
+	connect(&d->jdns, SIGNAL(resultsReady(int, const QJDns::Response &)), SLOT(jdns_done(int, const QJDns::Response &)));
+	connect(&d->jdns, SIGNAL(error(int, QJDns::Error)), SLOT(jdns_error(int, QJDns::Error)));
+	d->jdns.setNameServers(QJDns::systemInfo().nameServers);
 	d->errorCode = 0;
 }
 
@@ -251,21 +242,7 @@ AdvancedConnector::~AdvancedConnector()
 void AdvancedConnector::cleanup()
 {
 	d->mode = Idle;
-
-	// stop any dns
-#ifdef NO_NDNS
-	if(d->qdns) {
-		d->qdns->disconnect(this);
-		d->qdns->deleteLater();
-		//d->sd.deleteLater(d->qdns);
-		d->qdns = 0;
-	}
-#else
-	if(d->dns.isBusy())
-		d->dns.stop();
-#endif
-	if(d->srv.isBusy())
-		d->srv.stop();
+	d->type.clear();
 
 	// destroy the bytestream, if there is one
 	delete d->bs;
@@ -287,7 +264,7 @@ void AdvancedConnector::setProxy(const Proxy &proxy)
 	d->proxy = proxy;
 }
 
-void AdvancedConnector::setOptHostPort(const QString &host, Q_UINT16 _port)
+void AdvancedConnector::setOptHostPort(const QString &host, quint16 _port)
 {
 	if(d->mode != Idle)
 		return;
@@ -376,7 +353,7 @@ void AdvancedConnector::connectToServer(const QString &server)
 			if(!self)
 				return;
 
-			d->srv.resolveSrvOnly(d->server, "xmpp-client", "tcp");
+			d->type[d->jdns.queryStart( QString("_xmpp-client._tcp.%1").arg(d->server).toLatin1(), QJDns::Srv)] = QJDns::Srv;
 		}
 	}
 }
@@ -409,60 +386,72 @@ int AdvancedConnector::errorCode() const
 
 void AdvancedConnector::do_resolve()
 {
-#ifdef NO_NDNS
-	printf("resolving (aaaa=%d)\n", d->aaaa);
-	d->qdns = new Q3Dns;
-	connect(d->qdns, SIGNAL(resultsReady()), SLOT(dns_done()));
-	if(d->aaaa)
-		d->qdns->setRecordType(Q3Dns::Aaaa); // IPv6
-	else
-		d->qdns->setRecordType(Q3Dns::A); // IPv4
-	d->qdns->setLabel(d->host);
-#else
-	d->dns.resolve(d->host);
-#endif
+	d->type[d->jdns.queryStart(d->host.toLatin1(), QJDns::A)] = QJDns::A;
 }
 
-void AdvancedConnector::dns_done()
+void AdvancedConnector::jdns_done(int id, const QJDns::Response &resp)
+{
+	if(d->type[id] == QJDns::Srv) {
+		srv_done(id, resp);
+	} else if((d->type[id] == QJDns::A) || (d->type[id] == QJDns::Aaaa)) {
+		dns_done(id, resp);
+	}
+}
+
+void AdvancedConnector::jdns_error(int id, QJDns::Error e)
+{
+	QString str;
+	if(e == QJDns::ErrorGeneric)
+		str = "Generic";
+	else if(e == QJDns::ErrorNXDomain) {
+		if(d->type[id] == QJDns::Srv) {
+			srvResult(false);
+
+#ifdef XMPP_DEBUG
+			printf("srv_done1.1\n");
+#endif
+			// fall back to A record
+			d->using_srv = false;
+			d->host = d->server;
+			if(d->opt_probe) {
+#ifdef XMPP_DEBUG
+				printf("srv_done1.1.1\n");
+#endif
+				d->probe_mode = 0;
+				d->port = 5223;
+				d->will_be_ssl = true;
+			}
+			else {
+#ifdef XMPP_DEBUG
+				printf("srv_done1.1.2\n");
+#endif
+				d->probe_mode = 1;
+				d->port = 5222;
+			}
+			do_resolve();
+			return;
+		} else {
+			str = "NXDomain";
+		}
+	} else if(e == QJDns::ErrorTimeout)
+		str = "Timeout";
+	else if(e == QJDns::ErrorConflict)
+		str = "Conflict";
+#ifdef XMPP_DEBUG
+	printf("[%d] Error: %s\n", id, qPrintable(str));
+#endif
+	d->jdns.shutdown();
+}
+
+void AdvancedConnector::dns_done(int id, const QJDns::Response &resp)
 {
 	bool failed = false;
 	QHostAddress addr;
 
-#ifdef NO_NDNS
-	//if(!d->qdns)
-	//	return;
-
-	// apparently we sometimes get this signal even though the results aren' t ready
-	//if(d->qdns->isWorking())
-	//	return;
-
-	//SafeDeleteLock s(&d->sd);
-
-        // grab the address list and destroy the qdns object
-	QList<QHostAddress> list = d->qdns->addresses();
-	d->qdns->disconnect(this);
-	d->qdns->deleteLater();
-	//d->sd.deleteLater(d->qdns);
-	d->qdns = 0;
-
-	if(list.isEmpty()) {
-		if(d->aaaa) {
-			d->aaaa = false;
-			do_resolve();
-			return;
-		}
-		//do_resolve();
-		//return;
-		failed = true;
-	}
-	else
-		addr = list.first();
-#else
-	if(d->dns.result().isNull ())
+	if(resp.answerRecords.isEmpty())
 		failed = true;
 	else
-		addr = QHostAddress(d->dns.result());
-#endif
+		addr = resp.answerRecords[0].address;
 
 	if(failed) {
 #ifdef XMPP_DEBUG
@@ -562,44 +551,21 @@ void AdvancedConnector::tryNextSrv()
 #endif
 	d->host = d->servers.first().name;
 	d->port = d->servers.first().port;
-	d->servers.remove(d->servers.begin());
+	d->servers.removeFirst();
 	do_resolve();
 }
 
-void AdvancedConnector::srv_done()
+void AdvancedConnector::srv_done(int id, const QJDns::Response &resp)
 {
 	QPointer<QObject> self = this;
 #ifdef XMPP_DEBUG
 	printf("srv_done1\n");
 #endif
-	d->servers = d->srv.servers();
+	d->servers = resp.answerRecords;
 	if(d->servers.isEmpty()) {
-		srvResult(false);
-		if(!self)
-			return;
-
 #ifdef XMPP_DEBUG
-		printf("srv_done1.1\n");
+		printf("should not happend\n");
 #endif
-		// fall back to A record
-		d->using_srv = false;
-		d->host = d->server;
-		if(d->opt_probe) {
-#ifdef XMPP_DEBUG
-			printf("srv_done1.1.1\n");
-#endif
-			d->probe_mode = 0;
-			d->port = 5223;
-			d->will_be_ssl = true;
-		}
-		else {
-#ifdef XMPP_DEBUG
-			printf("srv_done1.1.2\n");
-#endif
-			d->probe_mode = 1;
-			d->port = 5222;
-		}
-		do_resolve();
 		return;
 	}
 
@@ -625,6 +591,7 @@ void AdvancedConnector::bs_connected()
 	else if(d->will_be_ssl)
 		setUseSSL(true);
 
+	d->jdns.shutdown();
 	d->mode = Connected;
 	connected();
 }

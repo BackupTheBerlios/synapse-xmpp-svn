@@ -1,7 +1,4 @@
 #include <QtCore/QByteRef>
-//#include <QDBus>
-//#include <QDBusAbstractInterface>
-//#include <QDBusInterface>
 #include <QDBusConnection>
 #include <QDBusReply>
 #include <QDBusMetaType>
@@ -40,7 +37,7 @@ public:
 	}
 public slots:
 	void found(int,int,const QString &name,const QString &type,const QString &domain,const QString &host, int aprotocol, const QString &address,ushort port, const QList<QByteArray>& txt, uint) {
-		printf("addrsss: %s\n", address.ascii());
+		printf("addrsss: %s\n", address.toAscii().data());
 		emit done(name, domain, host, port, txt);
 	}
 
@@ -166,10 +163,12 @@ LinkLocal::Stream *LinkLocal::ensureStream(Jid j)
 //		printf("port: %d\n", port);
 //		printf("searching for opened session..\n");
 		LinkLocal::Stream *stream = 0;
-		for(LinkLocal::Stream *stmp = streams_.first(); stmp; stmp = streams_.next())
+		QList<LinkLocal::Stream*>::iterator it;
+		for( it = streams_.begin(); it != streams_.end(); ++it)
+//		for(LinkLocal::Stream *stmp = streams_.first(); stmp; stmp = streams_.next())
 		{
-			if(stmp->compare(addr,port)) {
-				stream = stmp;
+			if((*it)->compare(addr,port)) {
+				stream = *it;
 				return stream;
 			}
 		}
@@ -279,7 +278,7 @@ void LinkLocal::update(const QString &name,const QString &domain,const QString &
 	RosterItem ri(jid);
 	ri.setName(data["nick"]);
 	ri.setSubscription(Subscription::Both);
-	printf("Resolved: %s %d\n", name.ascii(), port);
+	printf("Resolved: %s %d\n", name.toAscii().data(), port);
 	emit rosterItemUpdated(ri);
 	Status s(data["status"],data["msg"],0,true);
 	if(!data["ext"].isEmpty())
@@ -298,7 +297,16 @@ void LinkLocal::update(const QString &name,const QString &domain,const QString &
 
 void LinkLocal::removeStream(LinkLocal::Stream *s)
 {
-	streams_.remove((const LinkLocal::Stream*)s);
+	int i = 0;
+	QList<LinkLocal::Stream*>::iterator it;
+	for( it = streams_.begin(); it != streams_.end(); ++it)
+	{
+		if((*it) == s) {
+			streams_.removeAt(i);
+			delete s;
+		}
+		i++;
+	}
 }
 
 void LinkLocal::error(const QString &msg)

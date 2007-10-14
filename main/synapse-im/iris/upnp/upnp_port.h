@@ -19,7 +19,7 @@ class SIMUPNP::Device;
 class SIMUPNP::Port : QObject {
 	Q_OBJECT
 public:
-	Port(SIMUPNP::Device *_dev, const QString &_type);
+	Port(SIMUPNP::Device *_dev, const QString &_type, int _port = 0);
 	~Port();
 
 	void post(QString &soap, QString &soapAction);

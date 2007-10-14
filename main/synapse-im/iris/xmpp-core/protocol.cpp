@@ -28,7 +28,6 @@
 #include <qca.h>
 //Added by qt3to4:
 #include <QList>
-#include <Q3CString>
 #include <QtCrypto>
 
 #ifdef XMPP_TEST
@@ -443,7 +442,7 @@ void BasicProtocol::handleDocOpen(const Parser::Event &pe)
 		int minor = 0;
 		QString verstr = atts.value("version");
 		if(!verstr.isEmpty()) {
-			int n = verstr.find('.');
+			int n = verstr.indexOf('.');
 			if(n != -1) {
 				major = verstr.mid(0, n).toInt();
 				minor = verstr.mid(n+1).toInt();
@@ -535,7 +534,7 @@ bool BasicProtocol::doStep(const QDomElement &e)
 			{
 				QList<SendItem>::Iterator it = sendList.begin();
 				i = (*it);
-				sendList.remove(it);
+				sendList.erase(it);
 			}
 
 			// outgoing stanza?
@@ -900,7 +899,7 @@ bool CoreProtocol::grabPendingItem(const Jid &to, const Jid &from, int type, DBI
 		if(i.type == type && i.to.compare(to) && i.from.compare(from)) {
 			const DBItem &i = (*it);
 			*item = i;
-			dbpending.remove(it);
+			dbpending.erase(it);
 			return true;
 		}
 	}
@@ -922,7 +921,7 @@ bool CoreProtocol::dialbackStep(const QDomElement &e)
 		{
 			QList<DBItem>::Iterator it = dbrequests.begin();
 			i = (*it);
-			dbrequests.remove(it);
+			dbrequests.erase(it);
 		}
 
 		QDomElement r;
@@ -1234,7 +1233,7 @@ bool CoreProtocol::normalStep(const QDomElement &e)
 			//	QCA::insertProvider(createProviderHash());
 
 			p = doc.createElement("digest");
-			Q3CString cs = id.utf8() + password.utf8();
+			QByteArray cs = id.toUtf8() + password.toUtf8();
 			p.appendChild(doc.createTextNode(QCA::Hash("sha1").hashToString(cs)));
 		}
 		else {
@@ -1601,7 +1600,7 @@ bool CoreProtocol::normalStep(const QDomElement &e)
 			step = C2CPreDone;
 			return true;
 		} else {
-		printf("get request: [%s], %s\n", e.namespaceURI().latin1(), e.tagName().latin1());
+		printf("get request: [%s], %s\n", e.namespaceURI().toLatin1().data(), e.tagName().toLatin1().data());
 		if(e.namespaceURI() == NS_TLS && e.localName() == "starttls") {
 			// TODO: don't let this be done twice
 

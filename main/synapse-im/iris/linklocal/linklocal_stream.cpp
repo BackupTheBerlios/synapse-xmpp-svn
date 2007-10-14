@@ -3,7 +3,7 @@
 
 static QByteArray randomArray(int size)
 {
-	QByteArray a(size);
+	QByteArray a(size,'\0');
 	for(int n = 0; n < size; ++n)
 		a[n] = (char)(256.0*rand()/(RAND_MAX+1.0));
 	return a;
@@ -108,9 +108,10 @@ Stanza LinkLocal::Stream::read()
 	if(in.isEmpty())
 		return Stanza();
 	else {
-		Stanza *sp = in.getFirst();
+		Stanza *sp = in.first();
 		Stanza s = *sp;
-		in.removeRef(sp);
+		in.removeFirst();
+		delete sp;
 		return s;
 	}
 }
@@ -222,7 +223,7 @@ void LinkLocal::Stream::processNext()
 			}
 			case CoreProtocol::ESend: {
 				QByteArray a = proto->takeOutgoingData();
-				Q3CString cs(a.size()+1);
+				QByteArray cs(a.size()+1,'\0');
 				memcpy(cs.data(), a.data(), a.size());
 // 				printf("Need Send: {%s}\n", cs.data());
 				bs_->write(a);
