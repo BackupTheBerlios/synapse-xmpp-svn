@@ -93,9 +93,11 @@ void SIMContactListAccount::setAlert(const Jid &j, PsiIcon *icon)
 			parent->updateParent();
 			parent = clc->parent();
 			parent->updateParent();
-		} else if (clc->parent()->type() == SIMContactListItem::Meta) {
+		} else {
+			((SIMContactListItem *)clc)->updateParent(true);
+			/*if (clc->parent()->type() == SIMContactListItem::Meta) {
 			parent->removeChild(clc);
-			parent->appendChild(clc);
+			parent->appendChild(clc);*/
 		}
 	}
 }

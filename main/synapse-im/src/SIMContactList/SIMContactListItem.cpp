@@ -136,7 +136,7 @@ void SIMContactListItem::setDefaultParent(SIMContactListItem* parent)
 
 void SIMContactListItem::setParent(SIMContactListItem* parent)
 {
-	if (parentItem != parent) {
+//	if (parentItem != parent) {
 		if (parentItem) {
 			parentItem->removeChild(this);
 		}
@@ -148,7 +148,7 @@ void SIMContactListItem::setParent(SIMContactListItem* parent)
 		}
 		
 		contactList_->dataChanged();
-	}
+//	}
 }
 
 int SIMContactListItem::type()
