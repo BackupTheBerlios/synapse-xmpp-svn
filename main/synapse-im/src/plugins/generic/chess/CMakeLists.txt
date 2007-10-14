@@ -1,6 +1,8 @@
 #SET(CDIR "plugins/generic/chess")
 SET(CDIR ".")
-include_directories(${CDIR})
+include_directories(${CDIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 set(p_chess_SRCS
     ${CDIR}/gameboard.cpp

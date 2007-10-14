@@ -397,16 +397,13 @@ QString PluginManager::incomingMessage(PsiAccount* account, const XMPP::Jid& fro
 	const QString fromString=QString("%1").arg(from.full());
 	//qDebug() << "pluginmanager: incomming message from " << fromString 
 	//	 << " to " << toString;
-	printf("bbbb1 : %s\n", message.toAscii().data());
 	foreach(PsiPlugin* plugin, plugins_.values() ) {
 		QString msg = plugin->incomingMessage(fromString, toString, message );
-		printf("bbbb2 : %s\n", msg.toAscii().data());
 		if(!msg.isEmpty())
 			message = msg;
 		//qDebug() << plugin->shortName() << " returned: " << endl
 		//	<< message << "\n--\n";
 	}
-	printf("bbbb3 : %s\n", message.toAscii().data());
 	//qDebug() << "PluginManager::incomingMessage:\n" << message << endl << "--";
 	return message;
 }
