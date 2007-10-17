@@ -102,7 +102,7 @@ bool SIMContactListView::event(QEvent *event)
 	}
 	else if (event->type() == QEvent::KeyPress) {
 		QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-		if ((ke->modifiers() == Qt::NoModifier) || (ke->modifiers() == Qt::ShiftModifier)) {
+		if (((ke->modifiers() == Qt::NoModifier) && (ke->key() != Qt::Key_Escape )) || (ke->modifiers() == Qt::ShiftModifier || ke->modifiers() == Qt::AltModifier)) {
 			if (ke->key() == Qt::Key_Backspace) {
 				QString tmp = search_->lineEdit()->text();
 				tmp = tmp.left(tmp.size()-1);
