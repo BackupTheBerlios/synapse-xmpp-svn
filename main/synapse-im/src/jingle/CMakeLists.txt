@@ -3,6 +3,7 @@ include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 	../third-party/jrtplib
 	../iris/upnp
+	jingle/portaudio
 )
 set(portaudio_SRCS
 	jingle/portaudio/pa_convert.c
