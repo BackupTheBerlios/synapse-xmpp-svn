@@ -78,7 +78,6 @@
 #include <QMap>
 #include <qtimer.h>
 #include <qpointer.h>
-//Added by qt3to4:
 #include <QList>
 #include "xmpp_tasks.h"
 #include "xmpp_xmlcommon.h"
@@ -177,13 +176,11 @@ Client::Client(bool ll, QObject *par)
 
 	d->ftman = 0;
 #ifdef LINKLOCAL
-	qDBusRegisterMetaType<QList<QByteArray> >();
 	if(ll) {
 		d->linklocal = new LinkLocal;
 		connect(d->linklocal, SIGNAL(rosterItemUpdated(const RosterItem &)), SIGNAL(rosterItemUpdated(const RosterItem &)));
 		connect(d->linklocal, SIGNAL(presence(const Jid &, const Status &)), SLOT(ppPresence(const Jid &, const Status &)));
 		connect(d->linklocal, SIGNAL(readyRead(Stanza)), SLOT(streamReadyRead(Stanza)));
-		d->linklocal->reset();
 	} else
 		d->linklocal = NULL;
 #endif

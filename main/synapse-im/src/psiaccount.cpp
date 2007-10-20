@@ -977,6 +977,12 @@ void PsiAccount::setUserAccount(const UserAccount &acc)
 //	d->contactListAccount->setName(d->acc.name);
 
 	Jid j = acc.jid;
+#ifdef LINKLOCAL
+	if(d->linkLocal) {
+		j = Jid(j.node() + "@" + QHostInfo::localHostName());
+		d->acc.jid = j.bare();
+	}
+#endif
 	d->nextJid = j;
 	if(!isActive()) {
 		d->jid = j;

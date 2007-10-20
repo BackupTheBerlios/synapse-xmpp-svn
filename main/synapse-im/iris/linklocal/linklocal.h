@@ -13,13 +13,7 @@
 #include "servsock.h"
 #include "bsocket.h"
 #include "protocol.h"
-
-#include "avahi_addressresolver.h"
-#include "avahi_entrygroup.h"
-#include "avahi_server.h"
-#include "avahi_servicebrowser.h"
-#include "avahi_serviceresolver.h"
-#include "avahi_hostnameresolver.h"
+#include "qjdns.h"
 
 using namespace XMPP;
 
@@ -32,16 +26,9 @@ public:
 	~LinkLocal();
 
 	bool reset();
-
-	bool registerSrv(const QList<QByteArray> &txt);
-	bool updateSrv(const QList<QByteArray> &txt);
-	bool unregisterSrv();
-
-	void startDiscovery();
-	void stopDiscovery();
-	QString getHostname();
-
 	bool isConnected();
+
+	QString getHostname();
 
 	class Stream;
 	Stream *stream();
@@ -50,11 +37,9 @@ public:
 	void setPresence(const XMPP::Status &s);
 
 public slots:
-	void itemNew(int interface, int protocol, const QString &name, const QString &type, const QString &domain, unsigned int flags);
-	void itemRemove(int interface, int protocol, const QString &name, const QString &type, const QString &domain, unsigned int flags);
-	void update(const QString &name,const QString &domain,const QString &host, ushort &port, const QList<QByteArray>& txt);
-	void error(const QString &msg);
-	void allForNow();
+	void jdns_resultsReady(int, const QJDns::Response &);
+	void jdns_published(int id);
+	void jdns_error(int id, QJDns::Error e);
 	void c2c_connectionReady(int s);
 	void removeStream(LinkLocal::Stream *);
 
@@ -69,11 +54,8 @@ private:
 	LinkLocal::Stream *stream_;
 
 public:
-	org::freedesktop::Avahi::Server *server_;
-	org::freedesktop::Avahi::EntryGroup *entryGroup_;
-	org::freedesktop::Avahi::ServiceBrowser *discovery_;
-	QDBusConnection con;
-	bool registred_;
+	QJDns jdns;
+	int txt_id;
 	QString port_;
 	Jid jid_;
 	QString nick_;

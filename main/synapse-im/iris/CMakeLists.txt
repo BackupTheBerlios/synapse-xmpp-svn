@@ -22,7 +22,6 @@ ENDMACRO(MY_AUTOMOC)
 
 include(${QT_USE_FILE})
 ADD_DEFINITIONS(-DQT_NO_DEBUG)
-#ADD_DEFINITIONS(-DQT3_SUPPORT)
 
 include_directories(
 ../iris/include
@@ -122,14 +121,11 @@ set(iris_H
 	../iris/include/im.h
 )
 
-if(QT_QTDBUS_FOUND)
-if(AVAHI_FOUND)
+# LinkLocal
 ADD_DEFINITIONS(-DLINKLOCAL)
 
 include_directories(
-	${QT_QTDBUS_INCLUDE_DIR}
 	linklocal
-	linklocal/avahi
 )
 set(linklocal_H
 	linklocal/linklocal.h
@@ -139,26 +135,10 @@ set(linklocal_SRCS
 	linklocal/linklocal.cpp
 	linklocal/linklocal_stream.cpp
 )
-qt4_add_dbus_interface(linklocal_noMOC_SRCS linklocal/avahi/AddressResolver.xml avahi_addressresolver)
-qt4_add_dbus_interface(linklocal_noMOC_SRCS linklocal/avahi/HostNameResolver.xml avahi_hostnameresolver)
-qt4_add_dbus_interface(linklocal_noMOC_SRCS linklocal/avahi/ServiceBrowser.xml avahi_servicebrowser)
-set(
-    linklocal_SRCS
-    ${linklocal_SRCS}
-    linklocal/avahi/avahi_entrygroup.cpp
-    linklocal/avahi/avahi_server.cpp
-    linklocal/avahi/avahi_serviceresolver.cpp
-)
-set(
-    linklocal_H
-    ${linklocal_H}
-    linklocal/avahi/avahi_entrygroup.h
-    linklocal/avahi/avahi_server.h
-    linklocal/avahi/avahi_serviceresolver.h
-)
+
 set(iris_H ${iris_H} ${linklocal_H})
-endif(AVAHI_FOUND)
-endif(QT_QTDBUS_FOUND)
+# ---------
+
 
 set(iris_SRCS ${cutestuff_SRCS} ${idn_SRCS} ${linklocal_SRCS} ${upnp_SRCS} ${jdns_SRCS}
 	../iris/xmpp-core/securestream.cpp
@@ -194,12 +174,12 @@ qt4_wrap_cpp(cutestuff_MOC_SRCS ${cutestuff_H})
 MY_AUTOMOC(iris_SRCS)
 
 if(WIN32)
-add_library(iris ${iris_SRCS} ${iris_MOC_SRCS} ${cutestuff_MOC_SRCS})
+add_library(iris ${iris_SRCS} ${iris_MOC_SRCS} ${cutestuff_MOC_SRCS} ${linklocal_noMOC_SRCS})
 TARGET_LINK_LIBRARIES(iris
 	${QT_LIBRARIES}
 	${QT_QTNETWORK_LIBRARIES}
 	${QT_QTXML_LIBRARIES}
-	${QT_QT3SUPPORT_LIBRARIES}
+#	${QT_QT3SUPPORT_LIBRARIES}
 	qca
 	WSock32
 )
@@ -209,7 +189,7 @@ target_link_libraries(iris
 	${QT_LIBRARIES}
 	${QT_QTNETWORK_LIBRARIES}
 	${QT_QTXML_LIBRARIES}
-	${QT_QTDBUS_LIBRARIES}
+#	${QT_QTDBUS_LIBRARIES}
 	qca
 )
 endif(WIN32)
