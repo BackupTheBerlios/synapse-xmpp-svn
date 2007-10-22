@@ -43,6 +43,7 @@ void LinkLocal::jdns_resultsReady(int x, const QJDns::Response &resp)
 			printf(" --> Ptr : %s\n", jid.bare().toAscii().data());
 #endif
 			ContactData *cd = new ContactData();
+			cd->port = 0;
 			cd->jid = Jid(jid);
 			contacts_[jid.bare()] = cd;
 			jdns.queryStart(QString("_presence._tcp.local.")/*.arg(jid.bare())*/.toLatin1(),QJDns::Srv);
@@ -81,8 +82,10 @@ void LinkLocal::jdns_resultsReady(int x, const QJDns::Response &resp)
 					s.setCapsVersion(data["ver"]);
 				if(!data["phsh"].isEmpty())
 					s.setPhotoHash(data["phsh"]);
+				if(!data["port.p2pj"].isEmpty() && cd->port == 0)
+					cd->port = data["port.p2pj"].toInt();
 				
-				emit presence(Jid(jid.bare()+"/Local"), s);
+				emit presence(Jid(jid.bare()), s);
 			}
 		} else if (r->type == QJDns::Srv) {
 #ifdef LL_DEBUG
@@ -178,8 +181,6 @@ void LinkLocal::setPresence(const Status &s)
 		QString status = ((s.show().isEmpty()) ? "avail" : s.show());
 		status  = QString("status=") + ((status.compare("xa")) ? status : "away");
 
-		QHostInfo ip = QHostInfo::fromName(localName);
-
 //TXT record
 		QList<QByteArray> text;
 		text.append(status.toAscii());
@@ -219,7 +220,7 @@ void LinkLocal::setPresence(const Status &s)
 			a.type = QJDns::A;
 			a.ttl = 4500;
 			a.haveKnown = true;
-			a.address = "10.0.0.2";//ip.addresses().first();
+			a.address = jdns.detectPrimaryMulticast(QHostAddress::Any);
 			jdns.publishStart(QJDns::Unique, a);
 
 //SRV record
@@ -252,7 +253,7 @@ void LinkLocal::setPresence(const Status &s)
 	} else if(txt_id!=0) {
 		Status st(s);
 		st.setStatus("");
-		emit presence(Jid(jid_.node()+"@"+localName+"/Local"), st);
+		emit presence(Jid(jid_.node()+"@"+localName), st);
 		
 		c2c.stop();
 		reset();
