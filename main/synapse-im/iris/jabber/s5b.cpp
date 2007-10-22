@@ -2107,6 +2107,9 @@ S5BServer::~S5BServer()
 	while(!d->itemList.isEmpty())
 		delete d->itemList.takeFirst();
 	d->itemList.clear();
+#ifdef USE_UPNP
+	delete d->upnp;
+#endif
 	delete d;
 }
 

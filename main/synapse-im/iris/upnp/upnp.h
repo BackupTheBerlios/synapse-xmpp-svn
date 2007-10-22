@@ -11,9 +11,6 @@
 #include <QUdpSocket>
 #include <QMutex>
 
-//#include "upnp_port.h"
-//#include "upnp_device.h"
-
 class SIMUPNP : QObject {
 	Q_OBJECT
 public:
@@ -32,12 +29,6 @@ public:
 	void unregisterPort(SIMUPNP::Port*);
 
 	SocksServer *server();
-//	void setExternalPort(quint16);
-//	quint16 externalPort();
-//	void setLocalPort(quint16);
-//	quint16 localPort();
-//	void setProtocol(QString &_protocol);
-//	QString protocol();
 	void setListenAddress(QHostAddress);
 	QHostAddress listenAddress();
 	QString leaseDuration();
@@ -50,6 +41,8 @@ public:
 	quint16 randomPort();
 
 public slots:
+	void reset();
+
 	void send_request();
 	void timeout();
 	void on_reply();
@@ -60,8 +53,6 @@ private:
 	int error_;
 	QUdpSocket *upnp;
 	QList<Device*> devices;
-//	int localPort_;
-//	int externalPort_;
 	QHostAddress local_addr_;
 	QHostAddress listen_addr_;
 	SocksServer *serv;

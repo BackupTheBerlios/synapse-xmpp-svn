@@ -37,10 +37,11 @@ void SIMUPNP::Port::post(QString &soap, QString &soapAction)
 	header += QString("Content-Length: %1\r\n").arg(soap.size());
 	header += QString("Connection: close\r\n");
 	header += QString("Soapaction: \"%1#%2\"\r\n\r\n").arg(dev->serviceType()).arg(soapAction);
-	header += soap;
+	header += soap + "\r\n\r\n";
 
 	sock_->waitForConnected(10000);
 	sock_->write(header.toUtf8());
+	sock_->flush();
 }
 
 void SIMUPNP::Port::map()
@@ -69,18 +70,18 @@ void SIMUPNP::Port::map()
 	soap += QString("<NewEnabled>1</NewEnabled>");
 	soap += QString("<NewPortMappingDescription>%1</NewPortMappingDescription>").arg(SIMUPNP::instance()->userAgent());
 	soap += QString("<NewLeaseDuration>%1</NewLeaseDuration>").arg(SIMUPNP::instance()->leaseDuration());
-	soap += QString("</u:%1></s:Body></s:Envelope>\r\n").arg(soap_action);
+	soap += QString("</u:%1></s:Body></s:Envelope>").arg(soap_action);
 
 	post(soap,soap_action);
 }
 
 void SIMUPNP::Port::unmap()
 {
-	if(!mapped_)
+	if(!mapped_ || dev == NULL)
 		return;
 
 	sock_->connectToHost(dev->hostname(), dev->port());
-	connect(sock_, SIGNAL(disconnected()), this, SLOT(on_upnp_map_response()));
+	connect(sock_, SIGNAL(disconnected()), this, SLOT(on_map_response()));
 	QString soap_action = "DeletePortMapping";
 
 	QString soap;
@@ -91,7 +92,7 @@ void SIMUPNP::Port::unmap()
 	soap += QString("<NewRemoteHost></NewRemoteHost>");
 	soap += QString("<NewExternalPort>%1</NewExternalPort>").arg(port_);
 	soap += QString("<NewProtocol>%1</NewProtocol>").arg(type_);
-	soap += QString("</u:%1></s:Body></s:Envelope>\r\n").arg(soap_action);
+	soap += QString("</u:%1></s:Body></s:Envelope>").arg(soap_action);
 
 	post(soap, soap_action);
 }
@@ -103,7 +104,6 @@ void SIMUPNP::Port::on_map_response()
 
 	if (doc.left(15).compare("HTTP/1.1 200 OK") != 0) {
 		qDebug("UPNP::Port::on_map_resonse() : Bad response\n");
-//		upnp_->server()->listen(upnp_->externalPort(),true);
 		deleteLater();
 		return;
 	}

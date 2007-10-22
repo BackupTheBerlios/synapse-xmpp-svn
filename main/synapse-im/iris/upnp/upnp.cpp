@@ -7,25 +7,40 @@
 #include <QString>
 #include <QTimer>
 #include <QTcpSocket>
+#include <QCoreApplication>
 
 static bool isLocal(quint32 ip) {
 	return ((ip & 0xff000000) == 0x0a000000 || (ip & 0xfff00000) == 0xac100000 || (ip & 0xffff0000) == 0xc0a80000);
 }
 
-SIMUPNP::SIMUPNP(SocksServer *_serv)// : localPort_(8200), externalPort_(8200), protocol_("TCP")
+SIMUPNP::SIMUPNP(SocksServer *_serv)
 {
-	printf("SIMUPNP\n");
 	upnp = new QUdpSocket();
-	serv = _serv;
 	ports_.clear();
-	SIMUPNP::instance_  = this;
 	devices.clear();
+	serv = _serv;
+	SIMUPNP::instance_  = this;
+	reset();
 	rebind();
 };
 
 SIMUPNP::~SIMUPNP()
 {
+	reset();
+	SIMUPNP::instance_ = 0;
 };
+
+void SIMUPNP::reset()
+{
+	QList<Port*>::iterator it;
+	Port *p1 = NULL;
+	for( it=ports_.begin(); it != ports_.end(); ++it) {
+		p1 = *it;
+		if(p1->mapped()) {
+			p1->unmap();
+		}
+	}
+}
 
 void SIMUPNP::rebind(QHostAddress listen_addr)
 {
@@ -117,7 +132,6 @@ void SIMUPNP::on_reply()
 
 	dev->setUrl(resp.mid(x, y-(x+1)));
 	if (dev->url().isEmpty()) {
-		printf("delete dev\n");
 		delete dev;
 		return;
 	}
@@ -148,7 +162,6 @@ void SIMUPNP::on_reply()
 		QList<Device*>::iterator it2;
 		for ( it2 = devices.begin(); it2 != devices.end(); ++it2) {
 			Device *dev2 = *it2;
-			//printf("dev: %s\n", dev2->url().toAscii().data());
 			new Port(dev2, "TCP"); // fix for main port of file transfer
 			new Port(dev2, "TCP");
 			new Port(dev2, "UDP");
@@ -159,9 +172,7 @@ void SIMUPNP::on_reply()
 void SIMUPNP::registerPort(SIMUPNP::Port *port)
 {
 	if((ports_.begin() == ports_.end()) && (port->type().compare("TCP")==0)) {
-		printf("TCP server port: %d\n", port->port());
 		serv->stop();
-		printf("  : %d\n", serv->listen(port->port(),true) ? 1 : 0);
 		port->setInUse(true);
 		Device *dev = NULL;
 		QList<Device*>::iterator it1;
@@ -171,15 +182,6 @@ void SIMUPNP::registerPort(SIMUPNP::Port *port)
 		p->setInUse(true);
 	}
 	ports_.append(port);
-
-	QList<Port*>::iterator it;
-	int i=0;
-	for( it=ports_.begin(); it != ports_.end(); ++it) {
-		Port *p1 = *it;
-		i++;
-		if(p1)
-			printf("allocated ports: %d : %d : %s\n", i, p1->port(), p1->type().toAscii().data());
-	}
 }
 
 void SIMUPNP::unregisterPort(SIMUPNP::Port *port)
@@ -195,8 +197,7 @@ SocksServer *SIMUPNP::server()
 quint16 SIMUPNP::getPort(int protocol)
 {
 	while(!discoveryDone) {
-		//usleep(100);
-		printf("error.. - should not happend\n");
+		// just to catch exception on start
 		return 0;
 	}
 
@@ -211,9 +212,6 @@ quint16 SIMUPNP::getPort(int protocol)
 	for( it1=devices.begin(); it1 != devices.end(); ++it1)
 		dev = *it1;
 
-//	if(dev) {
-//		printf("dev->url()\n", dev->url());
-//	}
 	new Port(dev,proto);
 
 	QList<Port*>::iterator it2;
@@ -283,8 +281,6 @@ QString &SIMUPNP::externalIP()
 
 SIMUPNP *SIMUPNP::instance()
 {
-//	if ( !instance_ )
-//		instance_ = new PsiOptions();
 	return instance_;
 }
 
