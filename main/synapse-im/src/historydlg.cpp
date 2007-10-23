@@ -241,8 +241,9 @@ void HistoryDlg::doFind()
 
 void HistoryDlg::doExport()
 {
-	if(option.lastSavePath.isEmpty())
+	if(option.lastSavePath.isEmpty()) {
 		option.lastSavePath = QDir::homeDirPath();
+	}
 
  	UserListItem *u = pa_->findFirstRelevant(jid_);
 	QString them = JIDUtil::nickOrJid(u->name(), u->jid().full());

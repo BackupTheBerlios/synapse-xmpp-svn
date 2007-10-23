@@ -36,6 +36,7 @@ MASTER_DMG=$(NAME)-$(VERSION).dmg
 # Other variables
 QT_FRAMEWORK_VERSION=4
 QT_FRAMEWORKS=QtCore QtXml QtNetwork QtGui QtSql Qt3Support
+QT_PLUGINS=imageformats/libqjpeg.dylib imageformats/libqgif.dylib
 
 # The rules
 .PHONY: buildall
@@ -74,27 +75,29 @@ endif
 ################################################################################
 
 # The binary
-$(DISK_DIR)/Psi.app: $(PSI_DIR)/src/psi.app
+$(DISK_DIR)/$(APPFILE_NAME): $(PSI_DIR)/src/$(EXECUTABLE_NAME).app
 	@echo
 	@echo --------------------- Packaging Binary --------------------
 	rm -rf "$@"
 	ditto -rsrc "$<" "$@"
 	mkdir -p "$@/Contents/Frameworks"
 	-ditto -rsrc "$(GROWLDIR)/Growl.framework" "$@/Contents/Frameworks/Growl.framework"
-	#strip "$@/Contents/MacOS/psi"
+	#strip "$@/Contents/MacOS/$(EXECUTABLE_NAME)"
 	#
 	#@echo
 	#@echo Installing QCA ...
 	#cp -f "$(QCADIR)/lib/libqca.2.dylib" "$@/Contents/Frameworks/"
 	#install_name_tool -id "@executable_path/../Frameworks/libqca.2.dylib" "$@/Contents/Frameworks/libqca.2.dylib"
-	#install_name_tool -change "libqca.2.dylib" "@executable_path/../Frameworks/libqca.2.dylib" "$@/Contents/MacOS/psi"
-	#install_name_tool -change "$(QCADIR)/lib/libqca.2.dylib" "@executable_path/../Frameworks/libqca.2.dylib" "$@/Contents/MacOS/psi"
+	#install_name_tool -change "libqca.2.dylib" "@executable_path/../Frameworks/libqca.2.dylib" "$@/Contents/MacOS/$(EXECUTABLE_NAME)"
+	#install_name_tool -change "$(QCADIR)/lib/libqca.2.dylib" "@executable_path/../Frameworks/libqca.2.dylib" "$@/Contents/MacOS/$(EXECUTABLE_NAME)"
 	#mkdir -p "$@/Contents/Resources/crypto"
 	#cp -f "$(QTDIR)/plugins/crypto/libqca-openssl.dylib" "$@/Contents/Resources/crypto/"
 	#install_name_tool -change "$(QCADIR)/lib/libqca.2.dylib" "@executable_path/../Frameworks/libqca.2.dylib" "$@/Contents/Resources/crypto/libqca-openssl.dylib"
 	#install_name_tool -change "libqca.2.dylib" "@executable_path/../Frameworks/libqca.2.dylib" "$@/Contents/Resources/crypto/libqca-openssl.dylib"
-	mkdir -p "$@/Contents/Resources/imageformats"
-	cp -f "$(QTDIR)/plugins/imageformats/libqjpeg.dylib" "$@/Contents/Resources/imageformats/"
+	for f in $(QT_PLUGINS); do \
+		mkdir -p "$@/Contents/Plugins/`dirname $$f`"; \
+		cp -f "$(QTDIR)/plugins/$$f" "$@/Contents/Plugins/`dirname $$f`"; \
+	done; \
 	#
 	@echo
 	@echo Installing Qt Frameworks ...
@@ -110,10 +113,12 @@ $(DISK_DIR)/Psi.app: $(PSI_DIR)/src/psi.app
 		for g in $(QT_FRAMEWORKS); do \
 			install_name_tool -change "$(QTDIR)/lib/$$g.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$g" "@executable_path/../Frameworks/$$g.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$g" "$@/Contents/Frameworks/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f"; \
 		done; \
+		for g in $(QT_PLUGINS); do \
+			install_name_tool -change "$(QTDIR)/lib/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "@executable_path/../Frameworks/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "$@/Contents/Plugins/$$g"; \
+		done; \
 		\# install_name_tool -change "$(QTDIR)/lib/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "@executable_path/../Frameworks/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "$@/Contents/Frameworks/libqca.2.dylib"; \
 		\# install_name_tool -change "$(QTDIR)/lib/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "@executable_path/../Frameworks/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "$@/Contents/Resources/crypto/libqca-openssl.dylib"; \
-		install_name_tool -change "$(QTDIR)/lib/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "@executable_path/../Frameworks/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "$@/Contents/Resources/imageformats/libqjpeg.dylib"; \
-		install_name_tool -change "$(QTDIR)/lib/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "@executable_path/../Frameworks/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "$@/Contents/MacOS/psi"; \
+		install_name_tool -change "$(QTDIR)/lib/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "@executable_path/../Frameworks/$$f.framework/Versions/$(QT_FRAMEWORK_VERSION)/$$f" "$@/Contents/MacOS/$(EXECUTABLE_NAME)"; \
 	done
 
 # The rest

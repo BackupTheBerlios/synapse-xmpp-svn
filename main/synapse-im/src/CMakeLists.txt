@@ -55,6 +55,8 @@ include(options/CMakeLists.txt)
 
 include(../iris/CMakeLinks.txt)
 
+include(privacy/CMakeLists.txt)
+
 if(NOT WIN32)
 add_definitions(-DSYNAPSE_IM_DATADIR=\\\"${CMAKE_INSTALL_PREFIX}/share/synapse-im\\\")
 endif(NOT WIN32)
@@ -157,12 +159,6 @@ set(synapse-im_noMOC_SRCS
 	pgputil.cpp
 	physicallocation.cpp
 	pongserver.cpp
- 	privacydlg.cpp
- 	privacylist.cpp
- 	privacylistblockedmodel.cpp
- 	privacylistitem.cpp
- 	privacylistmodel.cpp
- 	privacyruledlg.cpp
 	profiledlg.cpp
 	proxy.cpp
 	psi_profiles.cpp
@@ -219,7 +215,6 @@ set(synapse-im_SRCS
 	filetransdlg.cpp
 	avatars.cpp
 	actionlist.cpp
- 	privacymanager.cpp
 	psiactionlist.cpp
 	httpauthmanager.cpp
 	psicon.cpp
@@ -276,9 +271,6 @@ set(synapse-im_H
 	pgpkeydlg.h
 	pgptransaction.h
 	pgputil.h
-	privacydlg.h
-	privacymanager.h
-	privacyruledlg.h
 	profiledlg.h
 	proxy.h
 	psiaccount.h
@@ -363,8 +355,6 @@ set(synapse-im_UIS
 	disco.ui
 	tip.ui
 	filetrans.ui
-	privacy.ui
-	privacyrule.ui
 	mood.ui
 	voicecall.ui
 	chatdlg.ui
@@ -393,6 +383,9 @@ add_executable(synapse-im
 	${options_SRCS}
 	${options_noMOC_SRCS}
 	${simcontactlist_SRCS}
+	${privacy_SRCS}
+	${privacy_moc_SRCS}
+	${privacy_UIS_H}
 #	${jingle_SRCS}
 	${synapse-im_UIS_H}
 	${options_UIS_H}

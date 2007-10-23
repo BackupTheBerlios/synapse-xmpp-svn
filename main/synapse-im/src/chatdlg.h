@@ -30,7 +30,11 @@
 #include <QCloseEvent>
 
 #include "advwidget.h"
+
+#include "tabbable.h"
+
 #include "xmpp_chatstate.h" 
+
 
 namespace XMPP {
 	class Jid;
@@ -61,16 +65,16 @@ private:
 	QString pep_;
 };
 
-class ChatDlg : public AdvancedWidget<QWidget>
+class ChatDlg : public Tabbable
 {
 	Q_OBJECT
 public:
 	ChatDlg(const Jid &, PsiAccount *);
 	~ChatDlg();
 
-	const Jid & jid() const;
+	Jid jid() const;
 	void setJid(const Jid &);
-	const QString & getDisplayNick();
+	const QString & getDisplayName();
 
 	static QSize defaultSize();
 	bool readyToHide();
@@ -83,9 +87,9 @@ signals:
 	void messagesRead(const Jid &);
 	void aSend(const Message &);
 	void aFile(const Jid &);
-	void captionChanged(ChatDlg*);
+	void captionChanged(QString);
 	void contactStateChanged( XMPP::ChatState );
-	void unreadMessageUpdate(ChatDlg*, int);
+	void unreadEventUpdate(int);
 
 protected:
 	void setShortcuts();
