@@ -1035,6 +1035,8 @@ void PsiAccount::autoLogin()
 	// auto-login ?
 #ifdef LINKLOCAL
 	if(d->acc.opt_auto && (d->acc.opt_enabled || d->linkLocal))
+#else
+	if(d->acc.opt_auto && d->acc.opt_enabled)
 #endif
 		if(!d->acc.opt_login_as)
 			setStatus(Status("", "", d->acc.priority));
