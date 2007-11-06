@@ -15,6 +15,8 @@ Transport::Transport()
 	stunSrvAddr.port = 19302;
 //	stunSrvPort = 3489;
 	stunSrcPort  = stunRandomPort();
+	if(firewallPort_ == 0)
+		getStunInfo();
 }
 
 Transport::~Transport()

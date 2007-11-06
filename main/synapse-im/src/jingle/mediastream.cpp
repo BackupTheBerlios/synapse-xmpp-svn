@@ -6,7 +6,7 @@
 // jrtplib includes
 #include "rtpsession.h"
 #include "rtppacket.h"
-#include "rtpudpv4transmitter.h"
+#include "synapsetransmitter.h"
 #include "rtpsessionparams.h"
 #include "rtpipv4address.h"
 
@@ -71,7 +71,7 @@ public:
     int codecPayload;
 
 
-    RTPUDPv4TransmissionParams transparams;
+    RTPSynapseTransmissionParams transparams;
 
     bool sendPacketsFlag;
 
@@ -114,6 +114,7 @@ static int audioCallback( void *inputBuffer, void *outputBuffer, // {{{
 
 //     Q_UNUSED( outTime );
 
+    printf("JStat %d : %d\n", d->micBuffer->size(),d->dspBuffer->size());
     d->micBuffer->lock();
     d->micBuffer->put( (char*)inputBuffer, framesPerBuffer*2 );
     d->micBuffer->unlock();
@@ -139,15 +140,19 @@ static int audioCallback( void *inputBuffer, void *outputBuffer, // {{{
     }
     
     d->dspBuffer->unlock();
+
+    printf("JStat %d : %d\n", d->micBuffer->size(),d->dspBuffer->size());
         
     return 0;
 }
 
 
-bool MediaStream::start(uint32_t ip, int port, int localPort, int codecPayload )
+bool MediaStream::start(QHostAddress ip, int port, int localPort, int codecPayload )
 {
     if ( isRunning() )
         stop();
+
+    printf("%s %d | %d | %d\n",ip.toString().toAscii().data(), port, localPort, codecPayload);
 
     if(d->processThread == NULL)
 	d->processThread = new MediaThread(this);
@@ -173,37 +178,45 @@ printf("transparams\n");
     d->transparams.SetPortbase(localPort);
 	
     RTPSessionParams sessparams;
+    sessparams.SetReceiveMode(RTPTransmitter::AcceptAll);
 
     sessparams.SetOwnTimestampUnit(1.0/8000.0); // 8KHz
 	sessparams.SetAcceptOwnPackets(true);
 
 printf("session.Create()\n");
-    int status = d->session.Create( sessparams, &d->transparams );
+    int status = d->session.Create( sessparams, &d->transparams, RTPTransmitter::SynapseProto );
 
     if ( status<0 ) {
-//        qDebug("can't create RTP session, %s", RTPGetErrorString(status).c_str() );
+        qDebug("can't create RTP session, %s", RTPGetErrorString(status).c_str() );
         d->session.Destroy(); 
         return false;
     }
 
 printf("session.AddDestination()\n");
-    RTPIPv4Address addr(ip,port);
+    RTPIPv4Address addr(ip.toIPv4Address(),port);
 	status = d->session.AddDestination(addr);
-    
+
     if ( status<0 ) {
-//         qDebug("can't add rtp destination, %s", RTPGetErrorString(status).c_str() );
+         qDebug("can't add rtp destination, %s", RTPGetErrorString(status).c_str() );
         d->session.Destroy(); 
         return false;
     }
 
+    d->session.SetDefaultPayloadType(codecPayload);
+    d->session.SetDefaultMark(false);
+    d->session.SetDefaultTimestampIncrement(160);
+
     //initialise audio
 
     status = Pa_Initialize();
+//////////////////// FOR TESTING
     if( status != paNoError ) {
-//        qDebug( "PortAudio error: %s", Pa_GetErrorText(status) );
-        stop();
-        return true;
+        qDebug( "PortAudio error: %s", Pa_GetErrorText(status) );
+//        stop();
+ //       return true;
     }
+
+if(status == paNoError) {
 
     status = Pa_OpenDefaultStream(
         &d->audioStream,/* passes back stream pointer */
@@ -218,11 +231,11 @@ printf("session.AddDestination()\n");
 
     status = Pa_StartStream( d->audioStream );
     if( status != paNoError ) {
-//         qDebug( "PortAudio error: %s", Pa_GetErrorText(status) );
-        stop();
-        return true;
+         qDebug( "PortAudio error: %s", Pa_GetErrorText(status) );
+//        stop();
+//        return true;
     }
-
+}
     
 
     // put something to dsp buffer
@@ -295,20 +308,22 @@ void MediaStream::timerClick()
 #ifndef TEST_AUDIO    
     int status = d->session.Poll();
     if ( status<0 ) {
-//        qDebug("Poll: %s", RTPGetErrorString(status).c_str() );
+        qDebug("Poll: %s", RTPGetErrorString(status).c_str() );
     }
+//    printf("JStat2 %d : %d\n", d->micBuffer->size(),d->dspBuffer->size());
 
     //checkRtpError( status );
     // check incoming packets
+    d->session.BeginDataAccess();
     if ( d->session.GotoFirstSourceWithData() ) {
 
-        //qDebug("have rtp data");
+        qDebug("have rtp data");
         do {
-            //RTPSourceData *sourceData = d->session.GetCurrentSourceInfo();
+            RTPSourceData *sourceData = d->session.GetCurrentSourceInfo();
 
             RTPPacket *pack;
             if ((pack = d->session.GetNextPacket()) != NULL) {
-                //qDebug("Get packet N %ld", pack->GetExtendedSequenceNumber());
+                qDebug("Get packet N %ld", pack->GetExtendedSequenceNumber());
 
 
                 // debug("Got  packet with payload type %d, size %d", pack->GetPayloadType(), pack->GetPayloadLength() );
@@ -341,11 +356,11 @@ void MediaStream::timerClick()
 
                         delete[] decodedData;
                     }
-//                    qDebug("decoded data (%d byes) with payload type %d",  size*2, pack->GetPayloadType() );
+                    qDebug("decoded data (%d byes) with payload type %d",  size*2, pack->GetPayloadType() );
 
 
                 } else {
-//                    qDebug("can't decode data with payload type %d", pack->GetPayloadType() );
+                    qDebug("can't decode data with payload type %d", pack->GetPayloadType() );
                 }
 
                 // we don't longer need the packet, so
@@ -354,6 +369,7 @@ void MediaStream::timerClick()
             }
         } while ( d->session.GotoNextSourceWithData());
     }
+    d->session.EndDataAccess();
 
     // send the packet
     // check for in data
@@ -382,7 +398,10 @@ void MediaStream::timerClick()
         data[i] = short(val);
     }
 
-
+    if(micDataSize == 0) {
+	micDataSize = 160;
+	data = new short[160];
+    }
 
     // examine the data here, to calculate levels
     processMicData(data, micDataSize);
@@ -390,10 +409,10 @@ void MediaStream::timerClick()
 
     if ( data ) {
         char * encodedData = 0;
-        //int readed = micDataSize;
+        int readed = micDataSize;
         int size = 0;
 
-        //qDebug("have mic data %d", micDataSize );
+        qDebug("have mic data %d", micDataSize );
         
         
         do {
@@ -402,7 +421,7 @@ void MediaStream::timerClick()
 
             int localPayload = d->codecPayload; // TODO get local payload here
 
-  //          qDebug("readed %d  encoded %d", readed, size );
+            qDebug("readed %d  encoded %d", readed, size );
 
             delete[] data;
             data = 0;
@@ -419,10 +438,10 @@ void MediaStream::timerClick()
                     if ( d->session.IsActive() && d->sendPacketsFlag ) {
                         int status = d->session.SendPacket( (void *)d->outBuffer, (int)d->outBufferPos, (unsigned char)localPayload , false, (long)d->outBufferTime );
                         if ( status<0 ) {
-//                             qDebug("can't SendPacket, %s", RTPGetErrorString(status).c_str() );
+                             qDebug("can't SendPacket, %s", RTPGetErrorString(status).c_str() );
                         }
                     }
-                    //qDebug("sent packet");
+                    qDebug("sent packet");
                 }
 
                     
@@ -441,7 +460,7 @@ void MediaStream::timerClick()
     
     status = d->session.Poll();
     if ( status<0 ) {
-//         qDebug("Poll: %s", RTPGetErrorString(status).c_str() );
+         qDebug("Poll: %s", RTPGetErrorString(status).c_str() );
     }
 #else // TEST_AUDIO
 

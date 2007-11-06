@@ -56,10 +56,10 @@ public slots:
 
 private:
 	JingleVoiceSession *voiceSession_;	
-	Q3PtrList<Session> sessionList_;
+	QList<Session*> sessionList_;
 	PsiAccount *pa_;
 	Client *client_;
-	Transport *transport_;
+//	Transport *transport_;
 	Jid jid_;
 	int sid_seed;
 };

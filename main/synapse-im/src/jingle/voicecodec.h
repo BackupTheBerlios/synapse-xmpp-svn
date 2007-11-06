@@ -2,7 +2,7 @@
 #define VOICECODEC_H
 
 #include <qstring.h>
-#include <q3valuelist.h>
+#include <QList>
 
 class VoiceEncoder {
 public:
@@ -61,7 +61,7 @@ public:
     VoiceCodecFactory* codecFactory( int payload );
     VoiceCodecFactory* codecFactory( QString rtmap );
 
-    Q3ValueList<int> payloads();
+    QList<int> payloads();
 
 private:    
     class Private;

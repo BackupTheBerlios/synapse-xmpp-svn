@@ -179,12 +179,11 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	}
 
 	// Check if portbase is even
-// No need to check for Synapse-IM
-/*	if (params->GetPortbase()%2 != 0)
+	if (params->GetPortbase()%2 != 0)
 	{
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_PORTBASENOTEVEN;
-	}*/
+	}
 
 	// create sockets
 	

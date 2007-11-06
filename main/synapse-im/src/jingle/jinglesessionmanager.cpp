@@ -21,7 +21,7 @@ JingleSessionManager::JingleSessionManager(PsiAccount *pa, Task *t)
 : Task(t), pa_(pa), client_(pa->client()), jid_(pa->jid()), sid_seed(0xaaaa)
 {
 	voiceSession_ = new JingleVoiceSession(pa,this);
-	transport_ = NULL;
+//	transport_ = NULL;
 
 	connect(voiceSession_, SIGNAL(send(const QDomElement&)), this, SLOT(sendStanza(const QDomElement&)));
 	Task::go(false);
@@ -30,6 +30,7 @@ JingleSessionManager::JingleSessionManager(PsiAccount *pa, Task *t)
 JingleSessionManager::~JingleSessionManager()
 {
 	delete voiceSession_;
+//	delete transport_;
 }
 
 bool JingleSessionManager::take(const QDomElement &e)
@@ -53,6 +54,7 @@ bool JingleSessionManager::take(const QDomElement &e)
 			} else
 				setError(e);
 		} else if (found && jt.attribute("action") == "session-accept") {
+				voiceSession_->setTransport(jt.attribute("sid"),content);
 				voiceSession_->setPayload(jt.attribute("sid"),content);
 				voiceSession_->start(jt.attribute("sid"));
 				setSuccess();
@@ -90,11 +92,11 @@ void JingleSessionManager::registerSession(Session *sess)
 
 Session *JingleSessionManager::getSession(QString sid)
 {
-	Q3PtrListIterator<Session> it(sessionList_);
-	for(Session *i; (i = it.current()); ++it) {
-		printf("%s : %s\n",i->sid.ascii(), sid.ascii());
-		if(i->sid == sid)
-			return i;
+	QList<Session*>::iterator it;
+	for(it = sessionList_.begin(); it != sessionList_.end(); ++it) {
+		printf("%s : %s\n",(*it)->sid.ascii(), sid.ascii());
+		if((*it)->sid == sid)
+			return *it;
 	}
 	return NULL;
 }
@@ -103,7 +105,7 @@ void JingleSessionManager::unregisterSession(QString sid)
 {
 	Session *sess = getSession(sid);
 	printf("removeRef\n");
-	sessionList_.removeRef(sess);
+	sessionList_.removeAll(sess);
 	printf("delete\n");
 	delete sess;
 }
@@ -122,11 +124,11 @@ QDomElement JingleSessionManager::sessionHeader(const Jid &j, const Jid &initiat
 
 QDomElement JingleSessionManager::sessionInitiate(const Jid &j, const Jid &initiator, QString &sid)
 {
-	if(transport_)
-		delete transport_;
-	transport_ = new Transport();
-	printf("getStunInfo()\n");
-	transport_->getStunInfo();
+//	if(transport_ == 0)
+//		transport_ = new Transport();
+//		delete transport_;
+//	printf("getStunInfo()\n");
+//	transport_->getStunInfo();
 	QDomElement iq = sessionHeader(j, initiator, sid);
 	bool found;
 	QDomElement jt = findSubTag(iq, "jingle", &found);

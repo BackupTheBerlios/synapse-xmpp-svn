@@ -42,6 +42,7 @@ void SIMUPNP::Device::post(QString &soap, QString &soapAction) {
 
 	sock_->waitForConnected(10000);
 	sock_->write(header.toUtf8());
+	sock_->flush();
 }
 
 void SIMUPNP::Device::getExternalIP() {

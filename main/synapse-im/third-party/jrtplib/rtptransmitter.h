@@ -66,7 +66,7 @@ public:
 	{ 
 		IPv4UDPProto, /**< Specifies the internal UDP over IPv4 transmitter. */
 		IPv6UDPProto, /**< Specifies the internal UDP over IPv6 transmitter. */
-		JabbinProto,
+		SynapseProto,
 		UserDefinedProto  /**< Specifies a user defined, external transmitter. */
 	};
 

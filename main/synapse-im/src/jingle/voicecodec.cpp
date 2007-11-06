@@ -1,6 +1,6 @@
 #include "voicecodec.h"
 
-#include <q3valuelist.h>
+#include <QList>
 #include <q3dict.h>
 #include <q3intdict.h>
 
@@ -22,7 +22,7 @@ class CodecsManager::Private {
 public:
     Q3IntDict<VoiceCodecFactory> codecs; // payload->VoiceCodecFactory dictionary
     Q3Dict<VoiceCodecFactory> rtmapDicts; // payload->VoiceCodecFactory dictionary
-    Q3ValueList<int> payloads;
+    QList<int> payloads;
 };
 
 CodecsManager::CodecsManager()
@@ -67,7 +67,7 @@ VoiceCodecFactory* CodecsManager::codecFactory( QString rtmap )
 }
 
 
-Q3ValueList<int> CodecsManager::payloads()
+QList<int> CodecsManager::payloads()
 {
     return d->payloads;
 }

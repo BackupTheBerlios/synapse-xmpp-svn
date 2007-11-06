@@ -6,6 +6,7 @@
 #include <qobject.h>
 #include <q3cstring.h>
 #include <q3ptrqueue.h>
+#include <QHostAddress>
 
 /*namespace cricket {
     class MediaChannel;
@@ -31,7 +32,7 @@ public:
     
 
 public slots:    
-    bool start( uint32_t ip, int port, int localPort, int codecPayload);
+    bool start( QHostAddress ip, int port, int localPort, int codecPayload);
     void stop();
     
     void timerClick();

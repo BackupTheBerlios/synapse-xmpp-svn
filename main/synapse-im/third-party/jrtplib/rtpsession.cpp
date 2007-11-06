@@ -41,6 +41,8 @@
 #include "rtppacket.h"
 #include "rtptimeutilities.h"
 #include "rtpmemorymanager.h"
+#include "synapsetransmitter.h"
+
 #ifdef RTP_SUPPORT_SENDAPP
 	#include "rtcpcompoundpacket.h"
 #endif // RTP_SUPPORT_SENDAPP
@@ -122,6 +124,9 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		rtptrans = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMITTER) RTPUDPv6Transmitter(GetMemoryManager());
 		break;
 #endif // RTP_SUPPORT_IPV6
+	case RTPTransmitter::SynapseProto:
+		rtptrans = (RTPTransmitter*) new SynapseTransmitter();
+		break;
 	case RTPTransmitter::UserDefinedProto:
 		rtptrans = NewUserDefinedTransmitter();
 		if (rtptrans == 0)

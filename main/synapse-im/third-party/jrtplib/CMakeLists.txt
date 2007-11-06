@@ -23,7 +23,11 @@ include(${QT_USE_FILE})
 ADD_DEFINITIONS(-DQT_NO_DEBUG)
 ADD_DEFINITIONS(-DQT3_SUPPORT)
 
-include_directories(../jrtplib)
+include_directories(
+	../jrtplib
+	${QT_QTNETWORK_INCLUDE_DIR}
+	${CMAKE_CURRENT_BINARY_DIR}
+)
 
 set(jrtp_H
 	rtcpapppacket.h
@@ -70,6 +74,7 @@ set(jrtp_H
 	rtptypes_win.h
 	rtpudpv4transmitter.h
 	rtpudpv6transmitter.h
+	synapsetransmitter.h
 )
 
 set(jrtp_SRCS
@@ -103,6 +108,7 @@ set(jrtp_SRCS
 	rtptimeutilities.cpp
 	rtpudpv4transmitter.cpp
 	rtpudpv6transmitter.cpp
+	synapsetransmitter.cpp
 )
 
 QT4_WRAP_CPP(jrtp_moc_SRCS ${jrtp_H})

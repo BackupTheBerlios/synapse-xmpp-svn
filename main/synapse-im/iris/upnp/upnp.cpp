@@ -165,6 +165,7 @@ void SIMUPNP::on_reply()
 			new Port(dev2, "TCP"); // fix for main port of file transfer
 			new Port(dev2, "TCP");
 			new Port(dev2, "UDP");
+			dev->getExternalIP();
 		}
 	}
 }
@@ -218,10 +219,11 @@ quint16 SIMUPNP::getPort(int protocol)
 	Port *p1 = NULL;
 	for( it2=ports_.begin(); it2 != ports_.end(); ++it2) {
 		p1 = *it2;
-		if(!p1->inUse() && p1->mapped() && p1->type().compare(proto) == 0) {
+		if((!p1->inUse()) && p1->mapped() && (p1->type().compare(proto) == 0)) {
 			p1->setInUse(true);
 			break;
 		}
+		p1 = NULL;
 	}
 
 	if(p1) {
@@ -242,7 +244,7 @@ void SIMUPNP::freePort(int protocol, quint16 port)
 	Port *p1 = NULL;
 	for( it=ports_.begin(); it != ports_.end(); ++it) {
 		p1 = *it;
-		if(p1->mapped() && p1->port() == port && p1->type().compare(proto) == 0) {
+		if(p1->mapped() && (p1->port() == port) && (p1->type().compare(proto) == 0)) {
 			p1->unmap();
 			break;
 		}
@@ -288,9 +290,10 @@ quint16 SIMUPNP::randomPort()
 {
 	quint16 ret = (quint16)rand();
 	
-	for (int i = 0; i < ports_.count(); ++i)
+	QList<Port*>::iterator it;
+	for ( it=ports_.begin(); it != ports_.end(); ++it )
 	{
-		if(ports_.takeAt(i)->port() == ret)
+		if((*it)->port() == ret)
 			return randomPort();
 	}
 	

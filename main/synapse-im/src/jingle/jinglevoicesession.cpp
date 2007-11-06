@@ -59,7 +59,8 @@ QString JingleVoiceSession::call(const Jid &jid)
 	QDomElement desc = doc()->createElement("description");
 	desc.setAttribute("xmlns",JINGLE_VOICE_NS);
 
-	Q3ValueList<int>::iterator i = CodecsManager::instance()->payloads().begin();
+	QList<int>::iterator i;
+// = CodecsManager::instance()->payloads().begin();
 	printf("..seaching in codecs..\n");
 	for (i = CodecsManager::instance()->payloads().begin(); i != CodecsManager::instance()->payloads().end(); ++i) {
 		VoiceCodecFactory *vcf = CodecsManager::instance()->codecFactory((*i));
@@ -116,9 +117,10 @@ bool JingleVoiceSession::setPayload(QString sid,QDomElement &e)
 			if(a.isNull())
 				continue;
 			if(a.tagName() == "payload-type") {
-				Q3ValueList<int>::iterator i = CodecsManager::instance()->payloads().begin();
+				QList<int>::iterator i;
+//CodecsManager::instance()->payloads().begin();
 				printf("..seaching in codecs..\n");
-				for (i = CodecsManager::instance()->payloads().begin(); i != CodecsManager::instance()->payloads().end(); i++) {
+				for (i = CodecsManager::instance()->payloads().begin(); i != CodecsManager::instance()->payloads().end(); ++i) {
 					VoiceCodecFactory *vcf = CodecsManager::instance()->codecFactory((*i));
 					if(vcf == NULL)
 						break;
@@ -148,7 +150,8 @@ bool JingleVoiceSession::setTransport(QString sid,QDomElement &e)
 				s->tpl.append(addr); // Changed to params list;
 			}
 		}
-		emit incoming(s->jid,sid);
+//		if(s->jid.compare(s->initiator) == 0)
+			emit incoming(s->jid,sid);
 	}
 }
 
