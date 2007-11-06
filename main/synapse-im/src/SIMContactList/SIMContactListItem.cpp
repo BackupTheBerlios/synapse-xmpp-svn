@@ -258,6 +258,29 @@ int SIMContactListItem::compare(SIMContactListItem *it1, SIMContactListItem *it2
 		SIMContactListGroup* it1_group = dynamic_cast<SIMContactListGroup*>(it1);
 		SIMContactListGroup* it2_group = dynamic_cast<SIMContactListGroup*>(it2);
 		if (it1_group && it2_group) {
+#ifdef uVme
+			if (it1_group->name() == "Upline Support")
+				return -1;
+			if (it2_group->name() == "Upline Support")
+				return 1;
+			if (it1_group->name().startsWith("Level")) {
+				if (!it2_group->name().startsWith("Level"))
+					return -1;
+				if (it1_group->name().length() < it2_group->name().length())
+					return -1;
+				if (it1_group->name().length() > it2_group->name().length())
+					return 1;
+			}
+			if (it2_group->name().startsWith("Level")) {
+				if (!it1_group->name().startsWith("Level"))
+					return 1;
+			}
+/*			if (it1_group->name().contains("Level") && !it2_group->name.contains("Level"))
+				return -1;
+			if (!it1_group->name().contains("Level") && it2_group->name.contains("Level"))
+				return 1;
+			*/
+#endif /*uVme*/
 			if (it1_group->name() == QObject::tr("General") || it2_group->name() == QObject::tr("Agents/Transports") || it2_group->name() == QObject::tr("Not in list"))
 				return -1;
 			if (it2_group->name() == QObject::tr("General") || it1_group->name() == QObject::tr("Agents/Transports") ||
