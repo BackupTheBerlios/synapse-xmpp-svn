@@ -59,7 +59,7 @@ using namespace QCA;
 static QByteArray scaleAvatar(const QByteArray& b)	
 {
 	//int maxSize = (option.avatarsSize > MAX_AVATAR_SIZE ? MAX_AVATAR_SIZE : option.avatarsSize);
-	int maxSize = MAX_AVATAR_SIZE;
+	int maxSize = AvatarFactory::maxAvatarSize();
 	QImage i(b);
 	if (i.isNull()) {
 		qWarning("AvatarFactory::scaleAvatar(): Null image (unrecognized format?)");
@@ -499,8 +499,12 @@ inline static QPixmap ensureSquareAvatar(const QPixmap& original)
 	return square;
 }
 
-QPixmap AvatarFactory::getAvatar(const Jid& jid, bool grey, int size)
+QPixmap AvatarFactory::getAvatar(const Jid& _jid, bool grey, int size)
 {
+	// protect from race condition when caller gets
+	// deleted as result of avatarChanged() signal
+	Jid jid = _jid;
+ 
 	// Compute the avatar of the user
 	Avatar* av = retrieveAvatar(jid);
 
@@ -654,6 +658,11 @@ QString AvatarFactory::getCacheDir()
 		home.mkdir("avatars");
 	}
 	return avatars.path();
+}
+
+int AvatarFactory::maxAvatarSize()
+{
+	return MAX_AVATAR_SIZE;
 }
 
 void AvatarFactory::itemPublished(const Jid& jid, const QString& n, const PubSubItem& item)

@@ -29,6 +29,7 @@
 #include <qcolor.h>
 #include <qimage.h>
 #include <qpixmapcache.h>
+#include <QFile>
 #include <QPixmap>
 #include <QList>
 #include <QImageReader>
@@ -85,6 +86,7 @@
 #include "globalshortcutmanager.h"
 #include "desktoputil.h"
 #include "historydb.h"
+#include "tabmanager.h"
 
 #ifdef Q_WS_MAC
 #include "mac_dock.h"
@@ -177,9 +179,6 @@ public:
 		: contactList(0), iconSelect(0)
 	{
 		psi = parent;
-		//the list 'owns' the tabs
-		tabs.setAutoDelete( true );
-		tabControlledChats.setAutoDelete( false );
 	}
 
 	~Private()
@@ -228,8 +227,6 @@ public:
 	MainWin *mainwin;
 	Idle idle;
 	QList<item_dialog*> dialogList;
-	Q3PtrList<TabDlg> tabs;
-	Q3PtrList<ChatDlg> tabControlledChats;
 	int eventId;
 	QStringList recentGCList, recentBrowseList, recentNodeList;
 //	EDB *edb;
@@ -242,6 +239,8 @@ public:
 	//GlobalAccelManager *globalAccelManager;
 	TuneController* tuneController;
 	QMenuBar* defaultMenuBar;
+	CapsRegistry* capsRegistry;
+	TabManager *tabManager;
 
 	SIMContactList *simContactList;
 };
@@ -256,6 +255,7 @@ PsiCon::PsiCon()
 	//pdb(DEBUG_JABCON, QString("%1 v%2\n By Justin Karneges\n    infiniti@affinix.com\n\n").arg(PROG_NAME).arg(PROG_VERSION));
 
 	d = new Private(this);
+	d->tabManager = new TabManager(this);
 
 	for(int i=0; i<5; i++)
 	{
@@ -275,15 +275,20 @@ PsiCon::PsiCon()
 
 	d->actionList = 0;
 	d->defaultMenuBar = new QMenuBar(0);
+	d->capsRegistry = new CapsRegistry();
+	connect(d->capsRegistry, SIGNAL(registered(const CapsSpec&)), SLOT(saveCapabilities()));
 }
 
 PsiCon::~PsiCon()
 {
 	deinit();
 
+	saveCapabilities();
+	delete d->capsRegistry;
+
 	delete d->actionList;
-//	delete d->edb;
 	delete d->defaultMenuBar;
+	delete d->tabManager;
 	delete d;
 }
 
@@ -330,7 +335,7 @@ bool PsiCon::init()
 	options->setOption("trigger-save",true);
 	
 	connect(options, SIGNAL(optionChanged(const QString&)), SLOT(optionsUpdate()));
-
+	
 	QDir profileDir( pathToProfile( activeProfile ) );
 	profileDir.rmdir( "info" ); // remove unused dir
 
@@ -437,46 +442,44 @@ bool PsiCon::init()
 
 	// Global shortcuts
 	setShortcuts();
-
-	// Entity capabilities
-	CapsRegistry::instance()->setFile(ApplicationInfo::homeDir() + "/caps.xml");
 	
 	// FIXME
 #ifdef __GNUC__
 #warning "Temporary hard-coding caps registration of own version"
 #endif
 	// client()->identity()
-	DiscoItem::Identity identity = { "client",  ApplicationInfo::name(), "pc" };
-	DiscoItem::Identities identities;
-	identities += identity;
-	QStringList features;
-	features << "http://jabber.org/protocol/bytestreams"
-		<< "http://jabber.org/protocol/si" 
-		<< "http://jabber.org/protocol/si/profile/file-transfer" 
-		<< "http://jabber.org/protocol/disco#info" 
-		<< "http://jabber.org/protocol/commands" 
-		<< "http://jabber.org/protocol/rosterx" 
-		<< "http://jabber.org/protocol/muc" 
-		<< "jabber:x:data";
-	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),ApplicationInfo::capsVersion()),identities,Features(features));
-	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),"cs"),identities,Features("http://jabber.org/protocol/chatstates"));
-	features.clear();
-	features << "http://jabber.org/protocol/mood"
-		<< "http://jabber.org/protocol/tune" 
-		<< "http://jabber.org/protocol/physloc" 
-		<< "http://jabber.org/protocol/geoloc" 
-		<< "http://www.xmpp.org/extensions/xep-0084.html#ns-data" 
-		<< "http://www.xmpp.org/extensions/xep-0084.html#ns-metadata";
-	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),"ep"),identities,features);
-	features.clear();
-	features << "http://jabber.org/protocol/mood+notify"
-		<< "http://jabber.org/protocol/tune+notify" 
-		<< "http://jabber.org/protocol/physloc+notify" 
-		<< "http://jabber.org/protocol/geoloc+notify" 
-		<< "http://www.xmpp.org/extensions/xep-0084.html#ns-metadata+notify";
-	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),"ep-notify"),identities,features);
-	CapsRegistry::instance()->registerCaps(CapsSpec(ApplicationInfo::capsNode(),ApplicationInfo::capsVersion(),"html"),identities,Features("http://jabber.org/protocol/xhtml-im"));
 
+	registerCaps(ApplicationInfo::capsVersion(), QStringList()
+	             << "http://jabber.org/protocol/bytestreams"
+	             << "http://jabber.org/protocol/si"
+	             << "http://jabber.org/protocol/si/profile/file-transfer"
+	             << "http://jabber.org/protocol/disco#info"
+	             << "http://jabber.org/protocol/commands"
+	             << "http://jabber.org/protocol/rosterx"
+	             << "http://jabber.org/protocol/muc"
+	             << "jabber:x:data"
+	            );
+
+	registerCaps("ep", QStringList()
+	             << "http://jabber.org/protocol/mood"
+	             << "http://jabber.org/protocol/tune"
+	             << "http://jabber.org/protocol/physloc"
+	             << "http://jabber.org/protocol/geoloc"
+	             << "http://www.xmpp.org/extensions/xep-0084.html#ns-data"
+	             << "http://www.xmpp.org/extensions/xep-0084.html#ns-metadata"
+	            );
+
+	registerCaps("ep-notify", QStringList()
+	             << "http://jabber.org/protocol/mood+notify"
+	             << "http://jabber.org/protocol/tune+notify"
+	             << "http://jabber.org/protocol/physloc+notify"
+	             << "http://jabber.org/protocol/geoloc+notify"
+	             << "http://www.xmpp.org/extensions/xep-0084.html#ns-metadata+notify"
+	            );
+
+	registerCaps("html", QStringList("http://jabber.org/protocol/xhtml-im"));
+	registerCaps("cs", QStringList("http://jabber.org/protocol/chatstates"));
+	registerCaps("mr", QStringList("urn:xmpp:receipts"));
 
 	// load accounts
 	d->contactList->loadAccounts(d->pro.acc);
@@ -513,6 +516,18 @@ bool PsiCon::init()
 // --- Windows breaks on this 
 //	d->mainwin->updateStatusLastMenu();
 	return true;
+}
+
+void PsiCon::registerCaps(const QString& ext, const QStringList& features)
+{
+	DiscoItem::Identity identity = { "client", ApplicationInfo::name(), "pc" };
+	DiscoItem::Identities identities;
+	identities += identity;
+
+	d->capsRegistry->registerCaps(CapsSpec(ApplicationInfo::capsNode(),
+	                                       ApplicationInfo::capsVersion(), ext),
+	                              identities,
+	                              Features(features));
 }
 
 void PsiCon::deinit()
@@ -704,93 +719,6 @@ QMenuBar* PsiCon::defaultMenuBar() const
 	return d->defaultMenuBar;
 }
 
-TabDlg* PsiCon::newTabs()
-{
-	TabDlg *tab;
-	tab=new TabDlg(this);
-	d->tabs.append(tab);
-	connect (tab, SIGNAL ( isDying(TabDlg*) ), SLOT ( tabDying(TabDlg*) ) );
-	connect(this, SIGNAL(emitOptionsUpdate()), tab, SLOT(optionsUpdate()));
-	return tab;
-}
-
-TabDlg* PsiCon::getTabs()
-{
-	if (!d->tabs.isEmpty())
-	{
-		return d->tabs.getFirst();
-	}
-	else
-	{
-		return newTabs();
-	}
-}
-
-void PsiCon::tabDying(TabDlg* tab)
-{
-	d->tabs.remove(tab);
-}
-
-bool PsiCon::isChatTabbed(Tabbable* chat)
-{
-	for (uint i = 0; i < d->tabs.count(); ++i)
-	{
-		if ( d->tabs.at(i)->managesTab
-		(chat) )
-				return true;
-	}
-	return false;
-}
-
-Tabbable* PsiCon::getChatInTabs(QString jid){
-	for (uint i = 0; i < d->tabs.count(); ++i)
-	{
-		if ( d->tabs.at(i)->getTabPointer(jid) )
-				return d->tabs.at(i)->getTabPointer(jid);
-	}
-	return NULL;
-
-}
-
-TabDlg* PsiCon::getManagingTabs(Tabbable* chat)
-{
-	for (uint i = 0; i < d->tabs.count(); ++i)
-	{
-		if ( d->tabs.at(i)->managesTab(chat) )
-				return d->tabs.at(i);
-	}
-	return NULL;
-
-}
-
-Q3PtrList<TabDlg>* PsiCon::getTabSets()
-{
-	return &d->tabs;
-}
-
-bool PsiCon::isChatActiveWindow(Tabbable* chat)
-{
-	//returns true if chat is on top of a tab pile
-	if ( chat->isHidden() )
-	{
-		return false;
-	}
-	if (!option.useTabs)
-	{
-		return chat->isActiveWindow();
-	}
-	for (uint i = 0; i < d->tabs.count(); ++i)
-	{
-		if ( d->tabs.at(i)->isActiveWindow() )
-		{
-			if ( d->tabs.at(i)->tabOnTop( chat ) )
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
 
 void PsiCon::dialogRegister(QWidget *w)
 {
@@ -820,7 +748,7 @@ void PsiCon::deleteAllDialogs()
 		delete i->widget;
 		delete i;
 	}
-	d->tabs.clear();
+	d->tabManager->deleteAll();
 }
 
 AccountsComboBox *PsiCon::accountsComboBox(QWidget *parent, bool online_only)
@@ -836,7 +764,7 @@ void PsiCon::createAccount(const QString &name, const Jid &j, const QString &pas
 
 PsiAccount *PsiCon::createAccount(const UserAccount& acc)
 {
-	PsiAccount *pa = new PsiAccount(acc, d->contactList);
+	PsiAccount *pa = new PsiAccount(acc, d->contactList, d->capsRegistry, d->tabManager);
 	connect(&d->idle, SIGNAL(secondsIdle(int)), pa, SLOT(secondsIdle(int)));
 	connect(pa, SIGNAL(updatedActivity()), SLOT(pa_updatedActivity()));
 	connect(pa, SIGNAL(updatedAccount()), SLOT(pa_updatedAccount()));
@@ -854,9 +782,9 @@ void PsiCon::removeAccount(PsiAccount *pa)
 void PsiCon::statusMenuChanged(int x)
 {
 	if(x == STATUS_OFFLINE && !option.askOffline) {
-		setGlobalStatus(Status("","Logged out",0,false));
+		setGlobalStatus(Status(Status::Offline, "Logged out", 0));
 		if(option.useDock == true)
-			d->mainwin->setTrayToolTip(Status("","",0,false));
+			d->mainwin->setTrayToolTip(Status(Status::Offline, "", 0));
 	}
 	else {
 		if(x == STATUS_ONLINE && !option.askOnline) {
@@ -957,6 +885,12 @@ void PsiCon::saveAccounts()
 	//d->pro.acc = acc;
 	//d->pro.toFile(pathToProfileConfig(activeProfile));
 	d->saveProfile(acc);
+}
+
+void PsiCon::saveCapabilities()
+{
+	QFile file(ApplicationInfo::homeDir() + "/caps.xml");
+	d->capsRegistry->save(file);
 }
 
 void PsiCon::updateMainwinStatus()
@@ -1186,7 +1120,7 @@ void PsiCon::recvNextEvent()
 	}*/
 	PsiAccount *pa = d->contactList->queueLowestEventId();
 	if(pa)
-		pa->openNextEvent();
+		pa->openNextEvent(UserAction);
 }
 
 void PsiCon::playSound(const QString &str)
@@ -1294,7 +1228,7 @@ IconSelectPopup *PsiCon::iconSelectPopup() const
 	return d->iconSelect;
 }
 
-void PsiCon::processEvent(PsiEvent *e)
+void PsiCon::processEvent(PsiEvent *e, ActivationType activationType)
 {
 	if ( e->type() == PsiEvent::PGP ) {
 		e->account()->eventQueue()->dequeue(e);
@@ -1339,26 +1273,24 @@ void PsiCon::processEvent(PsiEvent *e)
 	}
 
 	if ( isChat ) {
+		PsiAccount* account = e->account();
+		XMPP::Jid from = e->from();
+
 		if ( option.alertOpenChats && sentToChatWindow ) {
 			// Message already displayed, need only to pop up chat dialog, so that
 			// it will be read (or marked as read)
-			ChatDlg *c = e->account()->findDialog<ChatDlg*>(e->from());
+			ChatDlg *c = account->findChatDialog(from);
 			if(!c)
-				c = e->account()->findDialog<ChatDlg*>(e->jid());
+				c = account->findChatDialog(e->jid());
 			if(!c)
 				return; // should never happen
 
-			e->account()->processChats(e->from()); // this will delete all events, corresponding to that chat dialog
-			//KIS: I changed the following line with the one following that to attempt to get tabs to behave correctly. Lots of this stuff isn't great.
-			bringToFront((QWidget *)c);
-			if ( option.useTabs)
-			{
-				TabDlg* tabSet = getManagingTabs(c);
-				tabSet->selectTab(c);
-			}
+			account->processChats(from); // this will delete all events, corresponding to that chat dialog
 		}
 		else
-			e->account()->openChat(e->from());
+
+		// as the event could be deleted just above, we're using cached account and from values
+		account->openChat(from, activationType);
 	}
 	else {
 		// search for an already opened eventdlg
@@ -1449,7 +1381,7 @@ void PsiCon::s5b_init()
 
 void PsiCon::doSleep()
 {
-	setGlobalStatus(Status("",tr("Computer went to sleep"),0,false));
+	setGlobalStatus(Status(Status::Offline, tr("Computer went to sleep"), 0));
 }
 
 void PsiCon::doWakeup()

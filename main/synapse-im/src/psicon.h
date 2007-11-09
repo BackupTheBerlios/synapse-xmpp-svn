@@ -25,8 +25,9 @@
 #include <QList>
 
 #include "profiles.h"
+#include "psiactions.h"
 
-#include "tabbable.h"
+#include "tabbablewidget.h"
 
 
 using namespace XMPP;
@@ -80,14 +81,6 @@ public:
 	ProxyManager *proxy() const;
 	FileTransDlg *ftdlg() const;
 
-	TabDlg* getTabs();
-	TabDlg*	newTabs();
-	bool isChatTabbed(Tabbable*);
-	bool isChatActiveWindow(Tabbable*);
-	Tabbable* getChatInTabs(QString);
-	TabDlg* getManagingTabs(Tabbable*);
-	Q3PtrList<TabDlg>* getTabSets();
-
 	QWidget *dialogFind(const char *className);
 	void dialogRegister(QWidget *w);
 	void dialogUnregister(QWidget *w);
@@ -121,7 +114,7 @@ public:
 	void buildToolbars();
 
 	IconSelectPopup *iconSelectPopup() const;
-	void processEvent(PsiEvent *);
+	void processEvent(PsiEvent*, ActivationType activationType);
 
 	QString lastStatusString;
 
@@ -161,12 +154,12 @@ public slots:
 	void setStatusFromDialog(const XMPP::Status &, bool withPriority, int pos = -1);
 	void proxy_settingsChanged();
 	void updateMainwinStatus();
-	void tabDying(TabDlg*);
 
 	void mainWinGeomChanged(QRect saveableGeometry);
 
 private slots:
 	void saveAccounts();
+	void saveCapabilities();
 	void optionsUpdate();
 
 private:
@@ -182,6 +175,8 @@ private:
 	void setToggles(bool tog_offline, bool tog_away, bool tog_agents, bool tog_hidden, bool tog_self);
 	void getToggles(bool *tog_offline, bool *tog_away, bool *tog_agents, bool *tog_hidden, bool *tog_self);
 	void promptUserToCreateAccount();
+
+	void registerCaps(const QString& ext, const QStringList& features);
 
 	friend class EventQueue;
 	int getId();

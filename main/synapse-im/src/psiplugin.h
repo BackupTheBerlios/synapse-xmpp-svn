@@ -29,6 +29,7 @@
 #include <QObject>
 #include <QtCore>
 #include <QtXml>
+#include <QDomNode>
 
 class PsiAccount;
 class QDomElement;

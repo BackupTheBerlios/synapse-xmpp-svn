@@ -31,6 +31,7 @@
 
 #include "xmpp_rosterx.h"
 #include "xmpp_status.h"
+#include "psiactions.h"
 
 namespace XMPP
 {
@@ -60,6 +61,7 @@ class BookmarkManager;
 class URLBookmark;
 class ConferenceBookmark;
 class VoiceCaller;
+class CapsRegistry;
 class UserAccount;
 class ContactProfile;
 class QWidget;
@@ -78,6 +80,7 @@ class QHostAddress;
 class AvatarFactory;
 class PEPManager;
 class ServerInfoManager;
+class TabManager;
 class GArchive;
 class SIMContactListAccount;
 //#ifdef GOOGLE_FT
@@ -94,7 +97,7 @@ class PsiAccount : public QObject
 {
 	Q_OBJECT
 public:
-	PsiAccount(const UserAccount &acc, PsiContactList *parent);
+	PsiAccount(const UserAccount &acc, PsiContactList *parent, CapsRegistry* capsRegistry, TabManager *tabManager);
 	~PsiAccount();
 
 	void init();
@@ -102,6 +105,7 @@ public:
 	bool enabled() const;
 	void setEnabled(bool e = TRUE);
 
+	bool isAvailable() const;
 	bool isActive() const;
 	bool isConnected() const;
 	const QString &name() const;
@@ -140,6 +144,8 @@ public:
 	
 	bool useAMP() const;
 	bool notifyNewMail() const;
+
+	ChatDlg* findChatDialog(const Jid& jid) const;
 
 	template<typename T>
 	inline T findDialog(const Jid& jid = Jid(), bool compareResource = true) const { 
@@ -204,6 +210,10 @@ public:
 
 	void logEvent(const Jid &, PsiEvent *);
 
+	enum xmlRingType {RingXmlIn, RingXmlOut, RingSysMsg};
+	class xmlRingElem { public: int type; QDateTime time; QString xml; };
+	QList< xmlRingElem > dumpRingbuf();
+
 signals:
 	void disconnected();
 	void reconnecting();
@@ -228,7 +238,7 @@ public slots:
 	void incomingVoiceCall(const Jid&, QString sid);
 	
 	void secondsIdle(int);
-	void openNextEvent();
+	void openNextEvent(ActivationType activationType);
 	int forwardPendingEvents(const Jid &jid);
 	void autoLogin();
 
@@ -378,7 +388,10 @@ protected:
 	void sessionStarted();
 
 private slots:
-	void handleEvent(PsiEvent *);
+	void eventFromXml(PsiEvent* e);
+
+private:
+	void handleEvent(PsiEvent* e, ActivationType activationType);
 
 public:
 	class Private;
@@ -390,8 +403,8 @@ private:
 	void simulateContactOffline(UserListItem *);
 	void simulateRosterOffline();
 	void cpUpdate(const UserListItem &, const QString &rname="", bool fromPresence=false);
-	void queueEvent(PsiEvent *);
-	void openNextEvent(const UserListItem &);
+	void queueEvent(PsiEvent* e, ActivationType activationType);
+	void openNextEvent(const UserListItem &, ActivationType activationType);
 	void updateReadNext(const Jid &);
 	ChatDlg *ensureChatDlg(const Jid &);
 	void lastStepLogin();
@@ -403,11 +416,11 @@ private:
 	void verifyStatus(const Jid &j, const Status &s);
 
 	void processChats(const Jid &);
-	void openChat(const Jid &);
+	void openChat(const Jid &, ActivationType activationType);
 	EventDlg *ensureEventDlg(const Jid &);
 	friend class PsiCon;
 
-	bool isDisconnecting, notifyOnlineOk, doReconnect, usingAutoStatus, rosterDone, presenceSent, v_isActive;
+	bool isDisconnecting, notifyOnlineOk, doReconnect, rosterDone, presenceSent, v_isActive;
 	void cleanupStream();
 
 	QWidget* findDialog(const QMetaObject& mo, const Jid& jid, bool compareResource) const;

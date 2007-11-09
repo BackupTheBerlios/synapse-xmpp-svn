@@ -30,24 +30,10 @@
 #include "filetransfer.h"
 #include "applicationinfo.h"
 #include "psicontactlist.h"
+#include "atomicxmlfile.h"
 
 using namespace XMPP;
 using namespace XMLHelper;
-
-static PsiEvent *copyPsiEvent(PsiEvent *fe)
-{
-	PsiEvent *e = 0;
-	if ( fe->inherits("MessageEvent") )
-		e = new MessageEvent( *((MessageEvent *)fe) );
-	else if ( fe->inherits("AuthEvent") )
-		e = new AuthEvent( *((AuthEvent *)fe) );
-	else if ( fe->inherits("PGPEvent") )
-		e = new PGPEvent( *((PGPEvent *)fe) );
-	else
-		qWarning("copyPsiEvent(): Failed: unknown event type: %s", fe->className());
-
-	return 0;
-}
 
 //----------------------------------------------------------------------------
 // DummyStream
@@ -193,6 +179,11 @@ int PsiEvent::priority() const
 	return Options::EventPriorityDontCare;
 }
 
+QString PsiEvent::description() const
+{
+	return QString();
+}
+
 PsiEvent *PsiEvent::copy() const
 {
 	return 0;
@@ -293,6 +284,13 @@ bool MessageEvent::fromXml(PsiCon *psi, PsiAccount *account, const QDomElement *
 		DummyStream stream;
 		Stanza s = stream.createStanza(msg);
 		v_m.fromStanza(s, 0); // FIXME: fix tzoffset?
+
+		// if message was not spooled, it will be initialized with the
+		// current datetime. we want to reset it back to the original
+		// receive time
+		if (!v_m.timeStamp().secsTo(QDateTime::currentDateTime()))
+			v_m.setTimeStamp(timeStamp());
+
 		return true;
 	}
 
@@ -307,6 +305,22 @@ int MessageEvent::priority() const
 		return option.eventPriorityChat;
 
 	return option.eventPriorityMessage;
+}
+
+QString MessageEvent::description() const
+{
+	QStringList result;
+	if (!v_m.subject().isEmpty())
+		result << v_m.subject();
+	if (!v_m.body().isEmpty())
+		result << v_m.body();
+	foreach(Url url, v_m.urlList()) {
+		QString text = url.url();
+		if (!url.desc().isEmpty())
+			text += QString("(%1)").arg(url.desc());
+		result << text;
+	}
+	return result.join("\n");
 }
 
 PsiEvent *MessageEvent::copy() const
@@ -392,6 +406,21 @@ int AuthEvent::priority() const
 	return option.eventPriorityAuth;
 }
 
+QString AuthEvent::description() const
+{
+	QString result;
+	if (authType() == "subscribe")
+		result = tr("This user wants to subscribe to your presence.");
+	else if (authType() == "subscribed")
+		result = tr("You are now authorized.");
+	else if (authType() == "unsubscribed")
+		result = tr("Your authorization has been removed!");
+	else
+		Q_ASSERT(false);
+
+	return result;
+}
+
 PsiEvent *AuthEvent::copy() const
 {
 	return new AuthEvent( *this );
@@ -410,6 +439,13 @@ FileEvent::FileEvent(const Jid &j, FileTransfer *_ft, PsiAccount *acc)
 FileEvent::~FileEvent()
 {
 	delete ft;
+}
+
+FileEvent::FileEvent(const FileEvent &from)
+: PsiEvent(from.account())
+{
+	v_from = from.v_from;
+	ft = from.ft->copy();
 }
 
 int FileEvent::priority() const
@@ -445,6 +481,16 @@ FileTransfer *FileEvent::takeFileTransfer()
 	return _ft;
 }
 
+QString FileEvent::description() const
+{
+	return tr("This user wants to send you a file.");
+}
+
+PsiEvent *FileEvent::copy() const
+{
+	return new FileEvent( *this );
+}
+
 //----------------------------------------------------------------------------
 // HttpAuthEvent
 //----------------------------------------------------------------------------
@@ -471,6 +517,12 @@ HttpAuthEvent::HttpAuthEvent(const PsiHttpAuthRequest &req, PsiAccount *acc)
 HttpAuthEvent::~HttpAuthEvent()
 {
 }
+
+QString HttpAuthEvent::description() const
+{
+	return tr("HTTP Authentication Request");
+}
+
 //----------------------------------------------------------------------------
 // RosterExchangeEvent
 //----------------------------------------------------------------------------
@@ -517,6 +569,11 @@ void RosterExchangeEvent::setText(const QString& text)
 	v_text = text;
 }
 
+QString RosterExchangeEvent::description() const
+{
+	return tr("This user wants to modify your roster.");
+}
+
 //----------------------------------------------------------------------------
 // Status
 //----------------------------------------------------------------------------
@@ -553,42 +610,38 @@ void StatusEvent::setStatus(const XMPP::Status& s)
 }*/
 
 //----------------------------------------------------------------------------
-// EventQueue
+// EventItem
 //----------------------------------------------------------------------------
 
-class EventItem
+EventItem::EventItem(PsiEvent *_e, int i)
 {
-public:
-        EventItem(PsiEvent *_e, int i)
-	{
-		e = _e;
-		v_id = i;
-	}
+	e = _e;
+	v_id = i;
+}
 
-	EventItem(const EventItem &from)
-	{
-		e = copyPsiEvent(from.e);
-		v_id = from.v_id;
-	}
+EventItem::EventItem(const EventItem &from)
+{
+	e = from.e->copy();
+	v_id = from.v_id;
+}
 
-	~EventItem()
-	{
-	}
+EventItem::~EventItem()
+{
+}
 
-	int id() const
-	{
-		return v_id;
-	}
+int EventItem::id() const
+{
+	return v_id;
+}
 
-	PsiEvent *event() const
-	{
-		return e;
-	}
+PsiEvent* EventItem::event() const
+{
+	return e;
+}
 
-private:
-	PsiEvent *e;
-	int v_id;
-};
+//----------------------------------------------------------------------------
+// EventQueue
+//----------------------------------------------------------------------------
 
 class EventQueue::Private
 {
@@ -679,12 +732,11 @@ void EventQueue::dequeue(PsiEvent *e)
 	foreach(EventItem *i, d->list) {
 		if ( e == i->event() ) {
 			d->list.remove(i);
+			emit queueChanged();
 			delete i;
 			return;
 		}
 	}
-
-	emit queueChanged();
 }
 
 PsiEvent *EventQueue::dequeue(const Jid &j, bool compareRes)
@@ -855,7 +907,7 @@ EventQueue &EventQueue::operator= (const EventQueue &from)
 
 	foreach(EventItem *i, from.d->list) {
 		PsiEvent *e = i->event();
-		enqueue( copyPsiEvent(e) );
+		enqueue( e->copy() );
 	}
 
 	return *this;
@@ -914,7 +966,7 @@ bool EventQueue::fromXml(const QDomElement *q)
 		}
 
 		if ( event )
-			emit handleEvent( event );
+			emit eventFromXml( event );
 	}
 
 	return true;
@@ -923,33 +975,19 @@ bool EventQueue::fromXml(const QDomElement *q)
 bool EventQueue::toFile(const QString &fname)
 {
 	QDomDocument doc;
-
 	QDomElement element = toXml(&doc);
 	doc.appendChild(element);
 
-	QFile f( fname );
-	if( !f.open(QIODevice::WriteOnly) )
-		return FALSE;
-	QTextStream t;
-	t.setDevice( &f );
-	t.setEncoding( QTextStream::UnicodeUTF8 );
-	t << doc.toString(4);
-	f.close();
-
-	return TRUE;
+	AtomicXmlFile f(fname);
+	return f.saveDocument(doc);
 }
 
 bool EventQueue::fromFile(const QString &fname)
 {
-	QString confver;
+	AtomicXmlFile f(fname);
 	QDomDocument doc;
-
-	QFile f(fname);
-	if(!f.open(QIODevice::ReadOnly))
-		return FALSE;
-	if(!doc.setContent(&f, true))
-		return FALSE;
-	f.close();
+	if (!f.loadDocument(&doc))
+		return false;
 
 	QDomElement base = doc.documentElement();
 	return fromXml(&base);

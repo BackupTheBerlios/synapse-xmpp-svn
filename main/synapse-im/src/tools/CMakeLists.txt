@@ -9,6 +9,7 @@ include(tools/advwidget/CMakeLists.txt)
 #include(tools/contactlist/CMakeLists.txt)
 include(tools/grepshortcutkeydlg/CMakeLists.txt)
 include(tools/tunecontroller/CMakeLists.txt)
+include(tools/atomicxmlfile/CMakeLists.txt)
 
 set(tools_SRCS 
 	${advwidget_SRCS}
@@ -22,6 +23,7 @@ set(tools_SRCS
 	${spellchecker_SRCS}
 	${contactlist_SRCS}
 	${tunecontroller_SRCS}
+	${atomicxmlfile_SRCS}
 )
 set(tools_noMOC_SRCS 
 	${advwidget_noMOC_SRCS}
@@ -35,6 +37,7 @@ set(tools_noMOC_SRCS
 	${spellchecker_noMOC_SRCS}
 	${contactlist_noMOC_SRCS}
 	${tunecontroller_noMOC_SRCS}
+	${atomicxmlfile_noMOC_SRCS}
 )
 
 set(tools_UIS
@@ -65,6 +68,7 @@ set(tools_H
 	${spellchecker_H}
 	${contactlist_H}
 	${tunecontroller_H}
+	${atomicxmlfile_H}
 )
 
 MY_AUTOMOC(tools_SRCS)

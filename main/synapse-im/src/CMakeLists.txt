@@ -57,6 +57,12 @@ include(../iris/CMakeLinks.txt)
 
 include(privacy/CMakeLists.txt)
 
+include(capabilities/CMakeLists.txt)
+include(irisprotocol/CMakeLists.txt)
+include(utilities/CMakeLists.txt)
+include(tabs/CMakeLists.txt)
+include(protocol/CMakeLists.txt)
+
 if(NOT WIN32)
 add_definitions(-DSYNAPSE_IM_DATADIR=\\\"${CMAKE_INSTALL_PREFIX}/share/synapse-im\\\")
 endif(NOT WIN32)
@@ -121,9 +127,6 @@ set(synapse-im_noMOC_SRCS
 	antievil.cpp
 	applicationinfo.cpp
 	bookmarkmanager.cpp
-	capsmanager.cpp
-	capsregistry.cpp
-	capsspec.cpp
 	certutil.cpp
 	changepwdlg.cpp
 	chateditproxy.cpp
@@ -182,7 +185,8 @@ set(synapse-im_noMOC_SRCS
 	statusdlg.cpp
 	statuspreset.cpp
 	systeminfo.cpp
-	tabdlg.cpp
+	psichatdlg.cpp
+	chattoolbox.cpp
 	textutil.cpp
 	timeserver.cpp
 	tipdlg.cpp
@@ -239,8 +243,6 @@ set(synapse-im_H
 	antievil.h
 	avatars.h
 	bookmarkmanager.h
-	capsmanager.h
-	capsregistry.h
 	changepwdlg.h
 	chatdlg.h
 	chateditproxy.h
@@ -274,7 +276,10 @@ set(synapse-im_H
 	profiledlg.h
 	proxy.h
 	psiaccount.h
+	psiactions.h
 	psiapplication.h
+	psichatdlg.h
+	chattoolbox.h
 	psicon.h
 	psicontactlist.h
 	psievent.h
@@ -293,7 +298,6 @@ set(synapse-im_H
 	sslcertdlg.h
 	statusdlg.h
 	tasklist.h
-	tabdlg.h
 	timeserver.h
 	tipdlg.h
 	translationmanager.h
@@ -386,6 +390,16 @@ add_executable(synapse-im
 	${privacy_SRCS}
 	${privacy_moc_SRCS}
 	${privacy_UIS_H}
+	${capabilities_SRCS}
+	${capabilities_moc_SRCS}
+	${utilities_SRCS}
+	${utilities_moc_SRCS}
+	${tabs_SRCS}
+	${tabs_moc_SRCS}
+	${irisprotocol_SRCS}
+	${irisprotocol_moc_SRCS}
+	${protocol_SRCS}
+	${protocol_moc_SRCS}
 #	${jingle_SRCS}
 	${synapse-im_UIS_H}
 	${options_UIS_H}

@@ -139,26 +139,21 @@ private:
 
 public slots:
 	void addEmoticon(const PsiIcon *icon) {
-		if ( !dlg->isActiveWindow() )
-		     return;
-
-		QString text;
-
-		QHash<QString,QString> itext = icon->text();
-		for ( QHash<QString,QString>::ConstIterator it = itext.begin(); it != itext.end(); ++it) {
-			if (  !it->isEmpty() ) {
-				text = (*it) + " ";
-				break;
-			}
+		if ( !dlg->isActiveTab() ) {
+			return;
 		}
 
-		if ( !text.isEmpty() )
-			mle()->insert( text );
+		QString text = icon->defaultText();
+
+		if (!text.isEmpty()) {
+			mle()->insert(text + " ");
+		}
 	}
 
 	void addEmoticon(QString text) {
-		if ( !dlg->isActiveWindow() )
-		     return;
+		if ( !dlg->isActiveTab() ) {
+			return;
+		}
 
 		mle()->insert( text + " " );
 	}
@@ -461,8 +456,8 @@ public:
 	}
 };
 
-GCMainDlg::GCMainDlg(PsiAccount *pa, const Jid &j)
-	: Tabbable(j, pa)
+GCMainDlg::GCMainDlg(PsiAccount *pa, const Jid &j, TabManager *tabManager)
+	: TabbableWidget(j, pa, tabManager)
 {
 	setAttribute(Qt::WA_DeleteOnClose);
   	if ( option.brushedMetal )
@@ -818,7 +813,7 @@ void GCMainDlg::doClearButton()
 void GCMainDlg::openFind()
 {
 	if(d->findDlg)
-		bringToFront(d->findDlg);
+		::bringToFront(d->findDlg);
 	else {
 		d->findDlg = new GCFindDlg(d->lastSearch, this);
 		connect(d->findDlg, SIGNAL(find(const QString &)), SLOT(doFind(const QString &)));
@@ -829,7 +824,7 @@ void GCMainDlg::openFind()
 void GCMainDlg::configureRoom()
 {
 	if(d->configDlg)
-		bringToFront(d->configDlg);
+		::bringToFront(d->configDlg);
 	else {
 		GCUserViewItem* c = (GCUserViewItem*)ui_.lv_users->findEntry(d->self);
 		d->configDlg = new MUCConfigDlg(d->mucManager, this);

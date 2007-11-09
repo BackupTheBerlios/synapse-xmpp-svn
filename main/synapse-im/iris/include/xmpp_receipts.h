@@ -1,6 +1,6 @@
 /*
- * capsspec.h
- * Copyright (C) 2006  Remko Troncon
+ * xmpp_receipts.h - XEP-0184 support helper file
+ * Copyright (C) 2007  Michail Pishchagin
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,32 +18,15 @@
  *
  */
 
-#ifndef CAPSSPEC_H
-#define CAPSSPEC_H
+#ifndef XMPP_RECEIPTS_H
+#define XMPP_RECEIPTS_H
 
-#include <QList>
-#include <QString>
-
-class CapsSpec;
-typedef QList<CapsSpec> CapsSpecs;
-
-class CapsSpec
-{
-	public:
-		CapsSpec();
-		CapsSpec(const QString&, const QString&, const QString&);
-		const QString& node() const; 
-		const QString& version() const; 
-		const QString& extensions() const; 
-		CapsSpecs flatten() const;
-
-		bool operator==(const CapsSpec&) const;
-		bool operator!=(const CapsSpec&) const;
-		bool operator<(const CapsSpec&) const;
-		
-	private:
-		QString node_, ver_, ext_;
-};
-
+namespace XMPP {
+	typedef enum {
+		ReceiptNone,
+		ReceiptRequest,
+		ReceiptReceived
+	} MessageReceipt;
+}
 
 #endif
