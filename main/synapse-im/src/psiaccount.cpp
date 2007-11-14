@@ -4467,6 +4467,7 @@ void PsiAccount::openGroupChat(const Jid &j)
 	connect(d->psi, SIGNAL(emitOptionsUpdate()), w, SLOT(optionsUpdate()));
 	w->ensureTabbedCorrectly();
 	w->show();
+//??	d->tabManager->getManagingTabs(w)->selectTab(w);
 }
 
 bool PsiAccount::groupChatJoin(const QString &host, const QString &room, const QString &nick, const QString& pass, bool nohistory)

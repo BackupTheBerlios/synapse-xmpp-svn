@@ -173,6 +173,7 @@ void PsiTabWidget::addTab(QWidget* widget, QString name)
 	stacked_->addWidget(widget);
 	tabBar_->addTab(name);
 	showPage(currentPage());
+
 	if(count() > 1) {
 		closeButton_->show();
 		downButton_->show();

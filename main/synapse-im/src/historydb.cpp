@@ -176,7 +176,7 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 		ensureDate(j, m.timeStamp().date());
 		if (m.containsHTML())
 			html = m.htmlString();
-		QSqlQuery query("INSERT INTO MSG_" + j + " VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" + html + "')", db);
+		QSqlQuery query("INSERT INTO MSG_" + j + " VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" /*+ html*/ + "')", db);
 	}
 	else if(e->type() == PsiEvent::File && option.historyLogFileTransfers)
 	{

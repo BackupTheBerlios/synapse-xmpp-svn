@@ -733,7 +733,7 @@ void ChatDlg::toggleBlack()
 {
 	if(!chatEdit()->isEnabled())
 		return;
-	chatEdit()->setTextColor(QColor(255,255,255));
+	chatEdit()->setTextColor(QColor(0,0,0));
 }
 
 bool ChatDlg::isEncryptionEnabled() const
@@ -802,6 +802,7 @@ void ChatDlg::doSend()
 	m.setHTMLString(body);
 
 	m_ = m;
+
 
 	// Request events
 #ifdef USE_XEP0022
@@ -1207,9 +1208,10 @@ QString ChatDlg::messageText(const XMPP::Message& m)
 	QString txt;
 
 	if (m.containsHTML() && PsiOptions::instance()->getOption("options.html.chat.render").toBool() && (!m.html().text().isEmpty() || !m.htmlString().isEmpty())) {
+		// Dirty hack !!
 		if(!m.html().text().isEmpty())
 			txt = m.html().toString("span");
-		else
+		if(!m.htmlString().isEmpty())
 			txt = m.htmlString();
 
 		if (emote) {
