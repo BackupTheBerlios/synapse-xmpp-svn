@@ -789,8 +789,8 @@ void ChatDlg::doSend()
 		start1 = l.indexOf("<a",start1);
 		if(start1 == -1)
 			break;
-		int start2 = l.indexOf("href=", start1 + 3) + 6;
-		int end2 = l.indexOf("\"",start2);
+		int start2 = l.indexOf(">", start1 + 3) + 1;
+		int end2 = l.indexOf("<",start2);
 		int end1 = l.indexOf("</a>",end2)+4;
 		body = body.replace(l.mid(start2,end2-start2), l.mid(start1, end1-start1));
 		start1 += end1 - start1;
