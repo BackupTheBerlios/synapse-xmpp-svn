@@ -143,6 +143,8 @@ int PsiTabWidget::count()
  */
 QWidget* PsiTabWidget::currentPage()
 {
+	if (currentPageIndex() == -1)
+		return 0;
 	return widgets_[currentPageIndex()];
 }
 
@@ -151,7 +153,6 @@ void PsiTabWidget::tab_currentChanged( int tab )
 	setCurrentPage(tab);
 	emit currentChanged(currentPage());
 }
-
 
 /**
  * Returns the index of the current page
@@ -250,7 +251,7 @@ int PsiTabWidget::getIndex(QWidget* widget) {
 /**
  * Set the text of the tab.
  */
-void PsiTabWidget::setTabLabel(QWidget* widget, const QString& label) {
+void PsiTabWidget::setTabText(QWidget* widget, const QString& label) {
 	int index = getIndex(widget);
 	if (index == -1) {
 		return;

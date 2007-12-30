@@ -93,7 +93,6 @@ public:
 	void removeAccount(PsiAccount *);
 
 	void playSound(const QString &);
-	void raiseMainwin();
 
 	AccountsComboBox *accountsComboBox(QWidget *parent=0, bool online_only = false);
 
@@ -154,6 +153,8 @@ public slots:
 	void setStatusFromDialog(const XMPP::Status &, bool withPriority, int pos = -1);
 	void proxy_settingsChanged();
 	void updateMainwinStatus();
+	void doOpenUri(const QUrl &uri);
+	void raiseMainwin();
 
 	void mainWinGeomChanged(QRect saveableGeometry);
 
@@ -161,6 +162,7 @@ private slots:
 	void saveAccounts();
 	void saveCapabilities();
 	void optionsUpdate();
+	void forceSavePreferences();
 
 private:
 	class Private;
@@ -175,6 +177,7 @@ private:
 	void setToggles(bool tog_offline, bool tog_away, bool tog_agents, bool tog_hidden, bool tog_self);
 	void getToggles(bool *tog_offline, bool *tog_away, bool *tog_agents, bool *tog_hidden, bool *tog_self);
 	void promptUserToCreateAccount();
+	QString optionsFile() const;
 
 	void registerCaps(const QString& ext, const QStringList& features);
 

@@ -78,7 +78,12 @@ QWidget *OptionsTabShortcuts::widget()
 	/* step through the shortcut groups e.g. chatdlg */
 	foreach(QString shortcutGroup, shortcutGroups) {
 		topLevelItem = new QTreeWidgetItem(d->treeShortcuts);
-		topLevelItem->setText(0, translateShortcut(options->getComment(shortcutGroup)));
+
+		QString comment = options->getComment(shortcutGroup);
+		if (comment.isNull()) {
+			comment = "Unnamend group";
+		}
+		topLevelItem->setText(0, translateShortcut(comment));
 		topLevelItem->setData(0, OPTIONSTREEPATH, QVariant(shortcutGroup));
 		topLevelItem->setData(0, ITEMKIND, QVariant((int)OptionsTabShortcuts::TopLevelItem));
 		topLevelItem->setExpanded(true);
@@ -150,8 +155,8 @@ void OptionsTabShortcuts::applyOptions(Options *opt) {
 				options->setOption(optionsPath, QVariant(keySequences));
 			}
 			else {
-				/* zero key sequences, so set an empty variant, so it will be written empty to the options.xml */
-				options->setOption(optionsPath, QVariant());
+				/* zero key sequences, so set an empty string, so it will be written empty to the options.xml */
+				options->setOption(optionsPath, "");
 			}
 		}
 	}
@@ -195,6 +200,9 @@ void OptionsTabShortcuts::restoreOptions(const Options *opt)
 				
 				keys = ShortcutManager::instance()->shortcuts(shortcut.mid(QString("options.shortcuts").length() + 1));
 				comment = options->getComment(shortcut);
+				if (comment.isNull()) {
+					comment = "Unnamend group";
+				}
 				
 				/* create the TreeWidgetItem and set the Data the Kind and it's Optionspath and append it */
 				shortcutItem = new QTreeWidgetItem(topLevelItem);

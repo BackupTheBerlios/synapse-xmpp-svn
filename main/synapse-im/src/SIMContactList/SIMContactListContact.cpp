@@ -31,7 +31,7 @@
 #include "qclipboard.h"
 
 SIMContactListContact::SIMContactListContact(const UserListItem &_u, PsiAccount *_pa, SIMContactList *cl, SIMContactListItem *parent)
-:SIMContactListItem(SIMContactListItem::Contact, _pa, cl, parent), alertIcon_(NULL)
+:SIMContactListItem(SIMContactListItem::Contact, _pa, cl, parent), alertIcon_(NULL), blocked_(false)
 {
 	setUserListItem(_u);
 }
@@ -55,6 +55,10 @@ QPixmap SIMContactListContact::state()
 	if(alertIcon_) {
 		return alertIcon_->pixmap();
 	}
+
+	if(blocked_)
+		return IconsetFactory::icon("psi/stop").pixmap();
+
 	return PsiIconset::instance()->statusPtr(&u_)->pixmap();
 }
 
@@ -120,6 +124,12 @@ bool SIMContactListContact::alerting()
 void SIMContactListContact::setAlertIcon(PsiIcon *icon)
 {
 	alertIcon_ = icon;
+}
+
+void SIMContactListContact::setBlocked(bool blocked)
+{
+	blocked_ = blocked;
+	setUserListItem(u_);
 }
 
 void SIMContactListContact::setUserListItem(const UserListItem &_u)
@@ -204,6 +214,8 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	QAction *avatAssign = NULL;
 	QAction *avatClear = NULL;
 	QAction *pgp = NULL;
+	QAction *block = NULL;
+	QAction *unblock = NULL;
 	QAction *copyJid = NULL;
 	QAction *copyStatusMsg = NULL;
 	QAction *goToUrl = NULL;
@@ -302,11 +314,17 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		}
 	}
 
-	if(!self && online && isAgent)
-		if(!u_.isAvailable())
-			logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_ONLINE).icon(), SIMContactList::tr("&Log on"));
+	if(!self && online)
+		if(isAgent) {
+			if(!u_.isAvailable())
+				logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_ONLINE).icon(), SIMContactList::tr("&Log on"));
+			else
+				logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_OFFLINE).icon(), SIMContactList::tr("&Log off"));
+		}
+		if(blocked_)
+			unblock = pm.addAction(IconsetFactory::icon("psi/stop").icon(), SIMContactList::tr("Unblock contact"));
 		else
-			logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_OFFLINE).icon(), SIMContactList::tr("&Log off"));
+			block = pm.addAction(IconsetFactory::icon("psi/stop").icon(), SIMContactList::tr("Block contact"));
 
 	copyJid = pm.addAction(SIMContactList::tr("Copy JID"));
 	if(!description().isEmpty()) {
@@ -470,6 +488,10 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			Status s=makeStatus(STATUS_OFFLINE,"");
 			account()->actionAgentSetStatus(jid(), s);
 		}
+	} else if (ret == unblock) {
+		account()->unblockContact(jid().bare());
+	} else if (ret == block) {
+		account()->blockContact(jid().bare());
 	} else if (ret == copyJid) {
 		QClipboard *clipboard = QApplication::clipboard();
 		QString cliptext = jid().bare();

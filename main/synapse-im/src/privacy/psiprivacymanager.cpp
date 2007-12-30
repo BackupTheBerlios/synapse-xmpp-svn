@@ -42,21 +42,40 @@ public:
 	}
 	
 	bool take(const QDomElement &e) {
-		if(e.tagName() != "iq" || e.attribute("type") != "set")
+		if(e.tagName() != "iq" || (e.attribute("type") != "set" && e.attribute("type") != "result"))
 			return false;
 		
 		QString ns = queryNS(e);
 		if(ns == "jabber:iq:privacy") {
-			// TODO: Do something with update
+			if(e.attribute("type") == "set") {
+				// TODO: Do something with update
 			
-			// Confirm receipt
-			QDomElement iq = createIQ(doc(), "result", e.attribute("from"), e.attribute("id"));
-			send(iq);
-			return true;
+				// Confirm receipt
+				QDomElement iq = createIQ(doc(), "result", e.attribute("from"), e.attribute("id"));
+				send(iq);
+
+				bool found = false;
+				QDomElement q = queryTag(e);
+				QDomElement listTag = findSubTag(q,"list",&found);
+				if(found) {
+					emit updated(listTag.attribute("name"), false);
+				}
+				return true;
+/*			} else if(e.attribute("type") == "result") {
+				bool found = false;
+				QDomElement q = queryTag(e);
+				QDomElement activeTag = findSubTag(q,"active",&found);
+				if(found) {
+					emit updated(activeTag.attribute("name"), true);
+					return true;
+				}*/
+			}
 		}
 
 		return false;
 	}
+signals:
+	void updated(const QString&, bool force);
 };
 
 // -----------------------------------------------------------------------------
@@ -264,7 +283,8 @@ public:
 
 PsiPrivacyManager::PsiPrivacyManager(XMPP::Task* rootTask) : rootTask_(rootTask), getDefault_waiting_(false), block_waiting_(false)
 {
-   listener_ = new PrivacyListListener(rootTask_);	
+	listener_ = new PrivacyListListener(rootTask_);	
+	connect(listener_, SIGNAL(updated(const QString&, bool)), this, SLOT(updated(const QString&, bool)));
 }
 
 PsiPrivacyManager::~PsiPrivacyManager()
@@ -297,21 +317,42 @@ void PsiPrivacyManager::block(const QString& target)
 	}
 }
 
+void PsiPrivacyManager::unblock(const QString& target)
+{
+	unblock_targets_.push_back(target);
+	if (!block_waiting_) {
+		block_waiting_ = true;
+		connect(this,SIGNAL(defaultListAvailable(const PrivacyList&)),SLOT(block_getDefaultList_success(const PrivacyList&)));
+		connect(this,SIGNAL(defaultListError()),SLOT(block_getDefaultList_error()));
+		getDefaultList();
+	}
+}
+
 void PsiPrivacyManager::block_getDefaultList_success(const PrivacyList& l_)
 {
 	PrivacyList l = l_;
-	disconnect(this,SIGNAL(defaultListAvailable(const PrivacyList&)),this,SLOT(block_getDefault_success(const PrivacyList&)));
-	disconnect(this,SIGNAL(defaultListError()),this,SLOT(block_getDefault_error()));
+	disconnect(this,SIGNAL(defaultListAvailable(const PrivacyList&)),this,SLOT(block_getDefaultList_success(const PrivacyList&)));
+	disconnect(this,SIGNAL(defaultListError()),this,SLOT(block_getDefaultList_error()));
 	block_waiting_ = false;
 	while (!block_targets_.isEmpty()) 
 		l.insertItem(0,PrivacyListItem::blockItem(block_targets_.takeFirst()));
+	while (!unblock_targets_.isEmpty()) {
+		QString jid = unblock_targets_.takeFirst();
+		for(int i = 0; i < l.items().count(); ++i) {
+			if (l.items().at(i).value() == jid) {
+				l.removeItem(i);
+				i--;
+			}
+		}
+	}
+	printf("%d\n", l.items().count());
 	changeList(l);
 }
 
 void PsiPrivacyManager::block_getDefaultList_error()
 {
-	disconnect(this,SIGNAL(defaultListAvailable(const PrivacyList&)),this,SLOT(block_getDefault_success(const PrivacyList&)));
-	disconnect(this,SIGNAL(defaultListError()),this,SLOT(block_getDefault_error()));
+	disconnect(this,SIGNAL(defaultListAvailable(const PrivacyList&)),this,SLOT(block_getDefaultList_success(const PrivacyList&)));
+	disconnect(this,SIGNAL(defaultListError()),this,SLOT(block_getDefaultList_error()));
 	block_waiting_ = false;
 	block_targets_.clear();
 }
@@ -443,6 +484,12 @@ void PsiPrivacyManager::receiveLists()
 	}
 	
 	if (t->success()) {
+		if(!t->activeList().isEmpty())
+			updated(t->activeList(), true);
+		else {
+			changeActiveList(t->defaultList());
+			updated(t->defaultList(),true);
+		}
 		emit listsReceived(t->defaultList(),t->activeList(),t->lists());
 	}
 	else {
@@ -465,6 +512,39 @@ void PsiPrivacyManager::receiveList()
 	else {
 		qDebug("privacy.cpp: Error in list receiving.");
 		emit listError();
+	}
+}
+
+void PsiPrivacyManager::updated(const QString &name, bool force)
+{
+	if(!force && (active_ != name))
+		return;
+	else
+		active_ = name;
+
+	GetPrivacyListTask* t = new GetPrivacyListTask(rootTask_, name);
+	connect(t,SIGNAL(finished()),SLOT(activeListReceived()));
+	t->go(true);
+}
+
+void PsiPrivacyManager::activeListReceived()
+{
+	GetPrivacyListTask *t = (GetPrivacyListTask*)sender();
+	if (t->success()) {
+		QList<PrivacyListItem> pli = t->list().items();
+		QList<PrivacyListItem>::const_iterator it;
+		for(it = pli.begin(); it != pli.end(); ++it)
+			if((*it).isBlock()) {
+				if(last_.contains(*it))
+					last_.removeAll(*it);
+				else
+					emit contactBlocked((*it).value(), true);
+			}
+
+		for(it = last_.begin(); it != last_.end(); ++it)
+			emit contactBlocked((*it).value(), false);
+
+		last_ = pli;
 	}
 }
 

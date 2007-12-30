@@ -40,6 +40,7 @@ set(options_noMOC_SRCS
 	options/opt_sound.cpp
 	options/opt_status.cpp
 	options/opt_history.cpp
+	options/opt_tree.cpp
 )
 
 set(options_H
@@ -58,6 +59,7 @@ set(options_H
 	options/opt_shortcuts.h
 	options/opt_antievil.h
 	options/opt_history.h
+	options/opt_tree.h
 )
 
 set(options_UIS

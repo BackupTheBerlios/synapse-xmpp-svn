@@ -37,6 +37,7 @@
 
 #include "s5b.h"
 #include "psiaccount.h"
+#include "activeprofiles.h"
 #include "accountadddlg.h"
 #include "psiiconset.h"
 //#include "contactview.h"
@@ -81,6 +82,7 @@
 #include "pluginmanager.h"
 #endif
 #include "psicontactlist.h"
+#include "dbus.h"
 #include "tipdlg.h"
 #include "shortcutmanager.h"
 #include "globalshortcutmanager.h"
@@ -187,7 +189,7 @@ public:
 			delete iconSelect;
 	}
 
-	void saveProfile(UserAccountList acc = UserAccountList())
+	void saveProfile(UserAccountList acc)
 	{
 		pro.recentGCList = recentGCList;
 		pro.recentBrowseList = recentBrowseList;
@@ -199,8 +201,7 @@ public:
 		if ( proxy )
 			pro.proxyList = proxy->itemList();
 
-		if ( acc.count() )
-			pro.acc = acc;
+		pro.acc = acc;
 
 		pro.toFile(pathToProfileConfig(activeProfile));
 	}
@@ -233,7 +234,6 @@ public:
 	S5BServer *s5bServer;
 	ProxyManager *proxy;
 	IconSelectPopup *iconSelect;
-	QRect mwgeom;
 	FileTransDlg *ftwin;
 	PsiActionList *actionList;
 	//GlobalAccelManager *globalAccelManager;
@@ -294,6 +294,12 @@ PsiCon::~PsiCon()
 
 bool PsiCon::init()
 {
+	// check active profiles
+	if (!ActiveProfiles::instance()->setThisProfile(activeProfile))
+		return false;
+
+	connect(qApp, SIGNAL(forceSavePreferences()), SLOT(forceSavePreferences()));
+
 	// PGP initialization (needs to be before any gpg usage!)
 	PGPUtil::instance();
 
@@ -324,12 +330,10 @@ bool PsiCon::init()
 	d->contactList->groupStates = d->pro.groupStates;
 	
 	//load the new profile
-	QString optionsFile=pathToProfile( activeProfile );
-	optionsFile += "/options.xml";
-	options->load(optionsFile);
 	//Save every time an option is changed
-	options->autoSave(true, optionsFile);
-	
+	options->load(optionsFile());
+	options->autoSave(true, optionsFile());
+
 	//just set a dummy option to trigger saving
 	options->setOption("trigger-save",false);
 	options->setOption("trigger-save",true);
@@ -479,6 +483,7 @@ bool PsiCon::init()
 
 	registerCaps("html", QStringList("http://jabber.org/protocol/xhtml-im"));
 	registerCaps("cs", QStringList("http://jabber.org/protocol/chatstates"));
+	//I've commented out the automatic replies, so commenting out support as well - KIS
 	registerCaps("mr", QStringList("urn:xmpp:receipts"));
 
 	// load accounts
@@ -507,10 +512,17 @@ bool PsiCon::init()
 	foreach(PsiAccount* account, d->contactList->accounts()) {
 		account->autoLogin();
 	}
-
+	
 	// show tip of the day
-	if ( PsiOptions::instance()->getOption("options.ui.tip.show").toBool() )
+	if ( PsiOptions::instance()->getOption("options.ui.tip.show").toBool() ) {
 		TipDlg::show(this);
+	}
+
+#ifdef USE_DBUS
+	addPsiConAdapter(this);
+#endif
+
+	connect(ActiveProfiles::instance(), SIGNAL(raiseMainWindow()), SLOT(raiseMainwin()));
 
 //	printf("done\n");
 // --- Windows breaks on this 
@@ -548,17 +560,8 @@ void PsiCon::deinit()
 	delete d->ftwin;
 
 	if(d->mainwin) {
-		// shut down mainwin
-		QRect mwgeom;
-		if ( !d->mainwin->isHidden() && !d->mainwin->isMinimized() )
-			mwgeom = d->mainwin->saveableGeometry();
-		else
-			mwgeom = d->mwgeom;
-
 		delete d->mainwin;
 		d->mainwin = 0;
-
-		d->pro.mwgeom = mwgeom;
 	}
 
 	// TuneController
@@ -626,6 +629,7 @@ void PsiCon::closeProgram()
 
 void PsiCon::changeProfile()
 {
+	ActiveProfiles::instance()->unsetThisProfile();
 	if(d->contactList->haveActiveAccounts()) {
 		QMessageBox::information(0, CAP(tr("Error")), tr("Please disconnect before changing the profile."));
 		return;
@@ -961,6 +965,88 @@ void PsiCon::checkAccountsEmpty()
 	}
 }
 
+void PsiCon::doOpenUri(const QUrl &uriToOpen)
+{/*
+	QUrl uri(uriToOpen);	// got to copy, because setQueryDelimiters() is not const
+
+	qWarning("uri:  " + uri.toString());
+
+	// scheme
+
+	if (uri.scheme() != "xmpp") {	// try handling legacy URIs
+		QMessageBox::warning(0, tr("Warning"), QString("URI (link) type \"%1\" is unsupported.").arg(uri.scheme()));
+	}
+
+	// authority
+
+	PsiAccount *pa = 0;
+	if (uri.authority().isEmpty()) {
+		pa = d->contactList->defaultAccount();
+		if (!pa) {
+			QMessageBox::warning(0, tr("Warning"), QString("You don't have any account enabled."));
+		}
+	}
+	else {
+		qWarning("uri auth: [" + uri.authority() + "]");
+
+		Jid authJid = JIDUtil::fromString(uri.authority());
+		foreach(PsiAccount* acc, d->contactList->enabledAccounts()) {
+			if (acc->jid().compare(authJid, false)) {
+				pa = acc;
+			}
+		}
+
+		if (!pa) {
+			foreach(PsiAccount* acc, d->contactList->accounts()) {
+				if (acc->jid().compare(authJid, false)) {
+					QMessageBox::warning(0, tr("Warning"), QString("The account for %1 JID is disabled right now.").arg(authJid.bare()));
+					return;	// FIX-ME: Should suggest enabling it now
+				}
+			}
+		}
+		if (!pa) {
+			QMessageBox::warning(0, tr("Warning"), QString("You don't have an account for %1.").arg(authJid.bare()));
+			return;
+		}
+	}
+
+	// entity
+
+	QString path = uri.path();
+	if (path.startsWith('/'))	// this happens when authority part is present
+		path = path.mid(1);
+	Jid entity = JIDUtil::fromString(path);
+
+	// query
+
+	uri.setQueryDelimiters('=', ';');
+
+	QString querytype = uri.queryItems().value(0).first;	// defaults to empty string
+
+	if (querytype == "message") {
+		if (uri.queryItemValue("type") == "chat")
+			pa->actionOpenChat(entity);
+		else {
+			pa->dj_newMessage(entity, uri.queryItemValue("body"), uri.queryItemValue("subject"), uri.queryItemValue("thread"));
+		}
+	}
+	else if (querytype == "roster") {
+		pa->openAddUserDlg(entity, uri.queryItemValue("name"), uri.queryItemValue("group"));
+	}
+	else if (querytype == "join") {
+		pa->actionJoin(entity, uri.queryItemValue("password"));
+	}
+	else if (querytype == "vcard") {
+		pa->actionInfo(entity);
+	}
+	else if (querytype == "disco") {
+		pa->actionDisco(entity, uri.queryItemValue("node"));
+	}
+	else {
+		pa->actionSendMessage(entity);
+	}
+*/}
+
 void PsiCon::doToolbars()
 {
 	OptionsDlg *w = (OptionsDlg *)dialogFind("OptionsDlg");
@@ -1059,7 +1145,7 @@ void PsiCon::slotApplyOptions(const Options &opt)
 	// save just the options
 	//d->pro.prefs = option;
 	//d->pro.toFile(pathToProfileConfig(activeProfile));
-	d->saveProfile();
+	d->saveProfile(d->pro.acc);
 }
 
 int PsiCon::getId()
@@ -1315,7 +1401,8 @@ MainWin *PsiCon::mainWin()
 
 void PsiCon::mainWinGeomChanged(QRect saveableGeometry)
 {
-	d->mwgeom = saveableGeometry;
+	if (!saveableGeometry.isNull())
+		d->pro.mwgeom = saveableGeometry;
 }
 
 void PsiCon::updateS5BServerAddresses()
@@ -1446,5 +1533,15 @@ void PsiCon::promptUserToCreateAccount()
 	}
 }
 
+QString PsiCon::optionsFile() const
+{
+	return pathToProfile(activeProfile) + "/options.xml";
+}
 
+void PsiCon::forceSavePreferences()
+{
+	slotApplyOptions(option);
+	PsiOptions::instance()->save(optionsFile());
+}
+ 
 #include "psicon.moc"

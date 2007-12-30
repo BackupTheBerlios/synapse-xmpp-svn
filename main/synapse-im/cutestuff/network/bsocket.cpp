@@ -136,7 +136,11 @@ void BSocket::reset(bool clear)
 		delete d->qsock_relay;
 		d->qsock_relay = 0;
 
-		delete d->qsock;
+		QByteArray block(d->qsock->bytesAvailable(), 0);
+		d->qsock->read(block.data(), block.size());
+		appendRead(block);
+
+		d->qsock->deleteLater();
 		d->qsock = 0;
 	}
 	else {

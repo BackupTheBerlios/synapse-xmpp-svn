@@ -36,31 +36,36 @@
 //----------------------------------------------------------------------------
 
 TabbableWidget::TabbableWidget(const Jid &jid, PsiAccount *pa, TabManager *tabManager)
-	:AdvancedWidget<QWidget>(0), jid_(jid), pa_(pa), tabManager_(tabManager)
+	: AdvancedWidget<QWidget>(0)
+	, jid_(jid)
+	, pa_(pa)
+	, tabManager_(tabManager)
 {
-	hide();
-	QTimer::singleShot(0,this,SLOT(ensureTabbedCorrectly()));
+	QTimer::singleShot(0, this, SLOT(ensureTabbedCorrectly()));
 }
 
-void TabbableWidget::ensureTabbedCorrectly() {
+void TabbableWidget::ensureTabbedCorrectly()
+{
 	if (tabManager_->shouldBeTabbed(this)) {
 		if (!isTabbed()) {
 			tabManager_->getTabs()->addTab(this);
 		}
 		if(tabManager_->getTabs()->tabOnTop(this))
 			show();
-	} else {
+	}
+	else {
 		if (isTabbed()) {
 			getManagingTabDlg()->closeTab(this, false);
 		}
+
 		show();
 	}
 }
 
 void TabbableWidget::bringToFront() 
 {
-	if ( isTabbed() )
-	{
+	if (isTabbed()) {
+
 		getManagingTabDlg()->selectTab(this);
 	}
 	::bringToFront(this);
@@ -68,20 +73,16 @@ void TabbableWidget::bringToFront()
 
 TabbableWidget::~TabbableWidget()
 {
-	hide();
-}
-
-void TabbableWidget::hideEvent ( QHideEvent * event ) {
-	Q_UNUSED(event);
-	if (!isVisible()) {
-		//you can have a hideEvent and still be visible, check the docs.
-		if (isTabbed()) {
-			getManagingTabDlg()->removeTabWithNoChecks(this);
-		}
+	if (isTabbed()) {
+		getManagingTabDlg()->removeTabWithNoChecks(this);
 	}
 }
 
-bool TabbableWidget::isTabbed() {
+/**
+ * Checks if the dialog is in a tabset
+ */
+bool TabbableWidget::isTabbed()
+{
 	return tabManager_->isChatTabbed(this);
 }
 
@@ -105,25 +106,65 @@ Jid TabbableWidget::jid() const
 	return jid_;
 }
 
+void TabbableWidget::setJid(const Jid& j)
+{
+	jid_ = j;
+}
+
 const QString& TabbableWidget::getDisplayName()
 {
 	return jid_.user();
+}
+
+void TabbableWidget::deactivated()
+{
 }
 
 void TabbableWidget::activated()
 {
 }
 
+/**
+ * Returns true if this tab is active in the active window.
+ */
 bool TabbableWidget::isActiveTab()
 {
-	if ( isHidden() )
-	{
+	if (isHidden()) {
 		return false;
 	}
-	if (!isTabbed()/* && !getManagingTabDlg()*/)
-	{
+	if (!isTabbed()) {
 		return isActiveWindow();
 	}
 	return getManagingTabDlg()->isActiveWindow() &&
 	       getManagingTabDlg()->tabOnTop(this);
+}
+
+void TabbableWidget::doFlash(bool on)
+{
+	AdvancedWidget<QWidget>::doFlash(on);
+	emit updateFlashState();
+}
+
+TabbableWidget::State TabbableWidget::state() const
+{
+	return TabbableWidget::StateNone;
+}
+
+int TabbableWidget::unreadMessageCount() const
+{
+	return 0;
+}
+
+/**
+ * Use this to invalidate tab state.
+ */
+void TabbableWidget::invalidateTab()
+{
+	setWindowTitle(desiredCaption());
+	emit invalidateTabInfo();
+}
+
+PsiAccount* TabbableWidget::account() const
+{
+	return pa_;
 }

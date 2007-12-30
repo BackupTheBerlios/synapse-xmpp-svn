@@ -22,6 +22,7 @@ public:
 
 	bool alerting();
 	void setAlertIcon(PsiIcon *icon);
+	void setBlocked(bool);
 
 	void setUserListItem(const UserListItem &_u);
 	UserListItem *u();
@@ -38,6 +39,7 @@ private:
 	UserListItem u_;
 	SIMContactName contactName_;
 	PsiIcon *alertIcon_;
+	bool blocked_;
 };
 
 #endif

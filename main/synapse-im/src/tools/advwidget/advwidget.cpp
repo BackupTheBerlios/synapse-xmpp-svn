@@ -33,6 +33,12 @@
 #include <QWidget>
 #include <QTimer>
 #include <QDesktopWidget>
+#include <QDebug>
+
+#ifdef Q_WS_X11
+#include<X11/Xutil.h>
+#include <QX11Info>
+#endif
 
 // TODO: Make use of KDE taskbar flashing support
 
@@ -74,7 +80,9 @@ public:
 	static bool stickEnabled;
 
 	QWidget *parentWidget;
+	bool flashing_;
 
+	bool flashing() const;
 	void doFlash(bool on);
 	void posChanging(int *x, int *y, int *width, int *height);
 	void moveEvent(QMoveEvent *e);
@@ -92,6 +100,8 @@ bool GAdvancedWidget::Private::stickEnabled   = true;
 
 GAdvancedWidget::Private::Private(QWidget *parent)
 	: QObject(parent)
+	, parentWidget(parent)
+	, flashing_(false)
 {
 	if ( !advancedWidgetShared )
 		advancedWidgetShared = new AdvancedWidgetShared();
@@ -193,8 +203,17 @@ void GAdvancedWidget::Private::posChanging(int *x, int *y, int *width, int *heig
 	}
 }
 
+bool GAdvancedWidget::Private::flashing() const
+{
+	return flashing_;
+}
+
 void GAdvancedWidget::Private::doFlash(bool yes)
 {
+	flashing_ = yes;
+	if (parentWidget->window() != parentWidget)
+		return;
+
 #ifdef Q_WS_WIN
 	FLASHWINFO fwi;
 	fwi.cbSize = sizeof(fwi);
@@ -202,13 +221,49 @@ void GAdvancedWidget::Private::doFlash(bool yes)
 	if (yes) {
 		fwi.dwFlags = FLASHW_ALL | FLASHW_TIMER;
 		fwi.dwTimeout = 0;
-		fwi.uCount = (UINT)-1;
+		fwi.uCount = 5;
 	}
 	else {
 		fwi.dwFlags = FLASHW_STOP;
 		fwi.uCount = 0;
 	}
 	FlashWindowEx(&fwi);
+
+#elif defined( Q_WS_X11 )
+	static Atom demandsAttention = None;
+	static Atom wmState = None;
+
+
+    /* Xlib-based solution */
+	// adopted from http://www.qtforum.org/article/12334/Taskbar-flashing.html
+	// public domain by Marcin Jakubowski
+    Display *xdisplay = QX11Info::display();
+    Window rootwin = QX11Info::appRootWindow();
+
+	if (demandsAttention == None)
+    	demandsAttention = XInternAtom(xdisplay, "_NET_WM_STATE_DEMANDS_ATTENTION", true);
+	if (wmState == None)
+		wmState = XInternAtom(xdisplay, "_NET_WM_STATE", true);
+
+    XEvent e;
+    e.xclient.type = ClientMessage;
+    e.xclient.message_type = wmState;
+    e.xclient.display = xdisplay;
+    e.xclient.window = parentWidget->winId();
+    e.xclient.format = 32;
+    e.xclient.data.l[1] = demandsAttention;
+    e.xclient.data.l[2] = 0l;
+    e.xclient.data.l[3] = 0l;
+    e.xclient.data.l[4] = 0l;
+
+    if (yes) {
+        e.xclient.data.l[0] = 1;
+    }
+    else {
+        e.xclient.data.l[0] = 0;
+    }
+    XSendEvent(xdisplay, rootwin, False, (SubstructureRedirectMask | SubstructureNotifyMask), &e);
+
 #else
 	Q_UNUSED(yes)
 #endif
@@ -273,14 +328,6 @@ bool GAdvancedWidget::winEvent(MSG* msg, long* result)
 }
 #endif
 
-void GAdvancedWidget::preSetCaption()
-{
-}
-
-void GAdvancedWidget::postSetCaption()
-{
-}
-
 void GAdvancedWidget::restoreSavedGeometry(QRect savedGeometry)
 {
 	QRect geom = savedGeometry;
@@ -307,6 +354,11 @@ void GAdvancedWidget::restoreSavedGeometry(QRect savedGeometry)
 	d->parentWidget->resize(geom.size());
 }
 
+bool GAdvancedWidget::flashing() const
+{
+	return d->flashing();
+}
+
 void GAdvancedWidget::doFlash(bool on)
 {
 	d->doFlash( on );
@@ -316,7 +368,7 @@ void GAdvancedWidget::windowActivationChange(bool oldstate)
 {
 	Q_UNUSED(oldstate);
 	if ( d->parentWidget->isActiveWindow() ) {
-		d->doFlash(false);
+		doFlash(false);
 	}
 }
 

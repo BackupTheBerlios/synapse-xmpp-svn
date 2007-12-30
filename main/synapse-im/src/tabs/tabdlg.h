@@ -24,13 +24,11 @@
 #include <QWidget>
 #include <QSize>
 #include <QMap>
-#include <Q3PtrList>
+#include <QPointer>
 
-#include "xmpp_chatstate.h"
 #include "advwidget.h"
 
 #include "tabbablewidget.h"
-
 
 class PsiCon;
 class ChatTabs;
@@ -42,6 +40,7 @@ class Q3DragObject;
 class QContextMenuEvent;
 class PsiTabWidget;
 class TabManager;
+
 class TabDlg : public AdvancedWidget<QWidget>
 {
 	Q_OBJECT
@@ -50,63 +49,70 @@ public:
 	~TabDlg();
 	bool managesTab(const TabbableWidget*) const;
 	bool tabOnTop(const TabbableWidget*) const;
-	QString getName() const;
 	TabbableWidget *getTab(int i) const;
 	void removeTabWithNoChecks(TabbableWidget *tab);
-	
-signals:
-	void isDying(TabDlg*);
+
+	TabbableWidget* getTabPointer(QString fullJid);
+
+	virtual QString desiredCaption() const;
+	QString captionForTab(TabbableWidget* tab) const;
+
 protected:
 	void setShortcuts();
-	void closeEvent( QCloseEvent* );
+
+	// reimplemented
+	void closeEvent(QCloseEvent*);
 	void keyPressEvent(QKeyEvent *);
 	void windowActivationChange(bool);
 	void resizeEvent(QResizeEvent *);
 	void dragEnterEvent(QDragEnterEvent *event);
 	void dropEvent(QDropEvent *event);
+
 protected slots:
-	void detachChat();
-	void detachChat(QWidget*);
-	void closeChat();
-	void closeChat(QWidget*);
-	void sendChatTo(QWidget*, TabDlg *);
-	void queuedSendChatTo(QWidget*, TabDlg *);
+	void detachCurrentTab();
+	void mouseDoubleClickTab(QWidget*);
+	void detachTab(TabbableWidget*);
+	void sendTabTo(TabbableWidget*, TabDlg *);
+
 public slots:
 	void addTab(TabbableWidget *tab);
 	void setLooks();
-	void closeTab(TabbableWidget*,bool);
+	void closeCurrentTab();
+	void closeTab(TabbableWidget*, bool doclose = true);
 	void selectTab(TabbableWidget*);
 	void activated();
 	void optionsUpdate();
+
 private slots:
-	void tabSelected(QWidget* chat);
+	void updateFlashState();
+	void tabSelected(QWidget* selected);
 	void checkHasChats();
-	void closeMe();
-	void updateTab(QString);
+	void updateTab();
 	void updateTab(TabbableWidget*);
 	void nextTab();
 	void previousTab();
-	void setTabState( XMPP::ChatState );
-	void setTabHasEvents(int);
 	void tab_aboutToShowMenu(QMenu *menu);
-	void menu_sendChatTo(QAction *act);
+	void menu_sendTabTo(QAction *act);
+	void queuedSendTabTo(TabbableWidget* chat, TabDlg *dest);
 	void showTabMenu(int tab, QPoint pos, QContextMenuEvent * event);
 
-	
-public:
-	TabbableWidget* getTabPointer(QString fullJid);
 private:
-	void updateCaption();
-	Q3PtrList<TabbableWidget> chats;
-	PsiTabWidget *tabs;
-	QPushButton *detachButton, *closeButton, *closeCross;
-	QMenu *tabMenu;
-	QMap<TabbableWidget*, bool> tabIsComposing;
-	QMap<TabbableWidget*, int> tabHasMessages;
-	QAction *act_close, *act_next, *act_prev;
+	QList<TabbableWidget*> tabs_;
+	PsiTabWidget *tabWidget_;
+	QPushButton *detachButton_;
+	QPushButton *closeButton_;
+	QPushButton *closeCross_;
+	QMenu *tabMenu_;
+	QAction *act_close_;
+	QAction *act_next_;
+	QAction *act_prev_;
 	TabManager *tabManager_;
+	QPointer<TabbableWidget> selectedTab_;
 
-	QSize chatSize;
+	QSize chatSize_;
+
+	void extinguishFlashingTabs();
+	void updateCaption();
 };
 
 #endif

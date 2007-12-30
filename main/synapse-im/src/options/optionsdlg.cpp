@@ -31,6 +31,7 @@
 #include "opt_history.h"
 #include "opt_advanced.h"
 #include "opt_shortcuts.h"
+#include "opt_tree.h"
 
 #ifdef PSI_PLUGINS
 #include "opt_plugins.h"
@@ -332,7 +333,8 @@ void OptionsDlg::Private::createTabs()
 	tabs.append( new OptionsTabShortcuts(this) );
 	tabs.append( new OptionsTabHistory(this) );
 	tabs.append( new OptionsTabAdvanced(this) );
-	tabs.append( new OptionsTabAntiEvil(this) );
+	tabs.append( new OptionsTabTree(this) );
+//	tabs.append( new OptionsTabAntiEvil(this) );
 
 	// tabs - general
 	/*tabs.append( new OptionsTabGeneralRoster(this) );

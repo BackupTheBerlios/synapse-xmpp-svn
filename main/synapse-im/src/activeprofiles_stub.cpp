@@ -1,6 +1,7 @@
 /*
- * passphrasedlg.cpp - class to handle entering of OpenPGP passphrase
- * Copyright (C) 2003  Justin Karneges
+ * activeprofiles_stub.cpp - Class for interacting with other psi instances
+ * Copyright (C) 2006  Maciej Niedzielski
+ * Copyright (C) 2006-2007  Martin Hostettler
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,28 +18,47 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+ 
+#include "activeprofiles.h"
+#include <QString>
 
-#include <QLineEdit>
-#include <QPushButton>
-
-#include "passphrasedlg.h"
-
-PassphraseDlg::PassphraseDlg(QWidget *parent) : QDialog (parent)
+bool ActiveProfiles::isActive(const QString &profile) const
 {
-	ui_.setupUi(this);
-	setModal(false);
-	connect(ui_.pb_ok, SIGNAL(clicked()), SLOT(accept()));
-	connect(ui_.pb_cancel, SIGNAL(clicked()), SLOT(reject()));
+	return false;
 }
 
-void PassphraseDlg::promptPassphrase(const QString& name)
+bool ActiveProfiles::setThisProfile(const QString &profile)
 {
-	setWindowTitle(tr("%1: OpenPGP Passphrase").arg(name));
-	resize(minimumSizeHint());
+	return true;
 }
 
-QString PassphraseDlg::getPassphrase() const
+void ActiveProfiles::unsetThisProfile()
 {
-	return ui_.le_pass->text();
+}
+
+QString ActiveProfiles::thisProfile() const
+{
+	return "";
+}
+
+ActiveProfiles::ActiveProfiles()
+{
+}
+
+ActiveProfiles::~ActiveProfiles()
+{
+}
+
+bool ActiveProfiles::raiseOther(QString profile, bool withUI) const
+{
+	// FIXME stub
+	return true;
+}
+
+
+
+bool ActiveProfiles::sendOpenUri(const QString &uri, const QString &profile) const
+{
+	return true;
 }
 

@@ -20,9 +20,13 @@
 
 #include <QDomElement>
 #include <QDomDocument>
+#include <QDomDocumentFragment>
 #include <QKeySequence>
 
 #include "varianttree.h"
+
+
+QDomDocument *VariantTree::unknownsDoc=0;
 
 /**
  * Default Constructor
@@ -39,19 +43,64 @@ VariantTree::VariantTree(QObject *parent)
  */
 VariantTree::~VariantTree()
 {
+	foreach(VariantTree* vt, trees_.values()) {
+		delete vt;
+	}
+}
+
+
+/**
+ * Split a @a node into local key and rest
+ * @param node 
+ * @param key part of the @a node before first dot
+ * @param rest part of the @a node after first dot
+ * @return 
+ */
+bool VariantTree::getKeyRest(QString node, QString &key, QString &rest)
+{
+	int idx = node.indexOf(".");
+	if (idx != -1) {
+		key=node.left(idx);
+		rest=node.mid(idx+1);
+		return true;
+	}
+	return false;
+}
+
+
+bool VariantTree::isValidNodeName(const QString &name)
+{
+/* XML backend:
+[4]   	NameChar	   ::=   	 Letter | Digit | '.' | '-' | '_' | ':' | CombiningChar | Extender
+[5]   	Name	   ::=   	(Letter | '_' | ':') (NameChar)*
+but we don't want to have namespaces in the node names....
 	
+	but for now just allow ascii subset of this:
+	*/	
+	if (name == "") return false;
+	int len = name.length();
+	QString other(".-_");
+	QChar ch = name[0];
+	if (!((ch>='A' && ch<='Z') || (ch>='a' && ch<='z') || (ch=='_'))) return false;
+	for (int i=1; i < len; i++) {
+		ch = name[i];
+		if (!((ch>='A' && ch<='Z')
+			|| (ch>='a' && ch<='z')
+			|| (other.contains(ch))
+			|| (ch >= '0' && ch <= '9'))) return false;
+	}
+	return true;
 }
 
 /**
- * TODO
+ * Set @a node to value @a value
  */
 void VariantTree::setValue(QString node, QVariant value)
 {
-	if (node.contains("."))
-	{
+	QString key, subnode;
+	if (getKeyRest(node, key, subnode)) {
 		//not this tier
-		QString key=node.left(node.indexOf("."));
-		QString subnode=node.remove(0,node.indexOf(".")+1);
+		Q_ASSERT(isValidNodeName(key));
 		if (!trees_.contains(key))
 		{
 			if (values_.contains(key))
@@ -66,9 +115,10 @@ void VariantTree::setValue(QString node, QVariant value)
 		trees_[key]->setValue(subnode,value);
 	} else {
 		//this tier
+		Q_ASSERT(isValidNodeName(node));
 		if (trees_.contains(node))
 		{
-			qWarning(qPrintable(QString("Error: Trying to add option value %1 but it already exists as a node").arg(node)));
+			qWarning(qPrintable(QString("Error: Trying to add option value %1 but it already exists as a subtree").arg(node)));
 			return;
 		}
 		values_[node]=value;
@@ -76,15 +126,14 @@ void VariantTree::setValue(QString node, QVariant value)
 }
 
 /**
- * TODO
+ * Get value at @a node
+ * @return the value of @a node if @a node exists, otherwise VariantTree::missingValue
  */
-QVariant VariantTree::getValue(QString node)
+QVariant VariantTree::getValue(QString node) const
 {
-	if (node.contains("."))
-	{
+	QString key,subnode;
+	if (getKeyRest(node, key, subnode)) {
 		//not this tier
-		QString key=node.left(node.indexOf("."));
-		QString subnode=node.remove(0,node.indexOf(".")+1);
 		if (trees_.contains(key))
 		{
 			return trees_[key]->getValue(subnode);
@@ -97,8 +146,51 @@ QVariant VariantTree::getValue(QString node)
 	return missingValue;
 }
 
+
+bool VariantTree::remove(const QString &node, bool internal_nodes)
+{
+	QString key,subnode;
+	if (getKeyRest(node, key, subnode)) {
+		//not this tier
+		if (trees_.contains(key)) {
+			return trees_[key]->remove(subnode, internal_nodes);
+		}
+	} else {
+		//this tier
+		if (values_.contains(node)) {
+			values_.remove(node);
+			return true;
+		} else if (internal_nodes && trees_.contains(node)) {
+			trees_.remove(node);
+			return true;
+		}
+	}
+	return false;
+}
+
 /**
- * TODO
+ * @return true iff the node @a node is an internal node (i.e. has a child tree).
+ */
+bool VariantTree::isInternalNode(QString node) const
+{
+	QString key,subnode;
+	if (getKeyRest(node, key, subnode)) {
+		//not this tier
+		if (trees_.contains(key)) {
+			return trees_[key]->isInternalNode(subnode);
+		}
+		qWarning() << "isInternalNode called on non existant node: " << node;
+	} else {
+		return trees_.contains(node);
+	}
+}
+
+
+
+/**
+ * \brief Sets the comment of the specified node.
+ * \param name "Path" to the node
+ * \param comment the comment to store
  */
 void VariantTree::setComment(QString node, QString comment)
 {
@@ -107,6 +199,7 @@ void VariantTree::setComment(QString node, QString comment)
 		//not this tier
 		QString key=node.left(node.indexOf("."));
 		QString subnode=node.remove(0,node.indexOf(".")+1);
+		Q_ASSERT(isValidNodeName(key));
 		if (!trees_.contains(key))
 		{
 			if (values_.contains(key))
@@ -121,14 +214,16 @@ void VariantTree::setComment(QString node, QString comment)
 		trees_[key]->setComment(subnode,comment);
 	} else {
 		//this tier
+		Q_ASSERT(isValidNodeName(node));
 		comments_[node]=comment;
 	}
 }
 
 /**
- * Returns the comment associated with a node. 
+ * Returns the comment associated with a node.
+ * (or a null QString if the node has no comment)
  */
-QString VariantTree::getComment(QString node)
+QString VariantTree::getComment(QString node) const
 {
 	if (node.contains("."))
 	{
@@ -144,11 +239,11 @@ QString VariantTree::getComment(QString node)
 		if (comments_.contains(node))
 			return comments_[node];
 	}
-	return missingComment;
+	return QString();
 }
 
 /**
- * Find all the children of the provided node (if no node is provided),
+ * Find all the children of the provided node \a node or, if no node is provided,
  * all children.
  *
  * \param direct only return direct children
@@ -199,12 +294,13 @@ QStringList VariantTree::nodeChildren(const QString& node, bool direct, bool int
 
 
 /**
- *
+ * 
  */
 void VariantTree::toXml(QDomDocument &doc, QDomElement& ele) const
 {
 	// Subtrees
 	foreach (QString node, trees_.keys()) {
+		Q_ASSERT(node != "");
 		QDomElement nodeEle = doc.createElement(node);
 		trees_[node]->toXml(doc, nodeEle);
 		if (comments_.contains(node))
@@ -214,6 +310,7 @@ void VariantTree::toXml(QDomDocument &doc, QDomElement& ele) const
 	
 	// Values
 	foreach (QString child, values_.keys()) {
+		Q_ASSERT(child != "");
 		QVariant var = values_[child];
 		QDomElement valEle = doc.createElement(child);
 		variantToElement(var,valEle);
@@ -221,13 +318,24 @@ void VariantTree::toXml(QDomDocument &doc, QDomElement& ele) const
 		if (comments_.contains(child))
 			valEle.setAttribute("comment",comments_[child]);
 	}
+	
+	// unknown types passthrough
+	foreach (QDomDocumentFragment df, unknowns_) {
+		ele.appendChild(doc.importNode(df, true));
+	}
 } 
 
+/**
+ * 
+ * @param ele 
+ */
 void VariantTree::fromXml(const QDomElement &ele)
 {
 	QDomElement child = ele.firstChildElement();
 	while (!child.isNull()) {
+		bool isunknown=false;
 		QString name = child.nodeName();
+		Q_ASSERT(name != "");
 		if (!child.hasAttribute("type")) {
 			// Subnode
 			if ( !trees_.contains(name) )
@@ -236,11 +344,21 @@ void VariantTree::fromXml(const QDomElement &ele)
 		} 
 		else {
 			// Value
-			values_[name] = elementToVariant(child);
+			QVariant val;
+			val = elementToVariant(child);
+			if (val.isValid()) {
+				values_[name] = val;
+			} else {
+				isunknown = true;
+				if (!unknownsDoc) unknownsDoc = new QDomDocument();
+				QDomDocumentFragment frag(unknownsDoc->createDocumentFragment());
+				frag.appendChild(unknownsDoc->importNode(child, true));
+				unknowns_[name] = frag;
+			}
 		}
 
 		// Comments
-		if (child.hasAttribute("comment")) {
+		if (!isunknown && child.hasAttribute("comment")) {
 			QString comment=child.attribute("comment");
 			comments_[name]=comment;
 		}
@@ -294,23 +412,58 @@ QVariant VariantTree::elementToVariant(const QDomElement& e)
 		}
 		value = QVariant(QSize(width,height));
 	}
-	else { // Standard values
+	else if (type == "QRect") {
+		int x = 0, y = 0, width = 0, height = 0;
 		for (QDomNode node = e.firstChild(); !node.isNull(); node = node.nextSibling()) {
-			if ( node.isText() )
-				value=node.toText().data();
+			QDomElement e = node.toElement();
+			if (!e.isNull()) {
+				if (e.tagName() == "width") {
+					width = e.text().toInt();
+				}
+				else if (e.tagName() == "height") {
+					height = e.text().toInt();
+				}
+				else if (e.tagName() == "x") {
+					x = e.text().toInt();
+				}
+				else if (e.tagName() == "y") {
+					y = e.text().toInt();
+				}
+			}
 		}
+		value = QVariant(QRect(x,y,width,height));
+	}
+	else { // Standard values
+		QVariant::Type varianttype;
+		bool known = true;
+		
+		if (type=="QString") {
+			varianttype = QVariant::String;
+		} else if (type=="bool") {
+			varianttype = QVariant::Bool;
+		} else if (type=="int") {
+			varianttype = QVariant::Int;
+		} else if (type == "QKeySequence") {
+			varianttype = QVariant::KeySequence;
+		} else if (type == "QColor") {
+			varianttype = QVariant::Color;
+		} else {
+			known = false;
+		}
+		
+		if (known) {
+			for (QDomNode node = e.firstChild(); !node.isNull(); node = node.nextSibling()) {
+				if ( node.isText() )
+					value=node.toText().data();
+			}
+		
+			if (!value.isValid())
+				value = QString("");
 	
-		if (!value.isValid())
-			value = QString("");
-
-		if (type=="QString")
-			value.convert(QVariant::String);
-		else if (type=="bool")
-			value.convert(QVariant::Bool);
-		else if (type=="int")
-			value.convert(QVariant::Int);
-		else if (type == "QKeySequence")
-			value.convert(QVariant::KeySequence);
+			value.convert(varianttype);
+		} else {
+			value = QVariant();
+		}
 	}
 	return value;
 }
@@ -346,6 +499,21 @@ void VariantTree::variantToElement(const QVariant& var, QDomElement& e)
 		height_element.appendChild(e.ownerDocument().createTextNode(QString::number(size.height())));
 		e.appendChild(height_element);
 	}
+	else if (type == "QRect") {
+		QRect rect = var.toRect();
+		QDomElement x_element = e.ownerDocument().createElement("x");
+		x_element.appendChild(e.ownerDocument().createTextNode(QString::number(rect.x())));
+		e.appendChild(x_element);
+		QDomElement y_element = e.ownerDocument().createElement("y");
+		y_element.appendChild(e.ownerDocument().createTextNode(QString::number(rect.y())));
+		e.appendChild(y_element);
+		QDomElement width_element = e.ownerDocument().createElement("width");
+		width_element.appendChild(e.ownerDocument().createTextNode(QString::number(rect.width())));
+		e.appendChild(width_element);
+		QDomElement height_element = e.ownerDocument().createElement("height");
+		height_element.appendChild(e.ownerDocument().createTextNode(QString::number(rect.height())));
+		e.appendChild(height_element);
+	}
 	else if (type == "QKeySequence") {
 		QKeySequence k = var.value<QKeySequence>();
 		QDomText text = e.ownerDocument().createTextNode(k.toString());
@@ -359,4 +527,3 @@ void VariantTree::variantToElement(const QVariant& var, QDomElement& e)
 }
 
 const QVariant VariantTree::missingValue=QVariant(QVariant::Invalid);
-const QString VariantTree::missingComment=QString("There is no comment for this node");

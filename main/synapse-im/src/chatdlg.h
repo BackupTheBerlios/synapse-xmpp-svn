@@ -33,7 +33,6 @@
 
 #include "tabbablewidget.h"
 
-#include "xmpp_chatstate.h"
 
 #include "hoverlabel.h"
 
@@ -62,12 +61,17 @@ public:
 	static ChatDlg* create(const Jid& jid, PsiAccount* account, TabManager* tabManager);
 	~ChatDlg();
 
-	Jid jid() const;
+	// reimplemented
 	void setJid(const Jid &);
 	const QString & getDisplayName();
 
 	static QSize defaultSize();
 	bool readyToHide();
+
+	// reimplemented
+	virtual TabbableWidget::State state() const;
+	virtual int unreadMessageCount() const;
+	virtual QString desiredCaption() const;
 
 public:
 	PsiAccount* account() const;
@@ -80,9 +84,6 @@ signals:
 	void messagesRead(const Jid &);
 	void aSend(const Message &);
 	void aFile(const Jid &);
-	void captionChanged(QString);
-	void contactStateChanged(XMPP::ChatState);
-	void unreadEventUpdate(int);
 
 	/**
 	 * Signals if user (re)started/stopped composing
@@ -104,10 +105,13 @@ protected:
 	bool eventFilter(QObject *obj, QEvent *event);
   
 public slots:
+	// reimplemented
+	virtual void deactivated();
+	virtual void activated();
+
 	virtual void optionsUpdate();
 	void updateContact(const Jid &, bool);
 	void incomingMessage(const Message &);
-	virtual void activated();
 	virtual void updateAvatar() = 0;
 	void updateAvatar(const Jid&);
   
@@ -151,11 +155,13 @@ protected slots:
 	void checkComposing();
 
 protected:
+	// reimplemented
+	virtual void invalidateTab();
+
 	void resetComposing();
 	void doneSend();
 	virtual void setLooks();
 	void setSelfDestruct(int);
-	void updateCaption();
 	void deferredScroll();
 	bool isEmoteMessage(const XMPP::Message& m);
 	QString messageText(const XMPP::Message& m);
@@ -185,8 +191,6 @@ protected:
 	virtual ChatEdit* chatEdit() const = 0;
 
 private:
-	Jid jid_;
-	PsiAccount* pa_;
 	bool highlightersInstalled_;
 	QString dispNick_;
 	int status_;

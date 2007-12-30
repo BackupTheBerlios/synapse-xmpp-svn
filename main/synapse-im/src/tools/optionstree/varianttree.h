@@ -27,6 +27,8 @@
 
 class QDomDocument;
 class QDomElement;
+class QDomDocumentFragment;
+
 
 /**
  * \class VariantTree
@@ -53,27 +55,39 @@ public:
 	~VariantTree();
 
 	void setValue(QString node, QVariant value);
-	QVariant getValue(QString node);
+	QVariant getValue(QString node) const;
+	
+	bool isInternalNode(QString node) const;
 
 	void setComment(QString node, QString comment);
-	QString getComment(QString node);
+	QString getComment(QString node) const;
 
+	bool remove(const QString &node, bool internal_nodes = false);
+	
 	QStringList nodeChildren(const QString& node = "", bool direct = false, bool internal_nodes = false) const; 
 
 	void toXml(QDomDocument &doc, QDomElement& ele) const;
 	void fromXml(const QDomElement &ele);
 
+	static bool isValidNodeName(const QString &name);
+	
 	static const QVariant missingValue;
 	static const QString missingComment;
 
 protected:
 	static QVariant elementToVariant(const QDomElement&);
 	static void variantToElement(const QVariant&, QDomElement&);
+	
+	static bool getKeyRest(QString node, QString &key, QString &rest);
 
 private:
 	QMap<QString, VariantTree*> trees_;
 	QMap<QString, QVariant> values_;
 	QMap<QString, QString> comments_;
+	QMap<QString, QDomDocumentFragment> unknowns_;		// unknown types preservation
+	
+	// needed to have a document for the fragments.
+	static QDomDocument *unknownsDoc;
 	
 }; 
 

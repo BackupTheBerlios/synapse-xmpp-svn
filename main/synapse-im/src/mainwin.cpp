@@ -284,9 +284,11 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	d->cb_search->setEditable(true);
 
 	cvlist = new SIMContactListView(center,d->cb_search);
-	d->eventNotifier = new HoverLabel(cvlist, false);
+
+	d->eventNotifier = new HoverLabel(cvlist, HoverLabel::BottomLeft);
  	connect(cvlist, SIGNAL(resizeEventNotifier(QWidget*)), d->eventNotifier,  SLOT(resizeEvent(QWidget*)));
 	connect(d->eventNotifier, SIGNAL(clicked()), SLOT(doRecvNextEvent()));
+
 	cvlist->setItemDelegate(new SIMContactDelegate);
 	((SIMContactList *)d->psi->contactList())->setContactListView(cvlist);
 	SIMContactListModel *model = new SIMContactListModel(d->psi->contactList());
@@ -1272,4 +1274,22 @@ void MainWin::showNoFocus()
 {
 	bringToFront(this);
 }
+
+void MainWin::moveEvent(QMoveEvent* e)
+{
+	AdvancedWidget<QMainWindow>::moveEvent(e);
+	QTimer::singleShot(0, this, SLOT(geometryChanged()));
+}
+
+void MainWin::resizeEvent(QResizeEvent* e)
+{
+	AdvancedWidget<QMainWindow>::resizeEvent(e);
+	QTimer::singleShot(0, this, SLOT(geometryChanged()));
+}
+
+void MainWin::geometryChanged()
+{
+	emit geomChanged(saveableGeometry());
+}
+
 

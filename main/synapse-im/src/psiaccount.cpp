@@ -46,7 +46,6 @@
 #include "profiles.h"
 #include "xmpp_tasks.h"
 #include "xmpp_xmlcommon.h"
-#include "pongserver.h"
 #include "s5b.h"
 #include "filetransfer.h"
 #include "pgpkeydlg.h"
@@ -117,6 +116,7 @@
 #include "psicontactlist.h"
 #include "tabmanager.h"
 #include "timeserver.h"
+#include "pongserver.h"
 
 #ifdef PSI_PLUGINS
 #include "pluginmanager.h"
@@ -324,6 +324,7 @@ public:
 
 	// Avatars
 	AvatarFactory* avatarFactory;
+	QString photoHash;
 
 #ifdef LINKLOCAL
 	// Link-Local
@@ -436,6 +437,29 @@ public slots:
 		xmlRingbufWrite = (xmlRingbufWrite + 1) % xmlRingbuf.count();
 	}
 
+	void vcardChanged(const Jid &j)
+	{
+		// our own vcard?
+		if(j.compare(jid, false)) {
+			const VCard *vcard = VCardFactory::instance()->vcard(j);
+			if(vcard) {
+				vcardPhotoUpdate(vcard->photo());
+			}
+		}
+	}
+
+	void vcardPhotoUpdate(const QByteArray &photoData)
+	{
+		QString newHash;
+		if(!photoData.isEmpty()) {
+			newHash = QCA::Hash("sha1").hashToString(photoData);
+		}
+		if(newHash != photoHash) {
+			photoHash = newHash;
+			account->setStatusDirect(loginStatus);
+		}
+	}
+
 private:
 	struct item_dialog2
 	{
@@ -527,6 +551,8 @@ public:
 
 	void setAutoAway(AutoAway autoAway)
 	{
+		if (!account->isAvailable())
+			return;
 		Status status = autoAwayStatus(autoAway);
 		if (status.type() != loginStatus.type() ||
 		    status.status() != loginStatus.status())
@@ -678,13 +704,14 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent, CapsRegis
 
 	// Privacy manager
 	d->privacyManager = new PsiPrivacyManager(d->client->rootTask());
+	connect(d->privacyManager, SIGNAL(contactBlocked(const QString&, bool)), d->contactList, SLOT(contactBlocked(const QString&, bool)));
 
 	// Caps manager
 	d->capsManager = new CapsManager(d->client->jid(), capsRegistry, new IrisProtocol::DiscoInfoQuerier(d->client));
 	d->capsManager->setEnabled(option.useCaps);
 
 	//AntiEvil
-	new AntiEvil(d->client->rootTask());
+	//new AntiEvil(d->client->rootTask());
 
 	// Roster item exchange task
 	d->rosterItemExchangeTask = new RosterItemExchangeTask(d->client->rootTask());
@@ -750,6 +777,8 @@ PsiAccount::PsiAccount(const UserAccount &acc, PsiContactList *parent, CapsRegis
 	// Avatars
 	d->avatarFactory = new AvatarFactory(this);
 	d->self.setAvatarFactory(avatarFactory());
+
+	connect(VCardFactory::instance(), SIGNAL(vcardChanged(const Jid&)), d, SLOT(vcardChanged(const Jid&)));
 
 	// Bookmarks
 	d->bookmarkManager = new BookmarkManager(d->client);
@@ -965,7 +994,7 @@ bool PsiAccount::isConnected() const
  */
 bool PsiAccount::isAvailable() const
 {
-	return isConnected() && isActive();
+	return isConnected() && isActive() && loggedIn();
 }
 
 const QString & PsiAccount::name() const
@@ -1503,6 +1532,7 @@ void PsiAccount::sessionStarted()
 
 	// ask for roster
 	d->client->rosterRequest();
+	d->privacyManager->requestListNames();
 }
 
 void PsiAccount::cs_connectionClosed()
@@ -2229,13 +2259,13 @@ void PsiAccount::processIncomingMessage(const Message &_m)
 	// urls or subject on a chat message?  convert back to regular message
 	//if(m.type() == "chat" && (!m.urlList().isEmpty() || !m.subject().isEmpty()))
 	//	m.setType("");
-
-	if(m.messageReceipt() == ReceiptRequest && !m.id().isEmpty()) {
+	//We must not respond to recepit request automatically - KIS
+/*	if(m.messageReceipt() == ReceiptRequest && !m.id().isEmpty()) {
 		Message tm(m.from());
 		tm.setId(m.id());
 		tm.setMessageReceipt(ReceiptReceived);
 		dj_sendMessage(tm, false);
-	}
+	}*/
 
 	MessageEvent *me = new MessageEvent(m, this);
 	me->setOriginLocal(false);
@@ -2504,6 +2534,11 @@ void PsiAccount::setStatusActual(const Status &_s)
 		s.setCapsNode(d->client->capsNode());
 		s.setCapsVersion(d->client->capsVersion());
 		s.setCapsExt(d->client->capsExt());
+	}
+
+        // Add vcard photo hash if available
+	if(!d->photoHash.isEmpty()) {
+		s.setPhotoHash(d->photoHash);
 	}
 
 	// Set the status
@@ -3151,6 +3186,7 @@ ChatDlg *PsiAccount::ensureChatDlg(const Jid &j)
 #endif
 	}
 
+	Q_ASSERT(c);
 	return c;
 }
 
@@ -4417,23 +4453,13 @@ void PsiAccount::processChats(const Jid &j)
 
 void PsiAccount::openChat(const Jid& j, ActivationType activationType)
 {
-	bool activateChat = activationType == UserAction;
-	ChatDlg *c = ensureChatDlg(j);
-	QWidget *w = c;
-	if (option.useTabs) {
-		if (!d->tabManager->isChatTabbed(c)) {
-			//get a tab from the psicon
-			d->tabManager->getTabs()->addTab(c);
-		}
-		TabDlg* tabSet = d->tabManager->getManagingTabs(c);
-		activateChat = activateChat /* || !tabSet->isActiveWindow() */;
-		if (activateChat)
-			tabSet->selectTab(c);
-		w = tabSet;
-	}
+	ChatDlg *chat = ensureChatDlg(j);
+	chat->ensureTabbedCorrectly();
+
 	processChats(j);
-	if (activateChat)
-		bringToFront(w);
+
+	if (activationType == UserAction)
+		bringToFront(chat);
 }
 
 void PsiAccount::chatMessagesRead(const Jid &j)
@@ -4448,7 +4474,7 @@ void PsiAccount::logEvent(const Jid &j, PsiEvent *e)
 	HistoryDB::instance()->logEvent(j.bare(),e);
 }
 
-void PsiAccount::openGroupChat(const Jid &j)
+void PsiAccount::openGroupChat(const Jid &j, ActivationType activationType)
 {
 	QString str = j.userHost();
 	bool found = false;
@@ -4466,8 +4492,8 @@ void PsiAccount::openGroupChat(const Jid &j)
 	connect(w, SIGNAL(aSend(const Message &)), SLOT(dj_sendMessage(const Message &)));
 	connect(d->psi, SIGNAL(emitOptionsUpdate()), w, SLOT(optionsUpdate()));
 	w->ensureTabbedCorrectly();
-	w->show();
-//??	d->tabManager->getManagingTabs(w)->selectTab(w);
+	if (activationType == UserAction)
+		w->bringToFront();
 }
 
 bool PsiAccount::groupChatJoin(const QString &host, const QString &room, const QString &nick, const QString& pass, bool nohistory)
@@ -4526,7 +4552,7 @@ void PsiAccount::client_groupChatJoined(const Jid &j)
 		return;
 	w->joined();
 
-	openGroupChat(j);
+	openGroupChat(j, UserAction);
 }
 
 void PsiAccount::client_groupChatLeft(const Jid &j)
@@ -4605,6 +4631,9 @@ QStringList PsiAccount::hiddenChats(const Jid &j) const
 
 void PsiAccount::slotCheckVCard()
 {
+	if (!isConnected() || !isActive())
+		return;
+
 	QString nick = d->jid.user();
 	JT_VCard* j = static_cast<JT_VCard*>(sender());
 	if (j->success() && j->statusCode() == Task::ErrDisc) {
@@ -4617,6 +4646,10 @@ void PsiAccount::slotCheckVCard()
 	if (j->vcard().isEmpty()) {
 		changeVCard();
 		return;
+	}
+
+	if (!j->vcard().photo().isEmpty()) {
+		d->vcardPhotoUpdate(j->vcard().photo());
 	}
 
 	setNick(nick);
@@ -5139,5 +5172,14 @@ QList<PsiAccount::xmlRingElem> PsiAccount::dumpRingbuf()
 	return d->dumpRingbuf();
 }
 
+void PsiAccount::blockContact(const QString &jid)
+{
+	d->privacyManager->block(jid);
+}
+
+void PsiAccount::unblockContact(const QString &jid)
+{
+	d->privacyManager->unblock(jid);
+}
 
 #include "psiaccount.moc"

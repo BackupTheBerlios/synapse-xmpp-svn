@@ -199,6 +199,13 @@ void SIMContactList::dataChanged()
 	emit s_dataChanged();
 }
 
+void SIMContactList::contactBlocked(const QString &jid, bool blocked)
+{
+	SIMContactListContact *clc = findEntry(jid);
+	if(clc)
+		clc->setBlocked(blocked);
+}
+
 void SIMContactList::updateVisibleParents()
 {
 	root_->updateParents();

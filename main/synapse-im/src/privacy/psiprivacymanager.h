@@ -25,6 +25,7 @@
 #include <QStringList>
 
 #include "privacymanager.h"
+#include "privacylistitem.h"
 
 class QString;
 class PrivacyList;
@@ -52,6 +53,10 @@ public:
 
 	// Convenience
 	void block(const QString&);
+	void unblock(const QString&);
+
+signals:
+	void contactBlocked(const QString&, bool blocked);
 
 protected:
 	static QStringList blockedContacts(const PrivacyList&, bool* allBlocked);
@@ -71,6 +76,8 @@ protected slots:
 	void block_getDefaultList_success(const PrivacyList&);
 	void block_getDefaultList_error();
 
+	void updated(const QString &name, bool force);
+	void activeListReceived();
 private:
 	XMPP::Task* rootTask_;
 	PrivacyListListener* listener_;
@@ -78,8 +85,12 @@ private:
 	bool getDefault_waiting_;
 	QString getDefault_default_;
 
+	QStringList unblock_targets_;
 	QStringList block_targets_;
 	bool block_waiting_;
+
+	QString active_;
+	QList<PrivacyListItem> last_;
 };
 
 #endif

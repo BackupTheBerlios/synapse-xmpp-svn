@@ -69,16 +69,26 @@ endif(NOT WIN32)
 
 #DBus
 if(QT_QTDBUS_FOUND)
-ADD_DEFINITIONS(-DHAVE_DBUS)
-set(dbus_SRCS
+#//???????????
+#ADD_DEFINITIONS(-DHAVE_DBUS)
+ADD_DEFINITIONS(-DUSE_DBUS)
+set(rpc_SRCS
 	dbus.cpp
+	activeprofiles_dbus.cpp
 )
-set(dbus_H
+set(rpc_H
 	dbus.h
 )
 if(AVAHI_FOUND)
-    ADD_DEFINITIONS(-DLINKLOCAL)
+#////////???????????????
+	ADD_DEFINITIONS(-DLINKLOCAL)
 endif(AVAHI_FOUND)
+else (QT_QTDBUS_FOUND)
+	if(WIN32)
+		set(rpc_SRCS
+			activeprofiles_win.cpp
+		)
+	endif(WIN32)
 endif(QT_QTDBUS_FOUND)
 
 #Whiteboarding
@@ -202,7 +212,7 @@ set(synapse-im_noMOC_SRCS
 )
 
 set(synapse-im_SRCS
-	${dbus_SRCS}
+	${rpc_SRCS}
 	${wb_SRCS}
 	pixmaputil.cpp
 	mainwin_p.cpp
@@ -216,6 +226,8 @@ set(synapse-im_SRCS
 	discodlg.cpp
 	alerticon.cpp
 	psipopup.cpp
+	activeprofiles.cpp
+	psioptionseditor.cpp
 	filetransdlg.cpp
 	avatars.cpp
 	actionlist.cpp
@@ -226,7 +238,7 @@ set(synapse-im_SRCS
 )
 
 set(synapse-im_H
-	${dbus_H}
+	${rpc_H}
 	${wb_H}
 	aboutdlg.h
 	accountadddlg.h
@@ -235,6 +247,7 @@ set(synapse-im_H
 	accountmodifydlg.h
 	accountregdlg.h
 	accountscombobox.h
+	activeprofiles.h
 	adduserdlg.h
 	ahcformdlg.h
 	ahcommanddlg.h
@@ -284,6 +297,7 @@ set(synapse-im_H
 	psicontactlist.h
 	psievent.h
 	psioptions.h
+	psioptionseditor.h
 	psipopup.h
 	pongserver.h
 	psitoolbar.h
@@ -364,6 +378,7 @@ set(synapse-im_UIS
 	chatdlg.ui
 	chat/chatcontact.ui
 	groupchatdlg.ui
+	optioneditor.ui
 	options/ui_isdetails.ui
 	options/ui_options.ui
 	options/ui_positiontoolbar.ui
@@ -421,7 +436,8 @@ TARGET_LINK_LIBRARIES( synapse-im
 )
 if(WIN32)
 TARGET_LINK_LIBRARIES( synapse-im
-    gdi32
+	gdi32
+	User32
 )
 endif(WIN32)
 

@@ -57,6 +57,7 @@ public slots:
 
 	void updateOptions();
 	void dataChanged();
+	void contactBlocked(const QString &jid, bool blocked);
 signals:
 	void showOffline(bool);
 	void showAway(bool);

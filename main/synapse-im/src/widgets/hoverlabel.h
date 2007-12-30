@@ -8,7 +8,14 @@
 class HoverLabel : public QWidget {
 	Q_OBJECT
 public:
-	HoverLabel(QWidget *parent=0, bool _top=true);
+	enum Position {
+		TopLeft,
+		TopRight,
+		BottomLeft,
+		BottomRight
+	};
+
+	HoverLabel(QWidget *parent=0, int _pos = TopLeft, int timeout = 500);
 
 signals:
 	void clicked();
@@ -20,7 +27,7 @@ public slots:
 	void updateSize();
 	void resetAnimation();
 
-	bool top();
+	int position();
 	void resizeEvent(QWidget *w);
 
 protected:
@@ -37,7 +44,7 @@ private:
 	QSize   oldSize_;
 	QSize   newSize_;
 	qreal   percent_;
-	bool	top_;
+	int	pos_;
 };
 
 #endif

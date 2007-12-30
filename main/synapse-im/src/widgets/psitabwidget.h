@@ -57,7 +57,7 @@ public:
 	void removePage(QWidget*);
 	QWidget* page(int index);
 	int getIndex(QWidget*);
-	void setTabLabel(QWidget*, const QString&);
+	void setTabText(QWidget*, const QString&);
 	void setTabPosition(QTabWidget::TabPosition pos);
 	void setCloseIcon(const QIcon&);
 
@@ -67,7 +67,7 @@ public slots:
 
 signals:
 	void mouseDoubleClickTab( QWidget* tab );
-	void currentChanged(QWidget*);
+	void currentChanged(QWidget* selected);
 	void closeButtonClicked();
 	void aboutToShowMenu(QMenu *);
 	// context menu on the blank space will have tab==-1

@@ -50,32 +50,37 @@ public:
 	virtual bool readyToHide();
 	TabDlg* getManagingTabDlg();
 
-	/**
-	 * Checks if the dialog is in a tabset
-	 */
 	bool isTabbed(); 
-
-	/**
-	 * Returns true if this tab is active in the active window.
-	 */ 
 	bool isActiveTab();
 
+	// reimplemented
+	virtual void doFlash(bool on);
+
+	virtual void invalidateTab();
+
+	enum State {
+		StateNone = 0,
+		StateComposing
+	};
+	virtual State state() const = 0;
+	virtual int unreadMessageCount() const = 0;
+	virtual QString desiredCaption() const = 0;
+
 signals:
+	void invalidateTabInfo();
+	void updateFlashState();
 	void eventsRead(const Jid &);
-	void captionChanged(QString);
-	void contactStateChanged(XMPP::ChatState);
-	void unreadEventUpdate(int);
 
 public slots:
+	virtual void deactivated();
 	virtual void activated();
 	void bringToFront();
-	/**
-	 * Call this after creation and before display to ensure the widget is tabbed correctly.
-	 * Ideally use a factory function for this.
-	 */ 
 	void ensureTabbedCorrectly();
+
 protected:
-	virtual void hideEvent(QHideEvent *event);
+	virtual void setJid(const Jid&);
+	PsiAccount* account() const;
+
 private:
 	Jid jid_;
 	PsiAccount *pa_;
