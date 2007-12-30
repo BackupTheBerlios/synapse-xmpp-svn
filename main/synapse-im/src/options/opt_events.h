@@ -17,6 +17,9 @@ public:
 	void applyOptions(Options *opt);
 	void restoreOptions(const Options *opt);
 
+public slots:
+	void popupTypeChanged(const QString &text);
+
 private:
 	QWidget *w;
 	QList<QRadioButton*> list_alerts;

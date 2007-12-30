@@ -46,23 +46,25 @@
 // FancyPopup
 //----------------------------------------------------------------------------
 
-FancyPopup::FancyPopup(QWidget *parent, QString title, const PsiIcon *icon, int timeout, bool copyIcon)
- : QWidget( parent, "Synapse-IM OSD", Qt::ToolTip | Qt::WType_TopLevel | Qt::WNoAutoErase | Qt::WStyle_Customize | Qt::WX11BypassWM | Qt::WStyle_StaysOnTop | Qt::WStyle_NoBorder ), m_timer(new QTimer()), m_timeout(timeout), m_prl(NULL), m_title(title)
+FancyPopup::FancyPopup()
+ : HoverLabel(0), m_prl(0), m_title("")
 // : QWidget( parent, "Synapse-IM OSD", Qt::WType_TopLevel | Qt::WNoAutoErase | Qt::WStyle_Customize | Qt::WX11BypassWM | Qt::WStyle_StaysOnTop | Qt::WStyle_Tool ), m_timer(new QTimer()), m_timeout(timeout), m_prl(NULL), m_title(title)
 {
-	QWidget::setAttribute(Qt::WA_DeleteOnClose);
+	setWindowFlags(Qt::ToolTip| Qt::X11BypassWindowManagerHint | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint );
 	setFocusPolicy(Qt::NoFocus);
-	setBackgroundRole(QPalette::Midlight);
-	setAutoFillBackground(true);
-	connect(m_timer, SIGNAL(timeout()), this, SLOT(hide()));
-
-	resize(500,100);
+	setAutoFillBackground(false);
 }
 
 FancyPopup::~FancyPopup()
 {
-	if(m_timer != NULL) delete m_timer;
-	if(m_prl != NULL) delete m_prl;
+	delete m_prl;
+}
+
+void FancyPopup::setData(const QString &title, int pos, int timeout)
+{
+	m_title = title;
+	setPosition(pos);
+	setTimeout(timeout);
 }
 
 void FancyPopup::setData(QPixmap pix, PsiRichLabel *prl)
@@ -70,52 +72,35 @@ void FancyPopup::setData(QPixmap pix, PsiRichLabel *prl)
 	m_logo = pix;
 	m_prl = prl;
 	resize(dimensions());
-}
-
-void FancyPopup::show()
-{
-	setup();
-	restartHideTimer();
-	QWidget::show();
-printf("done\n");
+	show();
+	setSize(dimensions());
 }
 
 QSize FancyPopup::dimensions()
 {
 	m_titleSize = fontMetrics().boundingRect( 0, 0,
             500, fontMetrics().height(), Qt::AlignCenter | Qt::WordBreak, m_title );
-	int width = m_logo.width() + ((m_titleSize.width()>m_prl->sizeHint().width()) ? m_titleSize.width() : m_prl->sizeHint().width());
-	width += MARGIN;
+	int width = m_logo.width() + ((m_titleSize.width()>m_prl->sizeHint().width()) ? m_titleSize.width() : m_prl->sizeHint().width()) + fontMetrics().width("X")*3;
+	/*width += MARGIN;*/
 	int text_height = m_prl->sizeHint().height() + m_titleSize.height() + 4;
-	int height = MARGIN + ((m_logo.height()>text_height) ? m_logo.height() : text_height);
+	int height = /*MARGIN +*/ ((m_logo.height()>text_height) ? m_logo.height() : text_height) + fontMetrics().width("X")*2;
 	return QSize(width, height);
 }
 
 void FancyPopup::paintEvent(QPaintEvent *pe)
 {
+	HoverLabel::paintEvent(pe);
+	printf("FancyPopup::paintEvent()\n");
 	QPainter p((QWidget*)this);
+//	HoverLabel::paintEvent(pe);
 	QRect rect(pe->rect());
 	p.setClipRect(rect);
-	p.fillRect( rect, backgroundColor() );
-
-	p.save();
-	p.setBrush(QBrush(QColor(193,193,193,127)));
-//	p.setBrush(Qt::white);
-	p.drawRoundRect(rect, xround, yround);
-	p.restore();
-
-	rect.adjust(2,2,-2,-2);
-	p.setBrush(QBrush(QColor(193,193,193,127)));
-	p.drawRoundRect(rect, xround, yround);
-
-	p.setPen( backgroundColor().dark() );
-	p.drawRoundRect( rect, xround, yround );
 
 	const uint METRIC = fontMetrics().width('X');
 	rect.adjust(METRIC, METRIC, -METRIC, -METRIC);
 /// Paint logo
 	p.translate(rect.topLeft());
-	p.drawPixmap(logo_rect, m_logo);
+	p.drawPixmap(m_logo.rect(), m_logo);
 	rect.adjust(m_logo.width() + METRIC, 0,0,0);
 
 /// Paint reason
@@ -129,31 +114,13 @@ void FancyPopup::paintEvent(QPaintEvent *pe)
 	m_prl->paintThere(&p,rect);
 }
 
-void FancyPopup::setup()
-{
-	QSize size = dimensions();
-
-	QPoint point( MARGIN, MARGIN );
-	const QRect screen = QApplication::desktop()->screenGeometry( 0 );
-	point.rx() = screen.width() - MARGIN - size.width();
-	point.ry() = screen.height() - MARGIN - size.height();
-	point += screen.topLeft();
-
-	QRect rect(point, size);
-	const uint METRIC = fontMetrics().width('X');
-	xround = (METRIC * 200) / size.width();
-	yround = (METRIC * 200) / size.height();
-
-	logo_rect = QRect(0,0,m_logo.width(),m_logo.height());
-	setGeometry(rect);
-}
-
 void FancyPopup::hideEvent(QHideEvent *e)
 {
-	m_timer->stop();
-	deleteLater();
-
 	QWidget::hide();
+	delete m_prl;
+	m_prl = 0;
+	m_logo = QPixmap();
+	deleteLater();
 }
 
 void FancyPopup::mouseReleaseEvent(QMouseEvent *e)
@@ -165,9 +132,9 @@ void FancyPopup::mouseReleaseEvent(QMouseEvent *e)
 	hide();
 }
 
-void FancyPopup::restartHideTimer()
-{
-	m_timer->start(m_timeout);
-}
+//void FancyPopup::restartHideTimer()
+//{
+//	m_timer->start(m_timeout);
+//}
 
 //#include "fancypopup.moc"

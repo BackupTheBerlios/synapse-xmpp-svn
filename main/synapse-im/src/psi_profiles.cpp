@@ -694,6 +694,8 @@ void UserProfile::reset()
 
 	// popups
 	prefs.ppIsOn        = false;
+	prefs.popupPlace = 3;
+	prefs.popupTimeout = 5000;
 	prefs.ppOnline      = true;
 	prefs.ppOffline     = true;
 	prefs.ppStatus      = false;
@@ -1187,6 +1189,8 @@ bool UserProfile::toFile(const QString &fname)
 	{
 		QDomElement pp = doc.createElement("popups");
 		p.appendChild(pp);
+		pp.appendChild(textTag(doc, "place", prefs.popupPlace));	
+		pp.appendChild(textTag(doc, "timeout", prefs.popupTimeout));	
 		pp.appendChild(textTag(doc, "on", prefs.ppIsOn));
 		pp.appendChild(textTag(doc, "online", prefs.ppOnline));
 		pp.appendChild(textTag(doc, "offline", prefs.ppOffline));
@@ -1836,6 +1840,11 @@ bool UserProfile::fromFile(const QString &fname)
 
 		QDomElement p_popup = findSubTag(p, "popups", &found);
 		if(found) {
+			QDomElement tag1 = findSubTag(p_popup, "timeout", &found);
+			if(found) {
+				readNumEntry(p_popup, "place", &prefs.popupPlace);
+				readNumEntry(p_popup, "timeout", &prefs.popupTimeout);
+			}
 			readBoolEntry(p_popup, "on", &prefs.ppIsOn);
 			readBoolEntry(p_popup, "online", &prefs.ppOnline);
 			readBoolEntry(p_popup, "offline", &prefs.ppOffline);

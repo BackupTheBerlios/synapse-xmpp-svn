@@ -21,24 +21,23 @@
 #ifndef FANCYPOPUP_H
 #define FANCYPOPUP_H
 
-#include <QWidget>
+#include "hoverlabel.h"
 #include "psirichlabel.h"
 
 class PsiIcon;
 class QTimer;
 
-class FancyPopup : public QWidget
+class FancyPopup : public HoverLabel
 {
 	Q_OBJECT
 public:
-	FancyPopup(QWidget *parent, QString title, const PsiIcon *icon = 0, int timeout = 3000, bool copyIcon = true);
+	FancyPopup();
 	~FancyPopup();
 
+	void setData(const QString &title, int pos = HoverLabel::BottomRight, int timeout = 5000);
 	void setData(QPixmap pix, PsiRichLabel *prl);
 
-	void setup();
-	void show();
-	void restartHideTimer();
+//	void show();
 
 signals:
 	void clicked(int);
@@ -48,7 +47,7 @@ protected:
 	void mouseReleaseEvent(QMouseEvent *);
 	void paintEvent(QPaintEvent *);
 
-	static const int MARGIN = 15;
+//	static const int MARGIN = 15;
 
 public:
 	class Private;

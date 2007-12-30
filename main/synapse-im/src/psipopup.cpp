@@ -144,7 +144,8 @@ void PsiPopup::Private::init(const PsiIcon *_titleIcon, QString titleText, PsiAc
 	else
 		titleIcon = new PsiIcon(*_titleIcon);
 
-	popup = new FancyPopup(0,titleText, titleIcon, 3000, false);
+	popup = new FancyPopup();
+	popup->setData(titleText, option.popupPlace, option.popupTimeout);
 	connect(popup, SIGNAL(clicked(int)), SLOT(popupClicked(int)));
 	connect(popup, SIGNAL(destroyed()), SLOT(popupDestroyed()));
 	
@@ -314,13 +315,13 @@ void PsiPopup::setData(const PsiIcon *icon, QString text,const Jid& j) //sets la
 		return;
 	}
 
-	d->popup->setData(d->createContactPixmap((QPixmap*)&icon->pixmap(),j), d->createContactInfo(icon, text));
 	// update id
 	if ( icon )
 		d->id += icon->name();
 	d->id += text;
+	d->popup->setData(d->createContactPixmap((QPixmap*)&icon->pixmap(),j), d->createContactInfo(icon, text));
 
-	show();
+//	show();
 	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic") {
 		show();
 	}
@@ -430,7 +431,7 @@ void PsiPopup::show()
 	if ( !d->id.isEmpty() /*&& option.ppNoDupes*/ ) {
 		foreach (PsiPopup *pp, *psiPopupList) {
 			if ( d->id == pp->id() && pp->popup() ) {
-				pp->popup()->restartHideTimer();
+//				pp->popup()->restartHideTimer();
 
 				d->display = false;
 				break;

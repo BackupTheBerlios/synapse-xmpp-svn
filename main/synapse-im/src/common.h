@@ -75,6 +75,8 @@ struct Options
 	bool useDock, dockDCstyle, dockHideMW, dockToolMW;
 	bool smallChats, chatLineEdit, useTabs, putTabsAtBottom, usePerTabCloseButton, autoRosterSize, autoRosterSizeGrowTop, autoResolveNicksOnAdd, brushedMetal;
 
+	int popupPlace, popupTimeout;
+
 	bool autoCopy; // although this setting is ignored under linux,
 	               // it is preserved in case user uses the same config file on different platforms
 	bool useCaps;

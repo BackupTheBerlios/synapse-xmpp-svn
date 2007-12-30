@@ -4,10 +4,13 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPen>
+#include <QApplication>
+#include <QDesktopWidget>
 
 HoverLabel::HoverLabel(QWidget *parent,int _pos, int timeout)
 : QWidget(parent), animating_(false), percent_(0), pos_(_pos)
 {
+	setAutoFillBackground(false);
 	timer_.setInterval(1000/30);
 	hideTimer_.setInterval(timeout);
 	hideTimer_.setSingleShot(true);
@@ -31,7 +34,7 @@ void HoverLabel::setText(const QString &text)
 	}
 }
 
-/*void HoverLabel::setSize(const QSize &s)
+void HoverLabel::setSize(const QSize &s)
 {
 	staticSize_ = s;
 	oldSize_ = s;
@@ -40,7 +43,12 @@ void HoverLabel::setText(const QString &text)
 	show();
 	repaint();
 	hideTimer_.start();
-}*/
+}
+
+void HoverLabel::setTimeout(int timeout)
+{
+	hideTimer_.setInterval(timeout);
+}
 
 QSize HoverLabel::sizeForFont() const
 {
@@ -51,8 +59,8 @@ QSize HoverLabel::sizeForFont() const
 
 QSize HoverLabel::sizeHint() const
 {
-//	if (!staticSize_.isNull())
-//		return staticSize_;
+	if (!staticSize_.isNull())
+		return staticSize_;
 	if (!animating_)
 		return sizeForFont();
 	else
@@ -76,6 +84,11 @@ void HoverLabel::resetAnimation()
 		timer_.start();
 }
 
+void HoverLabel::setPosition(int pos)
+{
+	pos_ = pos;
+}
+
 int HoverLabel::position()
 {
 	return pos_;
@@ -88,12 +101,13 @@ void HoverLabel::mousePressEvent(QMouseEvent *e)
 
 void HoverLabel::paintEvent(QPaintEvent *e)
 {
+	printf("HoverLabel::paintEvent()\n");
 	QPainter p(this);
 	p.setClipRect(e->rect());
 	p.setPen(QPen(Qt::black, 1));
 	QLinearGradient gradient(rect().topLeft(), rect().bottomLeft());
-	gradient.setColorAt(0, QColor(255, 255, 255, 220));
-	gradient.setColorAt(1, QColor(193, 193, 193, 220));
+	gradient.setColorAt(0, QColor(255, 255, 255, 200));
+	gradient.setColorAt(1, QColor(193, 193, 193, 200));
 	p.setBrush(QBrush(gradient));
 	QSize size;
 	{
@@ -168,15 +182,16 @@ QSize HoverLabel::interpolate(const QSize &src, const QSize &dst, qreal percent)
 
 void HoverLabel::resizeEvent(QWidget *w)
 {
+	QSize ps = w ? w->size() : QApplication::desktop()->screenGeometry( 0 ).size();
 	QSize hs = sizeHint();
 	if(pos_ == TopLeft)
 		setGeometry(0, 0, hs.width(), hs.height());
 	else if(pos_ == TopRight)
-		setGeometry(w->width() - hs.width(), 0, hs.width(), hs.height());
+		setGeometry(ps.width() - hs.width(), 0, hs.width(), hs.height());
 	else if(pos_ == BottomLeft)
-		setGeometry(0, w->height() - hs.height(), hs.width(), hs.height());
+		setGeometry(0, ps.height() - hs.height(), hs.width(), hs.height());
 	else if(pos_ == BottomRight)
-		setGeometry(w->width() - hs.width(), w->height() - hs.height(), hs.width(), hs.height());
+		setGeometry(ps.width() - hs.width(), ps.height() - hs.height(), hs.width(), hs.height());
 }
 
 #include "hoverlabel.moc"

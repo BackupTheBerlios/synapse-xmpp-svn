@@ -70,6 +70,8 @@ QWidget *OptionsTabEvents::widget()
 	d->cb_bounce->hide();
 	d->lb_bounce->hide();
 #endif
+
+	connect(d->cb_popupType, SIGNAL(currentIndexChanged(const QString &)), this, SLOT(popupTypeChanged(const QString &)));
 /*
 	list_alerts.insert(0,d->rb_aSolid);
 	list_alerts.insert(1,d->rb_aBlink);
@@ -107,6 +109,8 @@ void OptionsTabEvents::applyOptions(Options *opt)
 	opt->ppOffline = d->ck_popupOnOffline->isChecked();
 	opt->ppStatus  = d->ck_popupOnStatus->isChecked();
 	PsiOptions::instance()->setOption("options.ui.popupType", d->cb_popupType->currentText());
+	opt->popupPlace = d->cb_popupPlacement->currentIndex();
+	opt->popupTimeout = d->sb_popupTimeout->value() * 1000;
 }
 
 void OptionsTabEvents::restoreOptions(const Options *opt)
@@ -145,4 +149,29 @@ void OptionsTabEvents::restoreOptions(const Options *opt)
 			break;
 	d->cb_popupType->addItems(typeList);
 	d->cb_popupType->setCurrentItem(n);
+
+	d->cb_popupPlacement->setCurrentItem(opt->popupPlace);
+	d->sb_popupTimeout->setValue(opt->popupTimeout/1000);
+	d->sb_popupTimeout->setSuffix("s");
+
+	if(n != 1) {
+		d->cb_popupPlacement->setEnabled(false);
+		d->sb_popupTimeout->setEnabled(false);
+	}
+}
+
+void OptionsTabEvents::popupTypeChanged(const QString &text)
+{
+	if ( !w )
+		return;
+
+	OptEventsUI *d = (OptEventsUI *)w;
+
+	if(text == "Full") {
+		d->cb_popupPlacement->setEnabled(true);
+		d->sb_popupTimeout->setEnabled(true);
+	} else {
+		d->cb_popupPlacement->setEnabled(false);
+		d->sb_popupTimeout->setEnabled(false);
+	}
 }

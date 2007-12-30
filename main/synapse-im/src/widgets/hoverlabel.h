@@ -22,12 +22,16 @@ signals:
 
 public slots:
 	void setText(const QString &text);
+	void setSize(const QSize &s);
+	void setTimeout(int timeout);
 	QSize sizeForFont() const;
 	QSize sizeHint() const;
 	void updateSize();
 	void resetAnimation();
 
 	int position();
+	void setPosition(int pos);
+
 	void resizeEvent(QWidget *w);
 
 protected:
@@ -41,6 +45,7 @@ private:
 	bool    animating_;
 	QTimer  timer_;
 	QTimer  hideTimer_;
+	QSize	staticSize_;
 	QSize   oldSize_;
 	QSize   newSize_;
 	qreal   percent_;
