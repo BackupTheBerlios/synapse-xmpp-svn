@@ -8,9 +8,9 @@
 #include <QDesktopWidget>
 
 HoverLabel::HoverLabel(QWidget *parent,int _pos, int timeout)
-: QWidget(parent), animating_(false), percent_(0), pos_(_pos)
+: QWidget(parent), animating_(false), percent_(0), pos_(_pos), staticSize_(0,0)
 {
-	setAutoFillBackground(false);
+	//setAutoFillBackground(false);
 	timer_.setInterval(1000/30);
 	hideTimer_.setInterval(timeout);
 	hideTimer_.setSingleShot(true);
@@ -105,6 +105,7 @@ void HoverLabel::paintEvent(QPaintEvent *e)
 	QPainter p(this);
 	p.setClipRect(e->rect());
 	p.setPen(QPen(Qt::black, 1));
+	p.save();
 	QLinearGradient gradient(rect().topLeft(), rect().bottomLeft());
 	gradient.setColorAt(0, QColor(255, 255, 255, 200));
 	gradient.setColorAt(1, QColor(193, 193, 193, 200));
@@ -165,6 +166,7 @@ void HoverLabel::paintEvent(QPaintEvent *e)
 		}
 	}
 
+	p.restore();
 	if(!text_.isEmpty()) {
 		QString txt;
 		QFontMetrics fm(fontMetrics());

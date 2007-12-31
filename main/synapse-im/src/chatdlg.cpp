@@ -323,9 +323,9 @@ bool ChatDlg::readyToHide()
 
 	// Reset 'contact is composing' & cancel own composing event
 	resetComposing();
-	setChatState(StateGone);
-	if (contactChatState_ == StateComposing || contactChatState_ == StateInactive) {
-		setContactChatState(StatePaused);
+	setChatState(XMPP::StateGone);
+	if (contactChatState_ == XMPP::StateComposing || contactChatState_ == XMPP::StateInactive) {
+		setContactChatState(XMPP::StatePaused);
 	}
 
 	if (pending_ > 0) {
@@ -354,7 +354,7 @@ void ChatDlg::hideEvent(QHideEvent* e)
 {
 	if (isMinimized()) {
 		resetComposing();
-		setChatState(StateInactive);
+		setChatState(XMPP::StateInactive);
 	}
 	TabbableWidget::hideEvent(e);
 }
@@ -806,16 +806,16 @@ void ChatDlg::doSend()
 
 
 	// Request events
-#ifdef USE_XEP0022
 	if (option.messageEvents) {
 
 		// Only request more events when really necessary
+#ifdef USE_XEP0022
 		if (sendComposingEvents_) {
 			m.addEvent(ComposingEvent);
 		}
+#endif
 		m.setChatState(XMPP::StateActive);
 	}
-#endif
 
 	// Update current state
 	setChatState(XMPP::StateActive);
@@ -1018,7 +1018,7 @@ void ChatDlg::setChatState(ChatState state)
 #ifdef USE_XEP0022
 	if (option.messageEvents && (sendComposingEvents_ || (contactChatState_ != XMPP::StateNone))) {
 #else
-	if (option.messageEvents && (contactChatState_ != StateNone)) {
+	if (option.messageEvents && (contactChatState_ != XMPP::StateNone)) {
 #endif
 		// Don't send to offline resource
 		QList<UserListItem*> ul = account()->findRelevant(jid());
@@ -1111,10 +1111,10 @@ void ChatDlg::setContactChatState(ChatState state)
 			setChatState(XMPP::StateActive);
 		}
 	}
-	if (contactChatState_ == StateComposing)
+	if (contactChatState_ == XMPP::StateComposing)
 		hover_->setText(tr("%1 (Composing ...)").arg(Qt::escape(dispNick_)));
 //		tr("%1 (Composing ...)").arg(cap);
-	else if (contactChatState_ == StateInactive)
+	else if (contactChatState_ == XMPP::StateInactive)
 		hover_->setText(tr("%1 (Inactive)").arg(Qt::escape(dispNick_)));
 	else hover_->setText("");
 //		cap = tr("%1 (Inactive)").arg(cap);
