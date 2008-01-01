@@ -199,6 +199,9 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	QAction *xmlConsole = NULL;
 	QAction *sendMessage = NULL;
 	QAction *startChat = NULL;
+#ifdef WHITEBOARDING
+	QAction *openWhiteboard = NULL;
+#endif
 	QAction *RC = NULL;
 	QAction *voiceCall = NULL;
 	QAction *upload = NULL;
@@ -238,50 +241,50 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		serviceDiscovery = pm.addAction(IconsetFactory::icon("psi/disco").icon(), SIMContactList::tr("Service &Discovery"));
 		xmlConsole = pm.addAction(IconsetFactory::icon("psi/xml").icon(), SIMContactList::tr("&XML Console"));
 		pm.addSeparator();
-	}
+	} else {
 
-	if(!self && !inList && !isPrivate && !option.lockdown.roster && online) {
-		addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), SIMContactList::tr("Add/Authorize to contact list"));
+		if(!inList && !isPrivate && !option.lockdown.roster && online) {
+			addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), SIMContactList::tr("Add/Authorize to contact list"));
 		
-		pm.addSeparator();
-	}
+			pm.addSeparator();
+		}
 
+		if (PsiOptions::instance()->getOption("options.ui.message.enabled").toBool() && online)
+			sendMessage = pm.addAction(IconsetFactory::icon("psi/sendMessage").icon(), SIMContactList::tr("Send &message"));
 
-	if (PsiOptions::instance()->getOption("options.ui.message.enabled").toBool() && online)
-		sendMessage = pm.addAction(IconsetFactory::icon("psi/sendMessage").icon(), SIMContactList::tr("Send &message"));
-
-	if (online)
-		startChat = pm.addAction(IconsetFactory::icon("psi/start-chat").icon(), SIMContactList::tr("Open &chat window"));
+		if (online)
+			startChat = pm.addAction(IconsetFactory::icon("psi/start-chat").icon(), SIMContactList::tr("Open &chat window"));
 	
 #ifdef WHITEBOARDING
-	QAction *openWhiteboard;
-	if (online)
-		openWhiteboard = pm.addAction(IconsetFactory::icon("psi/whiteboard").icon(), SIMContactList::tr("Open a &whiteboard"));
+		if (online)
+			openWhiteboard = pm.addAction(IconsetFactory::icon("psi/whiteboard").icon(), SIMContactList::tr("Open a &whiteboard"));
 #endif
+	}
 
 	if(!isPrivate && option.useRC) {
 		RC = pm.addAction(SIMContactList::tr("E&xecute command"));
 	}
 
-	if(account()->voiceCaller() && !isAgent && online) {
-		bool hasVoice = false;
-		const UserResourceList &rl = u_.userResourceList();
-		for (UserResourceList::ConstIterator it = rl.begin(); it != rl.end() && !hasVoice; ++it) {
+	if(!self) {
+		if(account()->voiceCaller() && !isAgent && online) {
+			bool hasVoice = false;
+			const UserResourceList &rl = u_.userResourceList();
+			for (UserResourceList::ConstIterator it = rl.begin(); it != rl.end() && !hasVoice; ++it) {
 			hasVoice = account()->capsManager()->features(u_.jid().withResource((*it).name())).canVoice();
 		}
 		if( hasVoice && account()->capsManager()->isEnabled() )
 			voiceCall = pm.addAction(IconsetFactory::icon("psi/voice").icon(), SIMContactList::tr("Voice call"));
-	}
+		}
 
-	if(!isAgent && online) {
-		pm.addSeparator();
-		upload = pm.addAction(IconsetFactory::icon("psi/upload").icon(), SIMContactList::tr("Send &file"));
-	}
+		if(!isAgent && online) {
+			pm.addSeparator();
+			upload = pm.addAction(IconsetFactory::icon("psi/upload").icon(), SIMContactList::tr("Send &file"));
+		}
 
-	if(!self) {
 		history = pm.addAction(IconsetFactory::icon("psi/history").icon(), SIMContactList::tr("&History"));
-		info = pm.addAction(IconsetFactory::icon("psi/vCard").icon(), SIMContactList::tr("User &Info"));
 	}
+
+	info = pm.addAction(IconsetFactory::icon("psi/vCard").icon(), SIMContactList::tr("User &Info"));
 
 	if(!self && online && !option.lockdown.roster) {
 		QMenu *manage = pm.addMenu(SIMContactList::tr("Manage"));
@@ -314,7 +317,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		}
 	}
 
-	if(!self && online)
+	if(!self && online) {
 		if(isAgent) {
 			if(!u_.isAvailable())
 				logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_ONLINE).icon(), SIMContactList::tr("&Log on"));
@@ -326,11 +329,13 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		else
 			block = pm.addAction(IconsetFactory::icon("psi/stop").icon(), SIMContactList::tr("Block contact"));
 
-	copyJid = pm.addAction(SIMContactList::tr("Copy JID"));
-	if(!description().isEmpty()) {
-		copyStatusMsg = pm.addAction(SIMContactList::tr("Copy status message"));
-		if(TextUtil::linkify(description()).compare(description()) != 0)
-			goToUrl = pm.addAction(SIMContactList::tr("Go to URL.."));
+		copyJid = pm.addAction(SIMContactList::tr("Copy JID"));
+		if(!description().isEmpty()) {
+			copyStatusMsg = pm.addAction(SIMContactList::tr("Copy status message"));
+			if(TextUtil::linkify(description()).compare(description()) != 0)
+				goToUrl = pm.addAction(SIMContactList::tr("Go to URL.."));
+		}
+
 	}
 
 	QAction *ret = pm.exec(p);
@@ -380,7 +385,10 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	} else if (ret == history) {
 		account()->actionHistory(u_.jid());
 	} else if (ret == info) {
-		account()->actionInfo(u_.jid());
+		if(!self)
+			account()->actionInfo(u_.jid());
+		else
+			account()->changeVCard();
 	} else if (ret == rename) {
 //		account()->actionRename(u.jid());
 		QModelIndex m = ((SIMContactListModel*)contactList()->contactListView()->model())->index(row(), SIMContactListModel::NameColumn, this);
