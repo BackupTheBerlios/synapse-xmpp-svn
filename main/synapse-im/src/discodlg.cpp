@@ -634,6 +634,8 @@ void DiscoListItem::updateItemsFinished(const DiscoList &list)
 	for(DiscoList::ConstIterator it = list.begin(); it != list.end(); ++it) {
 		const DiscoItem a = *it;
 
+		printf(" %s\n", a.jid().full().toAscii().data());
+
 		QString key = computeHash(a.jid().full(), a.node());
 		DiscoListItem *ch = children[ key ];
 
@@ -736,10 +738,13 @@ void DiscoListItem::updateInfo(const DiscoItem &item)
 {
 	copyItem( item );
 
+	printf(" 1: %s\n", item.jid().full().toAscii().data());
+
 	if ( treeWidget()->indexOfTopLevelItem(QTreeWidgetItem::parent()) != -1 ) {
 		DiscoGroupItem *gi = NULL;
 		DiscoItem::Identities ids = item.identities();
 		if(!ids.isEmpty()) {
+			printf(" 2: %s\n", item.jid().full().toAscii().data());
 			for(int i = 0; i<QTreeWidgetItem::parent()->childCount(); i++) {
  				gi = dynamic_cast<DiscoGroupItem*>(QTreeWidgetItem::parent()->child(i));
 				if ((gi != NULL) && (gi->compare(ids.first().category) == 0)) {
@@ -758,12 +763,15 @@ void DiscoListItem::updateInfo(const DiscoItem &item)
 			if(gi != NULL) {
 				QTreeWidgetItem::parent()->removeChild(this);
 				if (gi->childCount() > 0) {
-					for(int i = 0; i<gi->childCount(); i++) {
+					int i;
+					for(i = 0; i<gi->childCount(); i++) {
 							if (text(0).compare(gi->child(i)->text(0)) < 0) {
 							gi->insertChild(i, this);
 							break;
 						}
 					}
+					if(i == gi->childCount())
+						gi->addChild(this);
 				} else {
 					gi->addChild(this);
 				}
