@@ -3425,6 +3425,20 @@ void PsiAccount::actionGroupRename(const QString &oldname, const QString &newnam
 	}
 }
 
+void PsiAccount::actionArchive(const Jid &j)
+{
+#ifdef XEP-0136
+	ArchiveDlg *w = findDialog<ArchiveDlg*>(j);
+	if(w)
+		bringToFront(w);
+	else {
+		w = new ArchiveDlg(j, this);
+//		connect(w, SIGNAL(openEvent(PsiEvent *)), SLOT(actionHistoryBox(PsiEvent *)));
+		w->show();
+	}
+#endif
+}
+
 void PsiAccount::actionHistory(const Jid &j)
 {
 	HistoryDlg *w = findDialog<HistoryDlg*>(j);

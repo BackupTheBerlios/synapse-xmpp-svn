@@ -205,6 +205,9 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	QAction *RC = NULL;
 	QAction *voiceCall = NULL;
 	QAction *upload = NULL;
+#ifdef XEP-0136
+	QAction *archive = NULL;
+#endif
 	QAction *history = NULL;
 	QAction *info = NULL;
 	QAction *rename = NULL;
@@ -280,6 +283,10 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			pm.addSeparator();
 			upload = pm.addAction(IconsetFactory::icon("psi/upload").icon(), SIMContactList::tr("Send &file"));
 		}
+
+#ifdef XEP-0136
+		archive = pm.addAction(IconsetFactory::icon("psi/history").icon(), SIMContactList::tr("&Archive"));
+#endif
 
 		history = pm.addAction(IconsetFactory::icon("psi/history").icon(), SIMContactList::tr("&History"));
 	}
@@ -382,6 +389,10 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		account()->actionVoice(u_.jid());
 	} else if (ret == upload) {
 		account()->actionSendFile(u_.jid());
+#ifdef XEP-0136
+	} else if (ret == archive) {
+		account()->actionArchive(u_.jid());
+#endif
 	} else if (ret == history) {
 		account()->actionHistory(u_.jid());
 	} else if (ret == info) {

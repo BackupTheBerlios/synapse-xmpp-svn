@@ -57,6 +57,8 @@ include(../iris/CMakeLinks.txt)
 
 include(privacy/CMakeLists.txt)
 
+include(archiving/CMakeLists.txt)
+
 include(capabilities/CMakeLists.txt)
 include(irisprotocol/CMakeLists.txt)
 include(utilities/CMakeLists.txt)
@@ -79,10 +81,8 @@ set(rpc_SRCS
 set(rpc_H
 	dbus.h
 )
-if(AVAHI_FOUND)
-#////////???????????????
-	ADD_DEFINITIONS(-DLINKLOCAL)
-endif(AVAHI_FOUND)
+#if(AVAHI_FOUND)
+#endif(AVAHI_FOUND)
 else (QT_QTDBUS_FOUND)
 	if(WIN32)
 		set(rpc_SRCS
@@ -90,6 +90,8 @@ else (QT_QTDBUS_FOUND)
 		)
 	endif(WIN32)
 endif(QT_QTDBUS_FOUND)
+
+ADD_DEFINITIONS(-DLINKLOCAL)
 
 #Whiteboarding
 if(QT_QTSVG_FOUND)
@@ -405,6 +407,9 @@ add_executable(synapse-im
 	${privacy_SRCS}
 	${privacy_moc_SRCS}
 	${privacy_UIS_H}
+	${archiving_SRCS}
+	${archiving_moc_SRCS}
+	${archiving_UIS_H}
 	${capabilities_SRCS}
 	${capabilities_moc_SRCS}
 	${utilities_SRCS}

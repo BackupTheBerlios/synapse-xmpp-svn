@@ -1,7 +1,6 @@
 /*
  * busywidget.h - cool animating widget
- * Copyright (C) 2001, 2002  Justin Karneges
- *                           Hideaki Omuro
+ * Copyright (C) 2007        Andrzej Wójcik
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

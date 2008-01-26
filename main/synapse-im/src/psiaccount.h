@@ -90,6 +90,10 @@ class SIMContactListAccount;
 //class JingleFileTransfer;
 #endif
 
+#ifdef XEP-0136
+#include "archivedlg.h"
+#endif
+
 // sick sick remove this someday please!
 struct GCContact;
 
@@ -274,6 +278,7 @@ public slots:
 	void actionRemove(const Jid &);
 	void actionRename(const Jid &, const QString &);
 	void actionGroupRename(const QString &, const QString &);
+	void actionArchive(const Jid &);
 	void actionHistory(const Jid &);
 	void actionOpenChat(const Jid &);
 	void actionOpenChatSpecific(const Jid &);
