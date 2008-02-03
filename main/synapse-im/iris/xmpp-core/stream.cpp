@@ -937,7 +937,7 @@ void ClientStream::processNext()
 				incomingXml(str);
 		}
 
-		if(!ok) {
+		if(!ok && !(d->client.need == BasicProtocol::NSASLLayer)) {
 			bool cont = handleNeed();
 
 			// now we can announce stanzas
