@@ -39,6 +39,7 @@ void ServerInfoManager::reset()
 	amp_ = NULL;
 	hasGoogleMailNotify_ = false;
 	hasGoogleArchive_ = false;
+	hasMessageArchiving_ = false;
 	multicastService_ = QString();
 }
 
@@ -89,6 +90,13 @@ bool ServerInfoManager::hasGoogleArchive() const
 	return hasGoogleArchive_;
 }
 
+#ifdef XEP-0136
+bool ServerInfoManager::hasMessageArchiving() const
+{
+	return hasMessageArchiving_;
+}
+#endif
+
 void ServerInfoManager::disco_finished()
 {
 	JT_DiscoInfo *jt = (JT_DiscoInfo *)sender();
@@ -106,6 +114,11 @@ void ServerInfoManager::disco_finished()
 
 		if (f.test(QStringList("http://jabber.org/protocol/archive#save")) || f.test(QStringList("http://jabber.org/protocol/archive#otr")))
 			hasGoogleArchive_ = true;
+
+#ifdef XEP-0136
+		if(f.test(QStringList("http://www.xmpp.org/extensions/xep-0136.html#ns-auto")) || f.test(QStringList("http://www.xmpp.org/extensions/xep-0136.html#ns-manage")) || f.test(QStringList("http://www.xmpp.org/extensions/xep-0136.html#ns-pref")) || f.test(QStringList("http://www.xmpp.org/extensions/xep-0136.html#ns-manual")))
+			hasMessageArchiving_ = true;
+#endif
 
 		// Identities
 		DiscoItem::Identities is = jt->item().identities();

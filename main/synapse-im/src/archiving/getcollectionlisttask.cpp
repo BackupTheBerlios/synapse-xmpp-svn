@@ -56,6 +56,9 @@ bool GetCollectionListTask::take(const QDomElement &x)
 
 			return true;
 		}
+	} else if(x.attribute("type") == "error") {
+		emit done();
+		emit error();
 	}
 
 	return false;

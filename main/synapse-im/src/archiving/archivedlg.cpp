@@ -3,6 +3,8 @@
 #include <QTextCharFormat>
 #include <QListWidgetItem>
 #include <QTreeWidgetItem>
+#include <QMenu>
+#include <QMessageBox>
 
 #include "psiaccount.h"
 #include "getcollectionlisttask.h"
@@ -38,18 +40,21 @@ ArchiveDlg::ArchiveDlg(const XMPP::Jid &jid, PsiAccount *pa)
 	connect(calendar, SIGNAL(currentPageChanged(int, int)), this, SLOT(dateChanged(int, int)));
 
 	connect(lw_conversations, SIGNAL(itemSelectionChanged()), this, SLOT(collectionSelected()));
+	connect(lw_conversations, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(doCollectionContextMenu(const QPoint&)));
+	lw_conversations->
 
 	connect(tb_prevPage, SIGNAL(clicked()), this, SLOT(prevPage()));	connect(tb_nextPage, SIGNAL(clicked()), this, SLOT(nextPage()));
 
 	gclt_ = new GetCollectionListTask(pa->client()->rootTask());
 	connect(gclt_, SIGNAL(busy()), this, SLOT(busy()));
 	connect(gclt_, SIGNAL(done()), this, SLOT(collectionListRetrieved()));
-	connect(gclt_, SIGNAL(error()), this, SLOT(collectionListError()));
+	connect(gclt_, SIGNAL(error()), this, SLOT(error()));
 
 	gct_ = new GetCollectionTask(pa_->client()->rootTask());
 	connect(gct_, SIGNAL(busy()), this, SLOT(busy()));
 	connect(gct_, SIGNAL(done(int)), this, SLOT(collectionRetrieved(int)));
 	connect(gct_, SIGNAL(msg(int, bool, const QString&)), this, SLOT(collectionMsg(int, bool, const QString&)));
+	connect(gct_, SIGNAL(error()), this, SLOT(error()));
 	
 	QDate m(last_.date().year(), last_.date().month(), 1);
 	gclt_->get(jid, m, 50);
@@ -97,6 +102,40 @@ void ArchiveDlg::collectionSelected()
 		gct_->get(jid_, item->data(Qt::UserRole).toString(), 0, max);
 	}
 
+}
+
+void ArchiveDlg::doCollectionContextMenu(const QPoint &pos)
+{
+	QMenu cm;
+	QAction* _open = cm.addAction(tr("Open"));
+	QAction* _delete = cm.addAction(tr("Delete"));
+
+	QListWidgetItem *item = (*lw_conversations->selectedItems().begin());
+
+	if(item) {
+		QAction* x = cm.exec(lw_conversations->mapToGlobal(pos));
+
+		if(gct_ == NULL) {
+			gct_ = new GetCollectionTask(pa_->client()->rootTask());
+			connect(gct_, SIGNAL(busy()), this, SLOT(busy()));
+			connect(gct_, SIGNAL(done(int)), this, SLOT(collectionRetrieved(int)));
+			connect(gct_, SIGNAL(msg(int, bool, const QString&)), this, SLOT(collectionMsg(int, bool, const QString&)));
+		}
+
+		tw_log->clear();
+		last_ = QDateTime::fromString(item->data(Qt::UserRole).toString().left(15), Qt::ISODate);
+
+		if(x == _open) {
+			gct_->get(jid_, item->data(Qt::UserRole).toString(), 0, max);
+			//actionOpenEvent(EventsTree->currentItem());
+		}
+		else if (x == _delete) {
+			gct_->deleteCollection(jid_, item->data(Qt::UserRole).toString());
+			QDate m(last_.date().year(), last_.date().month(), 1);
+			lw_conversations->clear();
+			gclt_->get(jid_, m, 50);
+		}
+	}
 }
 
 void ArchiveDlg::prevPage()
@@ -159,10 +198,9 @@ void ArchiveDlg::collectionListRetrieved()
 	i++;
 }
 
-void ArchiveDlg::collectionListError()
+void ArchiveDlg::error()
 {
-	progressBar->setMaximum(100);
-	progressBar->setValue(100);
+	QMessageBox::critical(0, "Error", "Error while trying to use\none of XEP-0136 features.");
 }
 
 void ArchiveDlg::collectionMsg(int sec, bool direction, const QString &body)

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QDialog>
 #include <QDateTime>
+#include <QPoint>
 #include "ui_archivedlg.h"
 #include "xmpp_jid.h"
 
@@ -22,13 +23,14 @@ public slots:
 	void dateChanged(int year, int month);
 	void dateSelected();
 	void collectionSelected();
+	void doCollectionContextMenu(const QPoint&);
 
 	void prevPage();
 	void nextPage();
 
 	void busy();
 	void collectionListRetrieved();
-	void collectionListError();
+	void error();
 
 	void collectionMsg(int sec, bool direction, const QString &body);
 	void collectionRetrieved(int count);

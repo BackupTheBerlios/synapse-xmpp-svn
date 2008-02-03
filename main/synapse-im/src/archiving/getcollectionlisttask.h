@@ -58,6 +58,7 @@ public:
 signals:
 	void busy();
 	void done();
+	void error();
 
 private:
 	QList<Collection> collections_;

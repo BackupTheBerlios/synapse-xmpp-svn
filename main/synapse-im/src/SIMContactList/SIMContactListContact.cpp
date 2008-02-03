@@ -285,7 +285,10 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		}
 
 #ifdef XEP-0136
-		archive = pm.addAction(IconsetFactory::icon("psi/history").icon(), SIMContactList::tr("&Archive"));
+		ServerInfoManager *sim = account()->serverInfoManager();
+//		if(sim && sim->hasMessageArchiving()) {
+			archive = pm.addAction(IconsetFactory::icon("psi/history").icon(), SIMContactList::tr("&Archive"));
+//		}
 #endif
 
 		history = pm.addAction(IconsetFactory::icon("psi/history").icon(), SIMContactList::tr("&History"));

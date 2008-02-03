@@ -19,6 +19,7 @@ public:
 	~GetCollectionTask();
 
 	void get(const XMPP::Jid &, const QString &, int page = 0, int max = 30);
+	void deleteCollection(const XMPP::Jid &jid, const QString &start);
 
 	void onGo();
 	bool take(const QDomElement &);
@@ -27,6 +28,7 @@ signals:
 	void msg(int sec, bool direction, const QString &body);
 	void busy();
 	void done(int count);
+	void error();
 };
 
 #endif

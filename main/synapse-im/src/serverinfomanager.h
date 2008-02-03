@@ -39,6 +39,9 @@ public:
 	const QString& multicastService() const;
 	bool hasGoogleMailNotify() const;
 	bool hasGoogleArchive() const;
+#ifdef XEP-0136
+	bool hasMessageArchiving() const;
+#endif
 	bool hasPEP() const;
 	bool hasAMP(QString f = "") const;
 
@@ -58,6 +61,9 @@ private:
 	bool featuresRequested_;
 	bool hasGoogleMailNotify_;
 	bool hasGoogleArchive_;
+#ifdef XEP-0136
+	bool hasMessageArchiving_;
+#endif
 	bool hasPEP_;
 };
 

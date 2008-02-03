@@ -27,6 +27,18 @@ void GetCollectionTask::get(const XMPP::Jid &jid, const QString &start, int page
 	emit busy();
 }
 
+void GetCollectionTask::deleteCollection(const XMPP::Jid &jid, const QString &start)
+{
+	QDomElement iq = createIQ(doc(), "set", "", id());
+	QDomElement ret = doc()->createElement("remove");
+	ret.setAttribute("xmlns", MessageArchivingNS);
+	ret.setAttribute("with", jid.bare());
+	ret.setAttribute("start", start);
+	iq.appendChild(ret);
+	send(iq);
+	emit busy();
+}
+
 void GetCollectionTask::onGo()
 {
 }
@@ -64,9 +76,11 @@ bool GetCollectionTask::take(const QDomElement &x)
 			}
 
 			emit done(count);
-
-			return true;
 		}
+		return true;
+	} else if(x.attribute("type") == "error") {
+		emit done(0);
+		emit error();
 	}
 
 	return false;
