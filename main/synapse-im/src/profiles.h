@@ -33,6 +33,8 @@
 #include "xmpp_roster.h"
 #include "xmpp_jid.h"
 
+class OptionsTree;
+
 class UserAccount
 {
 public:
@@ -41,16 +43,15 @@ public:
 
 	void reset();
 
-	QDomElement toXml(QDomDocument &, const QString &tagName);
-	void fromXml(const QDomElement &);
+	void fromOptions(OptionsTree *o, QString base);
+	void toOptions(OptionsTree *o, QString base=QString());
 
 	QString name;
 	QString jid, pass, host, resource, authid, realm;
 	bool customAuth;
 	int port, priority;
- 	bool opt_enabled, opt_pass, opt_host, opt_auto, opt_newMail, opt_keepAlive, opt_log, opt_amp, opt_reconn, opt_ignoreSSLWarnings, opt_ignoreHostMismatch, opt_compress;
+ 	bool opt_enabled, opt_pass, opt_host, opt_auto, opt_newMail, opt_keepAlive, opt_log, opt_amp, opt_connectAfterSleep, opt_reconn, opt_ignoreSSLWarnings, opt_ignoreHostMismatch, opt_compress;
 	XMPP::ClientStream::AllowPlainType allow_plain;
-	bool tog_offline, tog_away, tog_agents, tog_hidden, tog_self;
 	bool req_mutual_auth;
 	bool legacy_ssl_probe;
 	bool opt_automatic_resource;
@@ -60,9 +61,7 @@ public:
 	bool opt_login_as;
 	QString opt_login_status, opt_login_message;
 
-	int proxy_index;
-	int proxy_type, proxy_port;
-	QString proxy_host, proxy_user, proxy_pass;
+	QString proxyID;
 
 	XMPP::Roster roster;
 
@@ -77,6 +76,15 @@ public:
 	VarList keybind;
 
 	XMPP::Jid dtProxy;
+	
+	QString optionsBase;
+	
+	
+	/* migration only 
+	int proxy_index;
+	int proxy_type, proxy_port;
+	QString proxy_host, proxy_user, proxy_pass;
+	bool tog_offline, tog_away, tog_agents, tog_hidden, tog_self;*/
 };
 
 typedef QList<UserAccount> UserAccountList;
@@ -88,29 +96,30 @@ public:
 	XMPP::Status::Type type;	
 };
 
-
-class UserProfile
+class UserProfile : public OptionsTree
 {
 public:
+	static UserProfile *instance();
+
+	bool fromOptions(OptionsTree *o, QString base);
+	bool toOptions(OptionsTree *o, QString base=QString());
+
+	void load(QString filename);
+	
+	LastStatus *getLastStatus(int);
+	void setLastStatus(int, QString);
+
+	bool isGroupOpen(const QString &name);
+	void setGroupOpen(const QString &name, bool open);
+
 	UserProfile();
+	~UserProfile();
 
-	void reset();
-	bool toFile(const QString &);
-	bool fromFile(const QString &);
-
-	QString progver;
-	UserAccountList acc;
-	Options prefs;
-
-	QRect mwgeom;
-	QStringList recentGCList;
-	QStringList recentBrowseList;
-	QString lastStatusString;
-	LastStatus lastStatusStrings[5];
+private:
+	QString file;
+	LastStatus lastStates[5];
 	QMap<QString,bool> groupStates;
-	bool useSound;
-
-	ProxyItemList proxyList;
+	static UserProfile *instance_;
 };
 
 QString pathToProfile(const QString &);

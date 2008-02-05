@@ -20,7 +20,6 @@
 
 #include "psicon.h"
 #include "psiaccount.h"
-#include "common.h"
 #include "iconaction.h"
 #include "stretchwidget.h"
 #include "psiiconset.h"
@@ -69,6 +68,9 @@ void PsiChatDlg::initUi()
 	initToolBar();
 	contactBox = NULL;
 	updateAvatar();
+
+	PsiToolTip::install(ui_.avatar);
+
 // ToolBox
 	showToolBox_ = !PsiOptions::instance()->getOption("options.ui.chat.toolbox").toBool();
 	showToolBox();
@@ -91,12 +93,12 @@ void PsiChatDlg::initUi()
 	list << 96;
 	ui_.splitter->setSizes(list);
 
-	smallChat_ = option.smallChats;
+	smallChat_ = PsiOptions::instance()->getOption("options.ui.chat.use-small-chats").toBool();
 }
 
 void PsiChatDlg::updateCountVisibility()
 {
-	if (option.showCounter && !smallChat_) {
+	if (PsiOptions::instance()->getOption("options.ui.message.show-character-count").toBool() && !smallChat_) {
 		ui_.lb_count->show();
 	}
 	else {
@@ -154,7 +156,7 @@ void PsiChatDlg::setLooks()
 		}
 		else {
 			ui_.toolbar->hide();
-			ui_.tb_emoticons->setVisible(option.useEmoticons);
+			ui_.tb_emoticons->setVisible(PsiOptions::instance()->getOption("options.ui.emoticons.use-emoticons").toBool());
 			ui_.tb_actions->show();
 		}
 	}
@@ -351,7 +353,7 @@ void PsiChatDlg::updateAvatar()
 
 void PsiChatDlg::optionsUpdate()
 {
-	smallChat_ = option.smallChats;
+	smallChat_ = PsiOptions::instance()->getOption("options.ui.chat.use-small-chats").toBool();
 
 	ChatDlg::optionsUpdate();
 }
@@ -474,20 +476,20 @@ void PsiChatDlg::appendSysMsg(const QString &str)
 	QString timestr = chatView()->formatTimeStamp(t);
 	QString style = PsiOptions::instance()->getOption("options.ui.chat.style").toString();
 	if (style == "Synapse-IM")
-		chatView()->appendText(QString("<hr width=\"98%\"/><table border=\"0\" width=\"100%\"><tr><td><div style=\"color: %1;\"> *** ").arg(option.color[cChatSystem].name()) + str + QString(" ***</div></td><td><div style=\"color: %1; vertical-alignment: baseline\" align=\"right\">").arg(option.color[cChatSystem].name()) + timestr + QString("</div></td></tr></table><hr width=\"98%\"/>"));
+		chatView()->appendText(QString("<hr width=\"98%\"/><table border=\"0\" width=\"100%\"><tr><td><div style=\"color: %1;\"> *** ").arg(PsiOptions::instance()->getOption("options.ui.look.colors.chat.system").value<QColor>().name()) + str + QString(" ***</div></td><td><div style=\"color: %1; vertical-alignment: baseline\" align=\"right\">").arg(PsiOptions::instance()->getOption("options.ui.look.colors.chat.system").value<QColor>().name()) + timestr + QString("</div></td></tr></table><hr width=\"98%\"/>"));
 	else
-		chatView()->appendText(QString("<font color=\"%1\">[%2]").arg(option.color[cChatSystem].name()).arg(timestr) + QString(" *** %1</font>").arg(str));
+		chatView()->appendText(QString("<font color=\"%1\">[%2]").arg(PsiOptions::instance()->getOption("options.ui.look.colors.chat.system").value<QColor>().name()).arg(timestr) + QString(" *** %1</font>").arg(str));
 }
 
 QString PsiChatDlg::colorString(bool local, ChatDlg::SpooledType spooled) const
 {
 	if (spooled == ChatDlg::Spooled_OfflineStorage)
-		return option.color[cChatSpooled].name();
+		return PsiOptions::instance()->getOption("options.ui.look.colors.chat.spooled").value<QColor>().name();
 
 	if (local)
-		return option.color[cChatMyName].name();
+		return PsiOptions::instance()->getOption("options.ui.look.colors.chat.my").value<QColor>().name();
 
-	return option.color[cChatContactName].name();
+	return PsiOptions::instance()->getOption("options.ui.look.colors.chat.contact").value<QColor>().name();
 }
 
 ChatView* PsiChatDlg::chatView() const

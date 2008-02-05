@@ -18,7 +18,6 @@
  *
  */
 
-
 #ifndef PSITABWIDGET_H
 #define PSITABWIDGET_H
 
@@ -61,6 +60,10 @@ public:
 	void setTabPosition(QTabWidget::TabPosition pos);
 	void setCloseIcon(const QIcon&);
 
+	void setTabBarShown(bool shown);     // default shown
+	void setTabButtonsShown(bool shown); // default shown
+	void setDragsEnabled(bool enabled);  // default enabled
+
 public slots:
 	void setCurrentPage(int);
 	void removeCurrentPage();
@@ -93,5 +96,7 @@ private:
 	QMenu *menu_;
 }; 
 
+
+#define PSITABDRAGMIMETYPE "x-drag-drop/x-psi-tab-drag"
 
 #endif

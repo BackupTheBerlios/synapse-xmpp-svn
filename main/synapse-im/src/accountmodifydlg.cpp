@@ -27,7 +27,6 @@
 #include "iconset.h"
 #include "psioptions.h"
 #include "jidutil.h"
-#include "profiles.h"
 #include "psicon.h"
 #include "proxy.h"
 #include "privacymanager.h"
@@ -141,6 +140,7 @@ void AccountModifyDlg::init()
 	ck_compress->setChecked(acc.opt_compress);
 	ck_auto->setChecked(acc.opt_auto);
 	ck_reconn->setChecked(acc.opt_reconn);
+	ck_connectAfterSleep->setChecked(acc.opt_connectAfterSleep);
 	ck_log->setChecked(acc.opt_log);
 	ck_amp->setChecked(acc.opt_amp);
 	ck_keepAlive->setChecked(acc.opt_keepAlive);
@@ -173,7 +173,7 @@ void AccountModifyDlg::init()
 
 	pc = psi->proxy()->createProxyChooser(tab_connection);
 	replaceWidget(lb_proxychooser, pc);
-	pc->setCurrentItem(acc.proxy_index);
+	pc->setCurrentItem(acc.proxyID);
 	
 	// Security level
 	cb_security_level->addItem(tr("None"),QCA::SL_None);
@@ -222,6 +222,9 @@ void AccountModifyDlg::init()
 		tr("Automatically login to this account on Psi startup.  Useful if "
 		"you have Psi automatically launched when an Internet "
 		"connection is detected."));
+	ck_connectAfterSleep->setWhatsThis(
+		tr("Makes Psi try to connect when the computer resumes "
+		"after a sleep."));
 	ck_reconn->setWhatsThis(
 		tr("Makes Psi try to reconnect if the connection was broken.  "
 		"Useful, if you have an unstable connection and have to "
@@ -480,8 +483,9 @@ void AccountModifyDlg::detailsVCard()
 
 void AccountModifyDlg::detailsChangePW()
 {
-	if (pa)
+	if (pa) {
 		pa->changePW();
+	}
 }
 
 void AccountModifyDlg::save()
@@ -545,6 +549,7 @@ void AccountModifyDlg::save()
 	acc.allow_plain =  (ClientStream::AllowPlainType) cb_plain->itemData(cb_plain->currentIndex()).toInt();
 	acc.opt_compress = ck_compress->isChecked();
 	acc.opt_auto = ck_auto->isChecked();
+	acc.opt_connectAfterSleep = ck_connectAfterSleep->isChecked();
 	acc.opt_reconn = ck_reconn->isChecked();
 	acc.opt_log = ck_log->isChecked();
 	acc.opt_keepAlive = ck_keepAlive->isChecked();
@@ -560,7 +565,7 @@ void AccountModifyDlg::save()
 
 	acc.pgpSecretKey = key;
 
-	acc.proxy_index = pc->currentItem();
+	acc.proxyID = pc->currentItem();
 
 	if(pa && pa->isActive()) {
 		QMessageBox::information(this, tr("Warning"), tr("This account is currently active, so certain changes may not take effect until the next login."));

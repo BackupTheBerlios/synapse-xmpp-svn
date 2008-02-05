@@ -48,9 +48,7 @@
 #include <QDragEnterEvent>
 #include <QTextDocument> // for Qt::escape()
 
-#include "profiles.h"
 #include "psiaccount.h"
-#include "common.h"
 #include "userlist.h"
 #include "stretchwidget.h"
 #include "psiiconset.h"
@@ -99,7 +97,7 @@ ChatDlg::ChatDlg(const Jid& jid, PsiAccount* pa, TabManager* tabManager)
 	: TabbableWidget(jid, pa, tabManager)
 	, highlightersInstalled_(false)
 {
-	if (option.brushedMetal) {
+	if (PsiOptions::instance()->getOption("options.ui.mac.use-brushed-metal-windows").toBool()) {
 		setAttribute(Qt::WA_MacMetalStyle);
 	}
 
@@ -148,7 +146,7 @@ void ChatDlg::init()
 	updatePGP();
 
 	connect(account(), SIGNAL(pgpKeyChanged()), SLOT(updatePGP()));
-	connect(account(), SIGNAL(encryptedMessageSent(int, bool, int)), SLOT(encryptedMessageSent(int, bool, int)));
+	connect(account(), SIGNAL(encryptedMessageSent(int, bool, int, const QString &)), SLOT(encryptedMessageSent(int, bool, int, const QString &)));
 	account()->dialogRegister(this, jid());
 
 	chatView()->setFocusPolicy(Qt::NoFocus);
@@ -219,9 +217,15 @@ void ChatDlg::initActions()
 //--------------------------
 }
 
+void ChatDlg::ensureTabbedCorrectly() {
+	TabbableWidget::ensureTabbedCorrectly();
+	setShortcuts();
+}
+
+
 void ChatDlg::setShortcuts()
 {
-	//act_send_->setShortcuts(ShortcutManager::instance()->shortcuts("chat.send"));
+	act_send_->setShortcuts(ShortcutManager::instance()->shortcuts("chat.send"));
 	act_scrollup_->setShortcuts(ShortcutManager::instance()->shortcuts("common.scroll-up"));
 	act_scrolldown_->setShortcuts(ShortcutManager::instance()->shortcuts("common.scroll-down"));
 
@@ -234,9 +238,11 @@ void ChatDlg::setShortcuts()
 	act_blue->setShortcuts(ShortcutManager::instance()->shortcuts("chat.color.blue"));
 	act_black->setShortcuts(ShortcutManager::instance()->shortcuts("chat.color.black"));
 
-	//if(!option.useTabs) {
-	//	act_close_->setShortcuts(ShortcutManager::instance()->shortcuts("common.close"));
-	//}
+	if(!isTabbed()) {
+		act_close_->setShortcuts(ShortcutManager::instance()->shortcuts("common.close"));
+	} else {
+		act_close_->QAction::setShortcuts (QList<QKeySequence>());
+	}
 }
 
 void ChatDlg::scrollUp()
@@ -248,33 +254,10 @@ void ChatDlg::scrollDown()
 {
 	chatView()->verticalScrollBar()->setValue(chatView()->verticalScrollBar()->value() + chatView()->verticalScrollBar()->pageStep() / 2);
 }
-  
-// FIXME: This should be unnecessary, since these keys are all registered as
-// actions in the constructor. Somehow, Qt ignores this sometimes (i think
-// just for actions that have no modifier).
-void ChatDlg::keyPressEvent(QKeyEvent *e)
-{
-	QKeySequence key = e->key() + (e->modifiers() & ~Qt::KeypadModifier);
-	if (!option.useTabs && ShortcutManager::instance()->shortcuts("common.close").contains(key)) {
-		close();
-	}
-	else if (ShortcutManager::instance()->shortcuts("chat.send").contains(key)) {
-		doSend();
-	}
-	else if (ShortcutManager::instance()->shortcuts("common.scroll-up").contains(key)) {
-		scrollUp();
-	}
-	else if (ShortcutManager::instance()->shortcuts("common.scroll-down").contains(key)) {
-		scrollDown();
-	}
-	else {
-		e->ignore();
-	}
-}
 
 void ChatDlg::resizeEvent(QResizeEvent *e)
 {
-	if (option.keepSizes) {
+	if (PsiOptions::instance()->getOption("options.ui.remember-window-sizes").toBool()) {
 		PsiOptions::instance()->setOption("options.ui.chat.size", e->size());
 	}
 }
@@ -302,21 +285,26 @@ bool ChatDlg::readyToHide()
 	}
 
 	if (keepOpen_) {
-		int n = QMessageBox::information(this, tr("Warning"), tr("A new chat message was just received.\nDo you still want to close the window?"), tr("&Yes"), tr("&No"));
-		if (n != 0) {
+		QMessageBox mb(QMessageBox::Information,
+			tr("Warning"),
+			tr("A new chat message was just received.\nDo you still want to close the window?"),
+			QMessageBox::Cancel,
+			this);
+		mb.addButton(tr("Close"), QMessageBox::AcceptRole);
+		if (mb.exec() == QMessageBox::Cancel) {
 			return false;
 		}
 	}
 
 	// destroy the dialog if delChats is dcClose
-	if (option.delChats == dcClose) {
+	if (PsiOptions::instance()->getOption("options.ui.chat.delete-contents-after").toString() == "instant") {
 		setAttribute(Qt::WA_DeleteOnClose);
 	}
 	else {
-		if (option.delChats == dcHour) {
+		if (PsiOptions::instance()->getOption("options.ui.chat.delete-contents-after").toString() == "hour") {
 			setSelfDestruct(60);
 		}
-		else if (option.delChats == dcDay) {
+		else if (PsiOptions::instance()->getOption("options.ui.chat.delete-contents-after").toString() == "day") {
 			setSelfDestruct(60 * 24);
 		}
 	}
@@ -517,7 +505,7 @@ void ChatDlg::updateContact(const Jid &j, bool fromPresence)
 				QString msg = tr("%1 is %2").arg(Qt::escape(dispNick_)).arg(status2txt(status_));
 				if (!statusString_.isEmpty()) {
 					QString ss = TextUtil::linkify(TextUtil::plain2rich(statusString_));
-					if (option.useEmoticons) {
+					if (PsiOptions::instance()->getOption("options.ui.emoticons.use-emoticons").toBool()) {
 						ss = TextUtil::emoticonify(ss);
 					}
 					if (PsiOptions::instance()->getOption("options.ui.chat.legacy-formatting").toBool()) {
@@ -563,7 +551,7 @@ void ChatDlg::setLooks()
 {
 	// update the font
 	QFont f;
-	f.fromString(option.font[fChat]);
+	f.fromString(PsiOptions::instance()->getOption("options.ui.look.font.chat").toString());
 	chatView()->setFont(f);
 	chatEdit()->setFont(f);
 
@@ -577,7 +565,7 @@ void ChatDlg::setLooks()
 #endif
 
 	/*QBrush brush;
-	brush.setPixmap( QPixmap( option.chatBgImage ) );
+	brush.setPixmap( QPixmap( LEGOPTS.chatBgImage ) );
 	chatView()->setPaper(brush);
 	chatView()->setStaticBackground(true);*/
  
@@ -590,15 +578,15 @@ void ChatDlg::optionsUpdate()
 	setShortcuts();
 
 	if (isHidden()) {
-		if (option.delChats == dcClose) {
+		if (PsiOptions::instance()->getOption("options.ui.chat.delete-contents-after").toString() == "instant") {
 			deleteLater();
 			return;
 		}
 		else {
-			if (option.delChats == dcHour) {
+			if (PsiOptions::instance()->getOption("options.ui.chat.delete-contents-after").toString() == "hour") {
 				setSelfDestruct(60);
 			}
-			else if (option.delChats == dcDay) {
+			else if (PsiOptions::instance()->getOption("options.ui.chat.delete-contents-after").toString() == "day") {
 				setSelfDestruct(60 * 24);
 			}
 			else {
@@ -806,8 +794,7 @@ void ChatDlg::doSend()
 
 
 	// Request events
-	if (option.messageEvents) {
-
+	if (PsiOptions::instance()->getOption("options.messages.send-composing-events").toBool()) {
 		// Only request more events when really necessary
 #ifdef USE_XEP0022
 		if (sendComposingEvents_) {
@@ -848,7 +835,7 @@ void ChatDlg::doneSend()
 	resetComposing();
 }
 
-void ChatDlg::encryptedMessageSent(int x, bool b, int e)
+void ChatDlg::encryptedMessageSent(int x, bool b, int e, const QString &dtext)
 {
 	if (transid_ == -1 || transid_ != x) {
 		return;
@@ -858,7 +845,7 @@ void ChatDlg::encryptedMessageSent(int x, bool b, int e)
 		doneSend();
 	}
 	else {
-		QMessageBox::critical(this, tr("Error"), tr("There was an error trying to send the message encrypted.\nReason: %1.").arg(PGPUtil::instance().messageErrorString((QCA::SecureMessage::Error) e)));
+		PGPUtil::showDiagnosticText(static_cast<QCA::SecureMessage::Error>(e), dtext);
 	}
 	chatEdit()->setEnabled(true);
 	chatEdit()->setFocus();
@@ -977,9 +964,9 @@ void ChatDlg::appendMessage(const Message &m, bool local)
 		if (PsiOptions::instance()->getOption("options.ui.flash-windows").toBool()) {
 			doFlash(true);
 		}
-		if (option.raiseChatWindow) {
-			if (option.useTabs) {
- 				TabDlg* tabSet = getManagingTabDlg();
+		if (PsiOptions::instance()->getOption("options.ui.chat.raise-chat-windows-on-new-messages").toBool()) {
+			if (isTabbed()) {
+				TabDlg* tabSet = getManagingTabDlg();
 				tabSet->selectTab(this);
 				::bringToFront(tabSet, false);
 			}
@@ -1016,9 +1003,9 @@ void ChatDlg::updateIsComposing(bool b)
 void ChatDlg::setChatState(ChatState state)
 {
 #ifdef USE_XEP0022
-	if (option.messageEvents && (sendComposingEvents_ || (contactChatState_ != XMPP::StateNone))) {
+	if (PsiOptions::instance()->getOption("options.messages.send-composing-events").toBool() && (sendComposingEvents_ || (contactChatState_ != XMPP::StateNone))) {
 #else
-	if (option.messageEvents && (contactChatState_ != XMPP::StateNone)) {
+	if (PsiOptions::instance()->getOption("options.messages.send-composing-events").toBool() && (contactChatState_ != XMPP::StateNone)) {
 #endif
 		// Don't send to offline resource
 		QList<UserListItem*> ul = account()->findRelevant(jid());
@@ -1040,7 +1027,7 @@ void ChatDlg::setChatState(ChatState state)
 		}
 
 		// Transform to more privacy-enabled chat states if necessary
-		if (!option.inactiveEvents && (state == XMPP::StateGone || state == XMPP::StateInactive)) {
+		if (!PsiOptions::instance()->getOption("options.messages.send-inactivity-events").toBool() && (state == XMPP::StateGone || state == XMPP::StateInactive)) {
 			state = XMPP::StatePaused;
 		}
 
@@ -1232,7 +1219,7 @@ QString ChatDlg::messageText(const XMPP::Message& m)
 		// qWarning("regular body:\n%s\n",qPrintable(txt));
 	}
 
-	if (option.useEmoticons)
+	if (PsiOptions::instance()->getOption("options.ui.emoticons.use-emoticons").toBool())
 		txt = TextUtil::emoticonify(txt);
 	if (PsiOptions::instance()->getOption("options.ui.chat.legacy-formatting").toBool())
 		txt = TextUtil::legacyFormat(txt);

@@ -85,7 +85,6 @@ protected:
 	void setShortcuts();
 
 	// reimplemented
-	void keyPressEvent(QKeyEvent *);
 	void dragEnterEvent(QDragEnterEvent *);
 	void dropEvent(QDropEvent *);
 	void closeEvent(QCloseEvent *);
@@ -101,6 +100,7 @@ public slots:
 	// reimplemented
 	virtual void deactivated();
 	virtual void activated();
+	virtual void ensureTabbedCorrectly();
 
 	void optionsUpdate();
 	

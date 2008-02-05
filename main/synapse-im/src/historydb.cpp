@@ -23,6 +23,7 @@
 #include "filetransfer.h"
 #include "common.h"
 #include "qca.h"
+#include "psioptions.h"
 
 static QString getNext(QString *str)
 {
@@ -93,30 +94,25 @@ HistoryDB::~HistoryDB()
 void HistoryDB::optionsUpdate()
 {
 	db.close();
-		
-	switch ( option.historyDBBackend ) {
-		case POSTGRES:
-			db = QSqlDatabase::addDatabase("QPSQL");
-			break;
-		case MYSQL:
-			db = QSqlDatabase::addDatabase("QMYSQL");
-			break;
-		case ODBC:
-			db = QSqlDatabase::addDatabase("QODBC");
-			break;
-		default:
-			option.historyDBBackend = SQLITE;
-			db = QSqlDatabase::addDatabase("QSQLITE");
-			db.setDatabaseName(pathToProfile(activeProfile) + "/history_v2.db");
-			break;
+	
+	QString backend = PsiOptions::instance()->getOption("options.history.backend").toString();
+	if(backend.compare("Postgres") == 0)
+		db = QSqlDatabase::addDatabase("QPSQL");
+	else if(backend.compare("MySQL") == 0)
+		db = QSqlDatabase::addDatabase("QMYSQL");
+	else if(backend.compare("ODBC") == 0)
+		db = QSqlDatabase::addDatabase("QODBC");
+	else {
+		db = QSqlDatabase::addDatabase("QSQLITE");
+		db.setDatabaseName(pathToProfile(activeProfile) + "/history_v2.db");
 	}
 
-	if (option.historyDBBackend > SQLITE) {
-		db.setDatabaseName(option.historyDBName);
-		db.setUserName(option.historyDBUser);
-		db.setPassword(option.historyDBPassword);
-		db.setPort(option.historyDBPort);
-		db.setHostName(option.historyDBHost);
+	if (backend.compare("SQLite 3") != 0) {
+		db.setDatabaseName(PsiOptions::instance()->getOption("options.history.database").toString());
+		db.setUserName(PsiOptions::instance()->getOption("options.history.user").toString());
+		db.setPassword(PsiOptions::instance()->getOption("options.history.password").toString());
+		db.setPort(PsiOptions::instance()->getOption("options.history.port").toInt());
+		db.setHostName(PsiOptions::instance()->getOption("options.history.host").toString());
 	}
 
 	if (!db.open()) {
@@ -168,7 +164,7 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 	if(!tablesList_.contains(j))
 		createJidTable(j);
 
-	if(e->type() == PsiEvent::Message && option.historyLogMessages) 
+	if(e->type() == PsiEvent::Message && PsiOptions::instance()->getOption("option.history.messages").toBool()) 
 	{
 		MessageEvent *me = (MessageEvent *)e;
 		const Message &m = me->message();
@@ -178,14 +174,14 @@ bool HistoryDB::logEvent(QString j, PsiEvent *e)
 			html = m.htmlString();
 		QSqlQuery query("INSERT INTO MSG_" + j + " VALUES ('" + m.type() + "','" + (e->originLocal() ? "to" : "from") + "','" + m.timeStamp().date().toString() + "','" + m.timeStamp().time().toString() + "','" + m.body() + "','" /*+ html*/ + "')", db);
 	}
-	else if(e->type() == PsiEvent::File && option.historyLogFileTransfers)
+	else if(e->type() == PsiEvent::File && PsiOptions::instance()->getOption("option.history.file-transfers").toBool())
 	{
 		FileEvent *fe = (FileEvent *)e;
 		XMPP::FileTransfer *ft = fe->fileTransfer();
 		ensureDate(j, fe->timeStamp().date());
 		QSqlQuery query("INSERT INTO MSG_" + j + " VALUES ('file','" + (e->originLocal() ? "to" : "from") + "','" + fe->timeStamp().date().toString() + "','" + fe->timeStamp().time().toString() + "',' Transfering file : " + ft->fileName() + QString("\n Size: %1").arg(ft->fileSize()) + "','')", db);
 	}
-	else if(e->type() == PsiEvent::Auth && option.historyLogMessages) 
+	else if(e->type() == PsiEvent::Auth && PsiOptions::instance()->getOption("option.history.messages").toBool()) 
 	{
 		AuthEvent *ae = (AuthEvent *)e;	
 		ensureDate(j,ae->timeStamp().date());
@@ -278,7 +274,7 @@ HistoryItem *HistoryDB::getEvents(QTreeWidget *eventsTree, QString j, QDate date
 		item->setText(2, query.record(i).value("origin").toString());
 		item->setText(3, query.record(i).value("text").toString());
 		for(int j=1; j<4; j++)
-			item->setTextColor(j, ((item->text(2) == "to") ? option.color[cChatMyName] : option.color[cChatContactName]));
+			item->setTextColor(j, ((item->text(2) == "to") ? PsiOptions::instance()->getOption("options.ui.look.colors.chat.my").value<QColor>() : PsiOptions::instance()->getOption("options.ui.look.colors.chat.contact").value<QColor>()));
 		if(!searchFor.isEmpty() && query.record(i).value("text").toString().contains(searchFor))
 		{
 			QColor red(255,0,0);

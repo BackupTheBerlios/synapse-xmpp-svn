@@ -39,6 +39,7 @@
 #include "common.h"
 #include "msgmle.h"
 #include "statuspreset.h"
+#include "statuscombobox.h"
 #include "shortcutmanager.h"
 
 //----------------------------------------------------------------------------
@@ -84,7 +85,8 @@ public:
 	PsiAccount *pa;
 	Status s;
 	ChatView *te;
-	QComboBox *cb_type, *cb_preset;
+	StatusComboBox *cb_type;
+	QComboBox *cb_preset;
 	QLineEdit *le_priority;
 	QCheckBox *save;
 	Jid j;
@@ -146,24 +148,7 @@ void StatusSetDlg::init()
 	QLabel *l;
 	l = new QLabel(tr("Status:"), this);
 	hb1->addWidget(l);
-	d->cb_type = new QComboBox(this);
-
-	QList<XMPP::Status::Type> statuses;
-	statuses << STATUS_CHAT << STATUS_ONLINE << STATUS_AWAY << STATUS_XA << STATUS_DND;
-	if (PsiOptions::instance()->getOption("options.ui.menu.status.invisible").toBool()) {
-		statuses << STATUS_INVISIBLE;
-	}
-	statuses << STATUS_OFFLINE;
-	
-	foreach(XMPP::Status::Type status, statuses) {
-		d->cb_type->addItem(status2txt(status), status);
-	}
-	for(int i = 0; i < d->cb_type->count(); i++) {
-		if (d->cb_type->itemData(i).toInt() == type) {
-			d->cb_type->setCurrentItem(i);
-			break;
-		}
-	}
+	d->cb_type = new StatusComboBox(this, static_cast<XMPP::Status::Type>(type));
 	hb1->addWidget(d->cb_type,3);
 
 	// Priority
@@ -179,8 +164,8 @@ void StatusSetDlg::init()
 	d->cb_preset = new QComboBox(this);
 	d->cb_preset->insertItem(tr("<None>"));
 	QStringList presets;
-	foreach(StatusPreset p, option.sp) {
-		presets += p.name();
+	foreach(QVariant name, PsiOptions::instance()->mapKeyList("options.status.presets")) {
+		presets += name.toString();
 	}
 	presets.sort();
 	d->cb_preset->insertStringList(presets);
@@ -230,6 +215,9 @@ StatusSetDlg::~StatusSetDlg()
 
 void StatusSetDlg::doButton()
 {
+	// Trim whitespace
+	d->te->setText(d->te->text().trimmed());
+
 	// Save preset
 	if (d->save->isChecked()) {
 		QString text;
@@ -248,7 +236,7 @@ void StatusSetDlg::doButton()
 				QMessageBox::information(this, tr("Error"), 
 					tr("Can't create a blank preset!"));
 			}
-			else if(option.sp.contains(text)) {
+			else if(PsiOptions::instance()->mapKeyList("options.status.presets").contains(text)) {
 				QMessageBox::information(this, tr("Error"), 
 					tr("You already have a preset with that name!"));
 			}
@@ -256,14 +244,17 @@ void StatusSetDlg::doButton()
 				break;
 		}
 		// Store preset
- 		option.sp[text] = StatusPreset(text,d->te->text());
- 		if (!d->le_priority->text().isEmpty()) 
- 			option.sp[text].setPriority(d->le_priority->text().toInt());
- 		option.sp[text].setStatus((XMPP::Status::Type) d->cb_type->itemData(d->cb_type->currentIndex()).toInt());
+		StatusPreset sp(text, d->te->text(), XMPP::Status(d->cb_type->status()).type());
+ 		if (!d->le_priority->text().isEmpty()) {
+			sp.setPriority(d->le_priority->text().toInt());
+		}
+		
+		sp.toOptions(PsiOptions::instance());
+		QString base = PsiOptions::instance()->mapPut("options.status.presets", text);
 	} 
 
 	// Set status
-	int type = d->cb_type->itemData(d->cb_type->currentIndex()).toInt();
+	int type = d->cb_type->status();
 	QString str = d->te->text();
 
  	if (d->le_priority->text().isEmpty())
@@ -299,20 +290,17 @@ void StatusSetDlg::chooseStatusPreset(int x)
 	if(x < 1)
 		return;
 	
-	StatusPreset preset = option.sp[d->cb_preset->text(x)];
-	d->te->setText(preset.message());
-	if (preset.priority().hasValue()) 
-		d->le_priority->setText(QString::number(preset.priority().value()));
-	else
+	QString base = PsiOptions::instance()->mapLookup("options.status.presets", d->cb_preset->text(x));
+	d->te->setText(PsiOptions::instance()->getOption(base+".message").toString());
+	if (PsiOptions::instance()->getOption(base+".force-priority").toBool()) {
+		d->le_priority->setText(QString::number(PsiOptions::instance()->getOption(base+".priority").toInt()));
+	} else {
 		d->le_priority->clear();
-
-	int n;
-	for(n = 0; n < d->cb_type->count(); ++n) {
-		if(preset.status() == d->cb_type->itemData(n).toInt()) {
-			d->cb_type->setCurrentItem(n);
-			break;
-		}
 	}
+
+	XMPP::Status status;
+	status.setType(PsiOptions::instance()->getOption(base+".status").toString());
+	d->cb_type->setStatus(status.type());
 }
 
 void StatusSetDlg::cancel()

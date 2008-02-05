@@ -4,7 +4,6 @@
 #include "optionstab.h"
 
 class QWidget;
-struct Options;
 
 class OptionsTabHistory : public OptionsTab
 {
@@ -14,8 +13,8 @@ public:
 	~OptionsTabHistory();
 
 	QWidget *widget();
-	void applyOptions(Options *opt);
-	void restoreOptions(const Options *opt);
+	void applyOptions();
+	void restoreOptions();
 
 public slots:
 	void backendChanged(int i);

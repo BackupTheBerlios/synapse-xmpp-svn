@@ -125,7 +125,7 @@ void PsiPopup::Private::init(const PsiIcon *_titleIcon, QString titleText, PsiAc
 	psi = acc->psi();
 	account = acc;
 	display = true;
-	if ( !option.ppIsOn )
+	if ( !PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.enabled").toBool() )
 		return;
 	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
 
@@ -145,7 +145,7 @@ void PsiPopup::Private::init(const PsiIcon *_titleIcon, QString titleText, PsiAc
 		titleIcon = new PsiIcon(*_titleIcon);
 
 	popup = new FancyPopup();
-	popup->setData(titleText, option.popupPlace, option.popupTimeout);
+	popup->setData(titleText, PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.place").toInt(), PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.timeout").toInt());
 	connect(popup, SIGNAL(clicked(int)), SLOT(popupClicked(int)));
 	connect(popup, SIGNAL(destroyed()), SLOT(popupDestroyed()));
 	
@@ -188,10 +188,10 @@ void PsiPopup::Private::eventDestroyed()
 
 QString PsiPopup::Private::clipText(QString text)
 {
-	if ( option.ppTextClip > 0 ) {
+	if ( PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-text-length").toInt() > 0 ) {
 		// richtext will give us trouble here
-		if ( ((int)text.length()) > option.ppTextClip ) {
-			text = text.left( option.ppTextClip );
+		if ( ((int)text.length()) > PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-text-length").toInt() ) {
+			text = text.left( PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-text-length").toInt() );
 
 			// delete last unclosed tag
 			/*if ( text.find("</") > text.find(">") ) {
@@ -233,7 +233,7 @@ PsiRichLabel *PsiPopup::Private::createContactInfo(const PsiIcon *icon, QString 
 {
 	PsiRichLabel *textLabel = new PsiRichLabel(QString("<qt>%1</qt>").arg(clipText(text)),0);
 	QFont font;
-	font.fromString( option.font[fPopup] );
+	font.fromString( PsiOptions::instance()->getOption("options.ui.look.font.passive-popup").toString() );
 	textLabel->setFont(font);
 
 	textLabel->setWordWrap(false);
@@ -348,15 +348,15 @@ void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, c
 	QString text;
 
 	QString jid = j.full();
-	if ( option.ppJidClip > 0 && ((int)jid.length()) > option.ppJidClip )
-		jid = jid.left( option.ppJidClip ) + "...";
+	if ( PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-jid-length").toInt() > 0 && ((int)jid.length()) > PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-jid-length").toInt() )
+		jid = jid.left( PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-jid-length").toInt() ) + "...";
 
 	QString status;
-	if ( option.ppStatusClip != 0 )
+	if ( PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-status-length").toInt() != 0 )
 		status = r.status().status();
-	if ( option.ppStatusClip > 0 )
-		if ( ((int)status.length()) > option.ppStatusClip )
-			status = status.left ( option.ppStatusClip ) + "...";
+	if ( PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-status-length").toInt() > 0 )
+		if ( ((int)status.length()) > PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-status-length").toInt() )
+			status = status.left ( PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-status-length").toInt() ) + "...";
 
 	QString name;
 	if ( u && !u->name().isEmpty() ) {
@@ -370,7 +370,7 @@ void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, c
 	}
 		
 	if (!name.isEmpty()) {
-		if ( !option.ppJidClip )
+		if ( !PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.maximum-jid-length").toInt() )
 			name = "<nobr>" + Qt::escape(name) + "</nobr>";
 		else
 			name = "<nobr>" + Qt::escape(name) + " &lt;" + Qt::escape(jid) + "&gt;" + "</nobr>";
@@ -379,7 +379,7 @@ void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, c
 		name = "<nobr>&lt;" + Qt::escape(jid) + "&gt;</nobr>";
 
 	QString statusString = TextUtil::plain2rich(status);
-	if ( option.useEmoticons )
+	if ( PsiOptions::instance()->getOption("options.ui.emoticons.use-emoticons").toBool() )
 		statusString = TextUtil::emoticonify(statusString);
 	if( PsiOptions::instance()->getOption("options.ui.chat.legacy-formatting").toBool() )
 		statusString = TextUtil::legacyFormat(statusString);
@@ -401,7 +401,7 @@ void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, c
 	}
 
 	// show popup
-	if ( d->popupType != AlertHeadline && (d->popupType != AlertFile || !option.popupFiles) )
+	if ( d->popupType != AlertHeadline && (d->popupType != AlertFile || !PsiOptions::instance()->getOption("options.ui.file-transfer.auto-popup").toBool()) )
 		setData(icon, contactText,j);
 	else if ( d->popupType == AlertHeadline ) {
 		const Message *jmessage = &((MessageEvent *)event)->message();
@@ -428,7 +428,7 @@ void PsiPopup::show()
 		return;
 	}
 
-	if ( !d->id.isEmpty() /*&& option.ppNoDupes*/ ) {
+	if ( !d->id.isEmpty() /*&& LEGOPTS.ppNoDupes*/ ) {
 		foreach (PsiPopup *pp, *psiPopupList) {
 			if ( d->id == pp->id() && pp->popup() ) {
 //				pp->popup()->restartHideTimer();

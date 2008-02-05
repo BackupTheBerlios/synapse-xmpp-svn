@@ -26,13 +26,11 @@
 #include "psicon.h"
 #include "psiaccount.h"
 #include "userlist.h"
-#include "common.h"
 #include "iconwidget.h"
 #include "s5b.h"
 #include "busywidget.h"
 #include "filetransfer.h"
 #include "accountscombobox.h"
-#include "profiles.h"
 #include "psiiconset.h"
 #include "msgmle.h"
 #include "jidutil.h"
@@ -44,6 +42,7 @@
 #include "psicontactlist.h"
 #include "accountlabel.h"
 #include "psievent.h"
+#include "psioptions.h"
 
 typedef Q_UINT64 LARGE_TYPE;
 
@@ -600,7 +599,7 @@ FileRequestDlg::FileRequestDlg(const Jid &jid, PsiCon *psi, PsiAccount *pa, cons
 			return;
 		}
 		
-		option.lastPath = fi.dirPath();
+		PsiOptions::instance()->getOption("options.ui.last-used-open-path").toString() = fi.dirPath();
 		le_fname->setText(QDir::convertSeparators(fi.filePath()));
 		lb_size->setText(tr("%1 byte(s)").arg(fi.size())); // TODO: large file support
 	}
@@ -789,16 +788,16 @@ void FileRequestDlg::setFile(QString& str)
 void FileRequestDlg::chooseFile()
 {
 	while(1) {
-		if(option.lastPath.isEmpty())
-			option.lastPath = QDir::homeDirPath();
-		QString str = QFileDialog::getOpenFileName(this, tr("Choose a file"), option.lastPath, tr("All files (*)"));
+		if(PsiOptions::instance()->getOption("options.ui.last-used-open-path").toString().isEmpty())
+			PsiOptions::instance()->getOption("options.ui.last-used-open-path").toString() = QDir::homeDirPath();
+		QString str = QFileDialog::getOpenFileName(this, tr("Choose a file"), PsiOptions::instance()->getOption("options.ui.last-used-open-path").toString(), tr("All files (*)"));
 		if(!str.isEmpty()) {
 			QFileInfo fi(str);
 			if(!fi.exists()) {
 				QMessageBox::information(this, tr("Error"), tr("The file specified does not exist."));
 				continue;
 			}
-			option.lastPath = fi.dirPath();
+			PsiOptions::instance()->getOption("options.ui.last-used-open-path").toString() = fi.dirPath();
 			le_fname->setText(QDir::convertSeparators(fi.filePath()));
 			lb_size->setText(tr("%1 byte(s)").arg(fi.size())); // TODO: large file support
 		}
@@ -843,13 +842,13 @@ void FileRequestDlg::doStart()
 	}
 	else {
 		QString fname, savename;
-		if(option.lastSavePath.isEmpty())
-			option.lastSavePath = QDir::homeDirPath();
-		fname = QFileDialog::getSaveFileName(this, tr("Save As"), QDir(option.lastSavePath).filePath(d->fileName), tr("All files (*)"));
+		if(PsiOptions::instance()->getOption("options.ui.last-used-save-path").toString().isEmpty())
+			PsiOptions::instance()->getOption("options.ui.last-used-save-path").toString() = QDir::homeDirPath();
+		fname = QFileDialog::getSaveFileName(this, tr("Save As"), QDir(PsiOptions::instance()->getOption("options.ui.last-used-save-path").toString()).filePath(d->fileName), tr("All files (*)"));
 		if(fname.isEmpty())
 			return;
 		QFileInfo fi(fname);
-		option.lastSavePath = fi.dirPath();
+		PsiOptions::instance()->getOption("options.ui.last-used-save-path").toString() = fi.dirPath();
 		savename = fname + ".part";
 		fname = fi.fileName();
 
@@ -1568,7 +1567,7 @@ public:
 				}
 			}
 
-			pa->playSound(option.onevent[eFTComplete]);
+			pa->playSound(PsiOptions::instance()->getOption("options.ui.notifications.sounds.completed-file-transfer").toString());
 		}
 	}
 };

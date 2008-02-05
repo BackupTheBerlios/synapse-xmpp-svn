@@ -4,6 +4,7 @@
 #include "iconset.h"
 #include "textutil.h"
 #include "common.h"
+#include "psioptions.h"
 
 #include "chattoolbox.h"
 
@@ -97,7 +98,7 @@ void ChatContactBox::update(const PsiIcon *icon, QString nickname, const QString
 		if(!statusString.isEmpty()) {
 			txt += QString("<b>Status:</b><br/>");
 			QString status = TextUtil::plain2rich(statusString);
-			if ( option.useEmoticons )
+			if ( PsiOptions::instance()->getOption("options.ui.emoticons.use-emoticons").toBool() )
 				status = TextUtil::emoticonify(status);
 			txt += status;
 		}

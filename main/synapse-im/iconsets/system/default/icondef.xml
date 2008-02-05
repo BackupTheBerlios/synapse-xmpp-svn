@@ -344,8 +344,8 @@
 		<x xmlns='name'>psi/command</x>
 		<object mime='image/png'>command.png</object>
 	</icon>
-
 	
+		
 	<!-- FIXME -->
 	<icon>
 		<x xmlns='name'>psi/roster</x>
@@ -386,6 +386,11 @@
 	<icon>
 		<x xmlns='name'>psi/whiteboard</x>
 		<object mime='image/png'>whiteboarding/whiteboard.png</object>
+	</icon>
+
+	<icon>
+		<x xmlns='name'>psi/save</x>
+		<object mime='image/png'>whiteboarding/save.png</object>
 	</icon>
 
 	<icon>

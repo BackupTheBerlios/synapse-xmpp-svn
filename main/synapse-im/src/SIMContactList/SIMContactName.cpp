@@ -40,7 +40,7 @@ void SIMContactName::setText(const QString &txt, const QColor &color, SIMContact
 	}
 	PsiRichText::setText(v_rt, txt);
 	QFont fnt;
-	fnt.fromString(option.font[fRoster]);
+	fnt.fromString(PsiOptions::instance()->getOption("options.ui.look.font.contactlist").toString());
 	v_rt->setDefaultFont(fnt);
 	PsiRichText::ensureTextLayouted(v_rt, clv_->columnWidth(SIMContactListModel::NameColumn)-2);
 }
@@ -52,7 +52,7 @@ void SIMContactName::paint(QPainter *painter, const QRect &rect, const QPalette 
 
 	QSize size = v_rt->size().toSize();
 	int h = (rect.height() - size.height())/2;
-	QBrush *paper = new QBrush(option.color[cListBack], Qt::SolidPattern);
+	QBrush *paper = new QBrush(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.background").value<QColor>(), Qt::SolidPattern);
 	painter->fillRect( rect.x(), rect.y(), rect.width(), rect.height(), *paper );
 
 	painter->translate(rect.x() + 2, rect.y() + h);

@@ -40,6 +40,7 @@
 #include "textutil.h"
 #include "jidutil.h"
 #include "userlist.h"
+#include "psioptions.h"
 
 #include "historydb.h"
 
@@ -241,15 +242,11 @@ void HistoryDlg::doFind()
 
 void HistoryDlg::doExport()
 {
-	if(option.lastSavePath.isEmpty()) {
-		option.lastSavePath = QDir::homeDirPath();
-	}
-
- 	UserListItem *u = pa_->findFirstRelevant(jid_);
+	UserListItem *u = pa_->findFirstRelevant(jid_);
 	QString them = JIDUtil::nickOrJid(u->name(), u->jid().full());
 	QString s = JIDUtil::encode(them).toLower();
 
-	QString str = option.lastSavePath + "/" + s + ".txt";
+	QString str = QDir::homeDirPath() + "/" + s + ".txt";
 	int y = QMessageBox::information(this, tr("Export"), tr("Export all history of chats or just from selected day?"), tr("&All"), tr("&Day"));
 	while(1) {
 		str = QFileDialog::getSaveFileName(this, tr("Export message history"), str, tr("Text files (*.txt);;Html files (*.html);;All files (*.*)"));
@@ -263,7 +260,6 @@ void HistoryDlg::doExport()
 				continue;
 		}
 
-		option.lastSavePath = fi.dirPath();
 		QDate date;
 		if(y!=0)
 			date = lookDate;

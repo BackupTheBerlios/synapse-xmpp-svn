@@ -17,6 +17,7 @@
 #include "psiaccount.h"
 #include "psicon.h"
 #include "psicontactlist.h"
+#include "psioptions.h"
 
 #define COLUMNS 4
 
@@ -77,13 +78,13 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 	}
 	else if (role == Qt::BackgroundColorRole) {
 		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
-			return qVariantFromValue(option.color[cListBack]);
+			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.background").value<QColor>());
 		} else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
-			return qVariantFromValue(option.color[cListBack]);
+			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.background").value<QColor>());
 		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
-			return qVariantFromValue(option.color[cGroupBack]);
+			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-background").value<QColor>());
 		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
-			return qVariantFromValue(option.color[cProfileBack]);
+			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.profile.header-background").value<QColor>());
 		}
 	}
 	else if (role == Qt::TextColorRole) {
@@ -94,14 +95,14 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 			return qVariantFromValue(meta->textColor());
 		}
 		else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
-			return qVariantFromValue(option.color[cGroupFore]);
+			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-foreground").value<QColor>());
 		}
 		else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
-			return qVariantFromValue(option.color[cProfileFore]);
+			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.profile.header-foreground").value<QColor>());
 		}
 	}
 	else if (role == Qt::FontRole) {
-		return qVariantFromValue(option.font[fRoster]);
+		return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.font.contactlist").value<QFont>());
 	}
 	else if (role == Qt::EditRole) {
 		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {

@@ -29,6 +29,7 @@ INCLUDE_DIRECTORIES(
     ${QT_QTXML_INCLUDE_DIR}
     ${QT_QT3SUPPORT_INCLUDE_DIR}
     ${QT_QTDBUS_INCLUDE_DIR}
+    ${QT_QTSVG_INCLUDE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ../third-party/qca/include/QtCrypto
@@ -97,18 +98,38 @@ ADD_DEFINITIONS(-DLINKLOCAL)
 if(QT_QTSVG_FOUND)
 ADD_DEFINITIONS(-DWHITEBOARDING)
 set(wb_noMOC_SRCS
-        wbmanager.cpp
-	wbdlg.cpp
-        wbwidget.cpp
-	wbscene.cpp
-        wbitems.cpp
+    sxe/sxemanager.cpp
+    sxe/sxesession.cpp
+    sxe/sxeedit.cpp
+    sxe/sxenewedit.cpp
+    sxe/sxeremoveedit.cpp
+    sxe/sxerecordedit.cpp
+    sxe/sxerecord.cpp
+    whiteboarding/wbmanager.cpp
+    whiteboarding/wbdlg.cpp
+    whiteboarding/wbwidget.cpp
+    whiteboarding/wbscene.cpp
+    whiteboarding/wbitem.cpp
+    whiteboarding/wbnewitem.cpp
+    whiteboarding/wbnewpath.cpp
+    whiteboarding/wbnewimage.cpp
 )
 set(wb_H
-        wbmanager.h
-	wbdlg.h
-        wbwidget.h
-	wbscene.h
-        wbitems.h
+    sxe/sxemanager.h
+    sxe/sxesession.h
+    sxe/sxeedit.h
+    sxe/sxenewedit.h
+    sxe/sxeremoveedit.h
+    sxe/sxerecordedit.h
+    sxe/sxerecord.h
+    whiteboarding/wbmanager.h
+    whiteboarding/wbdlg.h
+    whiteboarding/wbwidget.h
+    whiteboarding/wbscene.h
+    whiteboarding/wbitem.h
+    whiteboarding/wbnewitem.h
+    whiteboarding/wbnewpath.h
+    whiteboarding/wbnewimage.h
 )
 endif(QT_QTSVG_FOUND)
 
@@ -180,7 +201,6 @@ set(synapse-im_noMOC_SRCS
 	psiapplication.cpp
 	psicontactlist.cpp
 	psievent.cpp
-	psiiconset.cpp
 	psioptions.cpp
 	psitoolbar.cpp
 	psitrayicon.cpp
@@ -195,6 +215,7 @@ set(synapse-im_noMOC_SRCS
 	showtextdlg.cpp
 	sslcertdlg.cpp
 	statusdlg.cpp
+	statuscombobox.cpp
 	statuspreset.cpp
 	systeminfo.cpp
 	psichatdlg.cpp
@@ -208,6 +229,7 @@ set(synapse-im_noMOC_SRCS
 	varlist.cpp
 	vcardfactory.cpp
 	voicecalldlg.cpp
+	bookmarkmanagedlg.cpp
 	${wb_noMOC_SRCS}
 	xdata_widget.cpp
 	xmlconsole.cpp
@@ -235,6 +257,7 @@ set(synapse-im_SRCS
 	actionlist.cpp
 	psiactionlist.cpp
 	httpauthmanager.cpp
+	psiiconset.cpp
 	psicon.cpp
 	psiaccount.cpp
 )
@@ -297,6 +320,7 @@ set(synapse-im_H
 	chattoolbox.h
 	psicon.h
 	psicontactlist.h
+	psiiconset.h
 	psievent.h
 	psioptions.h
 	psioptionseditor.h
@@ -322,6 +346,8 @@ set(synapse-im_H
 	voicecaller.h
 	xdata_widget.h
 	xmlconsole.h
+	bookmarkmanagedlg.h
+	statuscombobox.h
 )
 
 set(res_RC
@@ -372,6 +398,7 @@ set(synapse-im_UIS
 	sslcert.ui
 	mucconfig.ui
 	xmlconsole.ui
+	bookmarkmanage.ui
 	disco.ui
 	tip.ui
 	filetrans.ui

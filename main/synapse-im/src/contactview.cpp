@@ -158,10 +158,11 @@ ContactProfile::ContactProfile(PsiAccount *pa, const QString &name, ContactView 
 
 	d->self = 0;
 
-	if(!unique)
+	if (!unique) {
 		d->cvi = new ContactViewItem(name, this, d->cv);
-	else
+	} else {
 		d->cvi = 0;
+	}
 
 	d->oldstate = -2;
 
@@ -231,8 +232,9 @@ const QString & ContactProfile::name() const
 void ContactProfile::setName(const QString &name)
 {
 	d->name = name;
-	if(d->cvi)
+	if (d->cvi) {
 		d->cvi->setProfileName(name);
+	}
 }
 
 void ContactProfile::setName(const char *s)
@@ -792,7 +794,7 @@ void ContactProfile::setAlert(const Jid &j, const PsiIcon *anim)
 		for(ContactViewItem *i; (i = it.current()); ++it)
 			i->setAlert(anim);
 
-		if(option.scrollTo)
+		if(PsiOptions::instance()->getOption("options.ui.contactlist.ensure-contact-visible-on-event").toBool())
 			ensureVisible(e);
 	}
 }
@@ -962,10 +964,10 @@ void ContactProfile::updateGroupInfo(ContactViewItem *group)
 		else {
 			total = group->childCount();
 		}
-		if (option.showGroupCounts)
+		if (PsiOptions::instance()->getOption("options.ui.contactlist.show-group-counts").toBool())
 			group->setGroupInfo(QString("(%1/%2)").arg(online).arg(total));
 	}
-	else if (option.showGroupCounts) {
+	else if (PsiOptions::instance()->getOption("options.ui.contactlist.show-group-counts").toBool()) {
 		int inGroup = contactSizeFromCVGroup(group);
 		group->setGroupInfo(QString("(%1)").arg(inGroup));
 	}
@@ -1016,7 +1018,7 @@ void ContactProfile::updateGroups()
 			if(e->u.isAvailable())
 				++totalOnline;
 		}
-		if(d->cvi && option.showGroupCounts)
+		if(d->cvi && PsiOptions::instance()->getOption("options.ui.contactlist.show-group-counts").toBool())
 			d->cvi->setGroupInfo(QString("(%1/%2)").arg(totalOnline).arg(d->roster.count()));
 	}
 
@@ -1075,7 +1077,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		am->insertItem(/*IconsetFactory::iconPixmap("psi/edit/clear"),*/ tr("Update MOTD"), 3);
 		am->insertItem(IconsetFactory::icon("psi/remove").icon(), tr("Delete MOTD"), 4);
 
-		const int status_start = 16;
+		const int status_start = 15;
 		Q3PopupMenu *sm = new Q3PopupMenu(&pm);
 		sm->insertItem(PsiIconset::instance()->status(STATUS_ONLINE).icon(),	status2txt(STATUS_ONLINE),	STATUS_ONLINE		+ status_start);
 		if (PsiOptions::instance()->getOption("options.ui.menu.status.chat").toBool())
@@ -1102,6 +1104,22 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		pm.insertItem(tr("Avatar"), avatarm, 14);
 		pm.setItemEnabled(14, d->pa->serverInfoManager()->hasPEP());
 #endif
+		const int bookmarks_start = STATUS_CHAT + status_start + 1; // STATUS_CHAT is the highest value of the states
+		QMenu *bookmarks = new QMenu(&pm);
+		bookmarks->insertItem(tr("Manage..."), bookmarks_start);
+		if (d->pa->bookmarkManager()->isAvailable()) {
+			int idx = 1;
+			bookmarks->insertSeparator();
+			foreach(ConferenceBookmark c, psiAccount()->bookmarkManager()->conferences()) {
+				bookmarks->insertItem(QString(tr("Join %1")).arg(c.name()), bookmarks_start + idx);
+				idx++;
+			}
+		}
+		else {
+			bookmarks->setEnabled(false);
+		}
+
+		pm.insertItem(tr("Bookmarks"), bookmarks);
 
 		pm.insertSeparator();
 		pm.insertItem(IconsetFactory::icon("psi/addContact").icon(), tr("&Add a contact"), 7);
@@ -1117,7 +1135,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		pm.insertItem(IconsetFactory::icon("psi/xml").icon(), tr("&XML Console"), 10);
 		pm.insertSeparator();
 		pm.insertItem(IconsetFactory::icon("psi/account").icon(), tr("&Modify Account..."), 0);
-
+		
 		if (PsiOptions::instance()->getOption("options.ui.menu.account.admin").toBool()) {
 			pm.insertSeparator();
 			pm.setItemEnabled(pm.insertItem(tr("&Admin"), am), online);
@@ -1179,9 +1197,22 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 			if(online)
 				d->pa->gArchive()->changed();
 		}
-		else if(x >= status_start) {
+		else if(x >= status_start && x <= STATUS_CHAT + status_start) { // STATUS_CHAT is the highest value of the states
 			int status = x - status_start;
 			d->pa->changeStatus(status);
+		}
+		else if(x == bookmarks_start) {
+			BookmarkManageDlg *dlg = d->pa->findDialog<BookmarkManageDlg*>();
+			if(dlg) {
+				bringToFront(dlg);
+			} else {
+				dlg = new BookmarkManageDlg(d->pa);
+				dlg->show();
+			}
+		}
+		else if (x > bookmarks_start) {
+			ConferenceBookmark c = psiAccount()->bookmarkManager()->conferences()[x - bookmarks_start - 1];
+			psiAccount()->actionJoin(c, true);
 		}
 	}
 	else if(i->type() == ContactViewItem::Group) {
@@ -1190,7 +1221,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 
 		if (PsiOptions::instance()->getOption("options.ui.message.enabled").toBool())
 			pm.insertItem(IconsetFactory::icon("psi/sendMessage").icon(), tr("Send message to group"), 0);
-		if(!option.lockdown.roster) {
+		if(!PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool()) {
 			// disable if it's not a user group
 			if(!online || i->groupType() != ContactViewItem::gUser || gname == ContactView::tr("Hidden")) {
 				d->cv->qa_ren->setEnabled(false);
@@ -1225,7 +1256,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		int x = pm.exec(pos);
 
 		// restore actions
-		if(option.lockdown.roster)
+		if(PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool())
 			d->cv->qa_ren->setEnabled(false);
 		else
 			d->cv->qa_ren->setEnabled(true);
@@ -1323,7 +1354,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 
 		Q3PopupMenu pm;
 
-		if(!self && !inList && !isPrivate && !option.lockdown.roster) {
+		if(!self && !inList && !isPrivate && !PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool()) {
 			pm.insertItem(IconsetFactory::icon("psi/addContact").icon(), tr("Add/Authorize to contact list"), 10);
 			if(!online)
 				pm.setItemEnabled(10, false);
@@ -1585,7 +1616,7 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		}
 
 		if(!self) {
-			if(!option.lockdown.roster) {
+			if(!PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool()) {
 				if(online || !inList)
 					d->cv->qa_rem->setEnabled(true);
 				else
@@ -1634,7 +1665,8 @@ void ContactProfile::doContextMenu(ContactViewItem *i, const QPoint &pos)
 		int x = pm.exec(pos);
 
 		// restore actions
-		if(option.lockdown.roster) {
+		d->cv->qa_logon->setEnabled(true);
+		if(PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool()) {
 			d->cv->qa_ren->setEnabled(false);
 			d->cv->qa_rem->setEnabled(false);
 		}
@@ -2313,7 +2345,7 @@ public slots:
 				autoRosterResizeInProgress = true;
 
 				QRect desktop = qApp->desktop()->availableGeometry( (QWidget *)topParent );
-				if ( option.autoRosterSizeGrowTop ) {
+				if ( PsiOptions::instance()->getOption("options.ui.contactlist.grow-roster-upwards").toBool() ) {
 					int newy = topParent->y() - dh;
 
 					// check, if we need to move roster lower
@@ -2354,8 +2386,8 @@ public slots:
 		int top_offs    = abs( desktop.top()    - topParent->frameGeometry().top() );
 		int bottom_offs = abs( desktop.bottom() - topParent->frameGeometry().bottom() );
 
-		option.autoRosterSizeGrowTop = bottom_offs < top_offs;
-		//qWarning("growTop = %d", option.autoRosterSizeGrowTop);
+		PsiOptions::instance()->setOption("options.ui.contactlist.grow-roster-upwards", (bool) (bottom_offs < top_offs));
+		//qWarning("growTop = %d", PsiOptions::instance()->getOption("options.ui.contactlist.automatically-resize-roster").toBool()GrowTop);
 	}
 	
 	/*
@@ -2461,7 +2493,7 @@ v_showOffline(true), v_showAway(true), v_showHidden(true), v_showAgents(true), v
 	qa_vcard = new IconAction("", "psi/vCard", tr("User &Info"), 0, this);
 	connect(qa_vcard, SIGNAL(activated()), SLOT(doVCard()));
 
-	if(option.lockdown.roster) {
+	if(PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool()) {
 		qa_ren->setEnabled(false);
 		qa_rem->setEnabled(false);
 	}
@@ -2538,6 +2570,8 @@ void ContactView::setShowOffline(bool x)
 {
 	bool oldstate = v_showOffline;
 	v_showOffline = x;
+	PsiOptions::instance()->setOption("options.ui.contactlist.show.offline-contacts", x);
+
 
 	if(v_showOffline != oldstate) {
 		showOffline(v_showOffline);
@@ -2574,7 +2608,8 @@ void ContactView::setShowAway(bool x)
 {
 	bool oldstate = v_showAway;
 	v_showAway = x;
-
+	PsiOptions::instance()->setOption("options.ui.contactlist.show.away-contacts", x);
+		
 	if(v_showAway != oldstate) {
 		showAway(v_showAway);
 
@@ -2592,6 +2627,7 @@ void ContactView::setShowHidden(bool x)
 {
 	bool oldstate = v_showHidden;
 	v_showHidden = x;
+	PsiOptions::instance()->setOption("options.ui.contactlist.show.hidden-contacts-group", x);
 
 	if(v_showHidden != oldstate) {
 		showHidden(v_showHidden);
@@ -2631,6 +2667,7 @@ void ContactView::setShowSelf(bool x)
 {
 	if (v_showSelf != x) {
 		v_showSelf = x;
+		PsiOptions::instance()->setOption("options.ui.contactlist.show.self-contact", x);
 		showSelf(v_showSelf);
 
 		Q3PtrListIterator<ContactProfile> it(d->profiles);
@@ -2669,6 +2706,7 @@ void ContactView::setShowAgents(bool x)
 {
 	bool oldstate = v_showAgents;
 	v_showAgents = x;
+	PsiOptions::instance()->setOption("options.ui.contactlist.show.agent-contacts", x);
 
 	if(v_showAgents != oldstate) {
 		showAgents(v_showAgents);
@@ -2686,7 +2724,7 @@ void ContactView::setShowAgents(bool x)
 // right-click context menu
 void ContactView::qlv_contextMenuRequested(Q3ListViewItem *lvi, const QPoint &pos, int c)
 {
-	if(option.useleft)
+	if(PsiOptions::instance()->getOption("options.ui.contactlist.use-left-click").toBool())
 		return;
 
 	qlv_contextPopup(lvi, pos, c);
@@ -2720,9 +2758,9 @@ void ContactView::qlv_singleclick(int button, Q3ListViewItem *i, const QPoint &p
 		if (button == Qt::LeftButton && item->type() == ContactViewItem::Group && pix && viewport()->mapFromGlobal(pos).x() <= pix->width() + treeStepSize()) {
 			setOpen(item, !item->isOpen());
 		}
-		else if(option.useleft) {
+		else if(PsiOptions::instance()->getOption("options.ui.contactlist.use-left-click").toBool()) {
 			if(button == Qt::LeftButton) {
-				if(option.singleclick) {
+				if(PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool()) {
 					qlv_contextPopup(i, pos, c);
 				}
 				else {
@@ -2758,7 +2796,7 @@ void ContactView::qlv_doubleclick(Q3ListViewItem *i)
 	if(!i)
 		return;
 
-	if(option.singleclick)
+	if(PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool())
 		return;
 
 	ContactViewItem *item = (ContactViewItem *)i;
@@ -2785,13 +2823,13 @@ void ContactView::optionsUpdate()
 {
 	// set the font
 	QFont f;
-	f.fromString(option.font[fRoster]);
+	f.fromString(PsiOptions::instance()->getOption("options.ui.look.font.contactlist").toString());
 	Q3ListView::setFont(f);
 
 	// set the text and background colors
 	QPalette mypal = Q3ListView::palette();
-	mypal.setColor(QColorGroup::Text, option.color[cOnline]);
-	mypal.setColor(QColorGroup::Base, option.color[cListBack]);
+	mypal.setColor(QColorGroup::Text, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.online").value<QColor>());
+	mypal.setColor(QColorGroup::Base, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.background").value<QColor>());
 	Q3ListView::setPalette(mypal);
 
 	// reload the icons
@@ -2806,7 +2844,7 @@ void ContactView::optionsUpdate()
 	setShortcuts();
 
 	// resize if necessary
-	if (option.autoRosterSize)
+	if (PsiOptions::instance()->getOption("options.ui.contactlist.automatically-resize-roster").toBool())
 		recalculateSize();
 
 	update();
@@ -2962,7 +3000,7 @@ Q3DragObject *ContactView::dragObject()
 
 bool ContactView::allowResize() const
 {
-	if ( !option.autoRosterSize )
+	if ( !PsiOptions::instance()->getOption("options.ui.contactlist.automatically-resize-roster").toBool() )
 		return false;
 
 	if ( window()->isMaximized() )
@@ -3564,15 +3602,15 @@ void ContactViewItem::paintCell(QPainter *p, const QColorGroup & cg, int column,
 		QColorGroup xcg = cg;
 
 		if(d->status == STATUS_AWAY || d->status == STATUS_XA)
-			xcg.setColor(QColorGroup::Text, option.color[cAway]);
+			xcg.setColor(QColorGroup::Text, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.away").value<QColor>());
 		else if(d->status == STATUS_DND)
-			xcg.setColor(QColorGroup::Text, option.color[cDND]);
+			xcg.setColor(QColorGroup::Text, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.do-not-disturb").value<QColor>());
 		else if(d->status == STATUS_OFFLINE)
-			xcg.setColor(QColorGroup::Text, option.color[cOffline]);
+			xcg.setColor(QColorGroup::Text, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.offline").value<QColor>());
 
 		if(d->animatingNick) {
-			xcg.setColor(QColorGroup::Text, d->animateNickColor ? option.color[cAnimFront] : option.color[cAnimBack]);
-			xcg.setColor(QColorGroup::HighlightedText, d->animateNickColor ? option.color[cAnimFront] : option.color[cAnimBack]);
+			xcg.setColor(QColorGroup::Text, d->animateNickColor ? PsiOptions::instance()->getOption("options.ui.look.contactlist.status-change-animation.color1").value<QColor>() : PsiOptions::instance()->getOption("options.ui.look.contactlist.status-change-animation.color2").value<QColor>());
+			xcg.setColor(QColorGroup::HighlightedText, d->animateNickColor ? PsiOptions::instance()->getOption("options.ui.look.contactlist.status-change-animation.color1").value<QColor>() : PsiOptions::instance()->getOption("options.ui.look.contactlist.status-change-animation.color2").value<QColor>());
 		}
 
 		RichListViewItem::paintCell(p, xcg, column, width, alignment);
@@ -3659,7 +3697,7 @@ void ContactViewItem::paintCell(QPainter *p, const QColorGroup & cg, int column,
 			p->setPen(xcg.text());
 
 		QFont f_info = p->font();
-		f_info.setPointSize(option.smallFontSize);
+		f_info.setPointSize(common_smallFontSize);
 		p->setFont(f_info);
 		QFontMetrics fm_info(p->font());
 		//int info_x = width - fm_info.width(d->groupInfo) - 8;
@@ -3667,23 +3705,23 @@ void ContactViewItem::paintCell(QPainter *p, const QColorGroup & cg, int column,
 		int info_y = ((height() - fm_info.height()) / 2) + fm_info.ascent();
 		p->drawText((info_x > x ? info_x : x), info_y, d->groupInfo);
 
-		if(type_ == Group && option.clNewHeadings && !isSelected()) {
+		if(type_ == Group && PsiOptions::instance()->getOption("options.ui.look.contactlist.use-slim-group-headings").toBool() && !isSelected()) {
 			x += fm.width(d->groupInfo) + 8;
 			if(x < width - 8) {
 				int h = (height() / 2) - 1;
-				p->setPen(QPen(option.color[cGroupBack]));
+				p->setPen(QPen(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-background").value<QColor>()));
 				p->drawLine(x, h, width - 8, h);
 				h++;
-				p->setPen(QPen(option.color[cGroupFore]));
+				p->setPen(QPen(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-foreground").value<QColor>()));
 				/*int h = height() / 2;
 
-				p->setPen(QPen(option.color[cGroupBack], 2));*/
+				p->setPen(QPen(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-background").value<QColor>(), 2));*/
 				p->drawLine(x, h, width - 8, h);
 			}
 		} 
 		else {
-			if (option.outlineHeadings) {
-				p->setPen(QPen(option.color[cGroupFore]));
+			if (PsiOptions::instance()->getOption("options.ui.look.contactlist.use-outlined-group-headings").toBool()) {
+				p->setPen(QPen(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-foreground").value<QColor>()));
 				p->drawRect(0, 0, width, height());
 			}
 		}
@@ -3753,7 +3791,7 @@ int ContactViewItem::compare(Q3ListViewItem *lvi, int, bool) const
 		if(i->type() == Group)
 			ret = -1;
 		else {
-			if ( option.rosterContactSortStyle == Options::ContactSortStyle_Status ) {
+			if ( PsiOptions::instance()->getOption("options.ui.contactlist.contact-sort-style").toString() == "status" ) {
 				ret = rankStatus(d->status) - rankStatus(i->status());
 				if(ret == 0)
 					ret = text(0).lower().localeAwareCompare(i->text(0).lower());
@@ -3768,7 +3806,7 @@ int ContactViewItem::compare(Q3ListViewItem *lvi, int, bool) const
 		if(i->type() == Contact)
 			ret = 1;
 		else if(i->type() == Group) {
-			if ( option.rosterGroupSortStyle == Options::GroupSortStyle_Rank ) {
+			if ( PsiOptions::instance()->getOption("options.ui.contactlist.group-sort-style").toString() == "rank") {
 				int ourRank   = d->groupData().rank;
 				int theirRank = i->d->groupData().rank;
 
@@ -3781,7 +3819,7 @@ int ContactViewItem::compare(Q3ListViewItem *lvi, int, bool) const
 			}
 		}
 		else if(i->type() == Profile) {
-			if ( option.rosterAccountSortStyle == Options::AccountSortStyle_Rank ) {
+			if ( PsiOptions::instance()->getOption("options.ui.contactlist.account-sort-style").toString() == "rank" ) {
 				int ourRank = d->groupData().rank;
 				int theirRank = i->d->groupData().rank;
 

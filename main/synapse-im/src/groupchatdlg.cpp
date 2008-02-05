@@ -65,11 +65,9 @@
 #include "stretchwidget.h"
 #include "mucmanager.h"
 #include "busywidget.h"
-#include "common.h"
 #include "msgmle.h"
 #include "iconwidget.h"
 #include "iconselect.h"
-#include "psitoolbar.h"
 #include "iconaction.h"
 #include "psitooltip.h"
 #include "psioptions.h"
@@ -455,7 +453,7 @@ GCMainDlg::GCMainDlg(PsiAccount *pa, const Jid &j, TabManager *tabManager)
 	: TabbableWidget(j.userHost(), pa, tabManager)
 {
 	setAttribute(Qt::WA_DeleteOnClose);
-  	if ( option.brushedMetal )
+  	if ( PsiOptions::instance()->getOption("options.ui.mac.use-brushed-metal-windows").toBool() )
 		setAttribute(Qt::WA_MacMetalStyle);
 	nicknumber=0;
 	d = new Private(this);
@@ -590,12 +588,27 @@ GCMainDlg::~GCMainDlg()
 	delete d;
 }
 
+void GCMainDlg::ensureTabbedCorrectly() {
+	TabbableWidget::ensureTabbedCorrectly();
+	setShortcuts();
+	// QSplitter is broken again, force resize so that
+	// lv_users gets initizalised properly and context menu
+	// works in tabs too.
+	QList<int> tmp = ui_.hsplitter->sizes();
+	ui_.hsplitter->setSizes(QList<int>() << 0);
+	ui_.hsplitter->setSizes(tmp);
+}
+
 void GCMainDlg::setShortcuts()
 {
 	d->act_clear->setShortcuts(ShortcutManager::instance()->shortcuts("chat.clear"));
 	d->act_find->setShortcuts(ShortcutManager::instance()->shortcuts("chat.find"));
-	//d->act_send->setShortcuts(ShortcutManager::instance()->shortcuts("chat.send"));
-	//d->act_close->setShortcuts(ShortcutManager::instance()->shortcuts("common.close"));
+	d->act_send->setShortcuts(ShortcutManager::instance()->shortcuts("chat.send"));
+	if (!isTabbed()) {
+		d->act_close->setShortcuts(ShortcutManager::instance()->shortcuts("common.close"));
+	} else {
+		d->act_close->QAction::setShortcuts (QList<QKeySequence>());
+	}
 	d->act_scrollup->setShortcuts(ShortcutManager::instance()->shortcuts("common.scroll-up"));
 	d->act_scrolldown->setShortcuts(ShortcutManager::instance()->shortcuts("common.scroll-down"));
 }
@@ -608,23 +621,6 @@ void GCMainDlg::scrollDown() {
 	ui_.log->verticalScrollBar()->setValue(ui_.log->verticalScrollBar()->value() + ui_.log->verticalScrollBar()->pageStep()/2);
 }
 
-// FIXME: This should be unnecessary, since these keys are all registered as
-// actions in the constructor. Somehow, Qt ignores this.
-void GCMainDlg::keyPressEvent(QKeyEvent *e)
-{
-	QKeySequence key = e->key() + ( e->modifiers() & ~Qt::KeypadModifier);
-	if(!option.useTabs && ShortcutManager::instance()->shortcuts("common.close").contains(key))
-		close();
-	else if(ShortcutManager::instance()->shortcuts("chat.send").contains(key))
-		mle_returnPressed();
-	else if(ShortcutManager::instance()->shortcuts("common.scroll-up").contains(key))
-		scrollUp();
-	else if(ShortcutManager::instance()->shortcuts("common.scroll-down").contains(key))
-		scrollDown();
-	else
-		e->ignore();
-}
-
 void GCMainDlg::closeEvent(QCloseEvent *e)
 {
 	e->accept();
@@ -632,7 +628,7 @@ void GCMainDlg::closeEvent(QCloseEvent *e)
 
 void GCMainDlg::resizeEvent(QResizeEvent* e)
 {
-	if (option.keepSizes)
+	if (PsiOptions::instance()->getOption("options.ui.remember-window-sizes").toBool())
 		PsiOptions::instance()->setOption("options.ui.muc.size", e->size());
 }
 
@@ -739,9 +735,10 @@ void GCMainDlg::mle_returnPressed()
 
 	if(str.lower().startsWith("/nick ")) {
 		QString nick = str.mid(6).stripWhiteSpace();
-		if ( !nick.isEmpty() ) {
+		QString norm_nick;
+		if (!nick.isEmpty() && XMPP::Jid::validResource(nick, &norm_nick)) {
 			d->prev_self = d->self;
-			d->self = nick;
+			d->self = norm_nick;
 			account()->groupChatChangeNick(jid().host(), jid().user(), d->self, account()->status());
 		}
 		ui_.mle->chatEdit()->setText("");
@@ -828,8 +825,10 @@ void GCMainDlg::configureRoom()
 		::bringToFront(d->configDlg);
 	else {
 		GCUserViewItem* c = (GCUserViewItem*)ui_.lv_users->findEntry(d->self);
+		MUCItem::Role role = c ? c->s.mucItem().role() : MUCItem::UnknownRole;
+		MUCItem::Affiliation affiliation = c ? c->s.mucItem().affiliation() : MUCItem::UnknownAffiliation;
 		d->configDlg = new MUCConfigDlg(d->mucManager, this);
-		d->configDlg->setRoleAffiliation(c->s.mucItem().role(), c->s.mucItem().affiliation());
+		d->configDlg->setRoleAffiliation(role, affiliation);
 		d->configDlg->show();
 	}
 }
@@ -1168,9 +1167,10 @@ void GCMainDlg::message(const Message &_m)
 	if (m.body().left(d->self.length()) == d->self)
 		d->lastReferrer = m.from().resource();
 
-	if(option.gcHighlighting) {
-		for(QStringList::Iterator it=option.gcHighlights.begin();it!=option.gcHighlights.end();it++) {
-			if(m.body().contains((*it), Qt::CaseInsensitive)) {
+	if(PsiOptions::instance()->getOption("options.ui.muc.use-highlighting").toBool()) {
+		QStringList highlightWords = PsiOptions::instance()->getOption("options.ui.muc.highlight-words").toStringList();
+		foreach (QString word, highlightWords) {
+			if(m.body().contains((word), Qt::CaseInsensitive)) {
 				alert = true;
 			}
 		}
@@ -1179,11 +1179,11 @@ void GCMainDlg::message(const Message &_m)
 	// play sound?
 	if(from == d->self) {
 		if(!m.spooled())
-			account()->playSound(option.onevent[eSend]);
+			account()->playSound(PsiOptions::instance()->getOption("options.ui.notifications.sounds.outgoing-chat").toString());
 	}
 	else {
-		if(alert || (!option.noGCSound && !m.spooled() && !from.isEmpty()) )
-			account()->playSound(option.onevent[eChat2]);
+		if(alert || (PsiOptions::instance()->getOption("options.ui.notifications.sounds.notify-every-muc-message").toBool() && !m.spooled() && !from.isEmpty()) )
+			account()->playSound(PsiOptions::instance()->getOption("options.ui.notifications.sounds.chat-message").toString());
 	}
 
 	if(from.isEmpty())
@@ -1219,7 +1219,7 @@ void GCMainDlg::appendSysMsg(const QString &str, bool alert, const QDateTime &ts
 	if (d->trackBar)
 	 	d->doTrackBar();
 
-	if (!option.gcHighlighting)
+	if (!PsiOptions::instance()->getOption("options.ui.muc.use-highlighting").toBool())
 		alert=false;
 
 	QDateTime time = QDateTime::currentDateTime();
@@ -1246,23 +1246,25 @@ QString GCMainDlg::getNickColor(QString nick)
 		}
 		sender=nicks[nick];
 	}
-
-	if(!option.gcNickColoring || option.gcNickColors.empty()) {
+	
+	QStringList nickColors = PsiOptions::instance()->getOption("options.ui.look.colors.muc.nick-colors").toStringList();
+	
+	if(!PsiOptions::instance()->getOption("options.ui.muc.use-nick-coloring").toBool() || nickColors.empty()) {
 		return "#000000";
 	}
-	else if(sender == -1 || option.gcNickColors.size() == 1) {
-		return option.gcNickColors[option.gcNickColors.size()-1];
+	else if(sender == -1 || nickColors.size() == 1) {
+		return nickColors[nickColors.size()-1];
 	}
 	else {
-		int n = sender % (option.gcNickColors.size()-1);
-		return option.gcNickColors[n];
+		int n = sender % (nickColors.size()-1);
+		return nickColors[n];
 	}
 }
 
 void GCMainDlg::appendMessage(const Message &m, bool alert)
 {
 	//QString who, color;
-	if (!option.gcHighlighting)
+	if (!PsiOptions::instance()->getOption("options.ui.muc.use-highlighting").toBool())
 		alert=false;
 	QString who, textcolor, nickcolor,alerttagso,alerttagsc;
 
@@ -1299,7 +1301,7 @@ void GCMainDlg::appendMessage(const Message &m, bool alert)
 
 	txt = TextUtil::linkify(txt);
 
-	if(option.useEmoticons)
+	if(PsiOptions::instance()->getOption("options.ui.emoticons.use-emoticons").toBool())
 		txt = TextUtil::emoticonify(txt);
 	if( PsiOptions::instance()->getOption("options.ui.chat.legacy-formatting").toBool() )
 		txt = TextUtil::legacyFormat(txt);
@@ -1309,7 +1311,7 @@ void GCMainDlg::appendMessage(const Message &m, bool alert)
 		ui_.log->appendText(QString("<font color=\"%1\">").arg(nickcolor) + QString("[%1]").arg(timestr) + QString(" *%1 ").arg(Qt::escape(who)) + alerttagso + txt + alerttagsc + "</font>");
 	}
 	else {
-		if(option.chatSays) {
+		if(PsiOptions::instance()->getOption("options.ui.chat.use-chat-says-style").toBool()) {
 			//ui_.log->append(QString("<font color=\"%1\">").arg(color) + QString("[%1] ").arg(timestr) + QString("%1 says:").arg(Qt::escape(who)) + "</font><br>" + txt);
 			ui_.log->appendText(QString("<font color=\"%1\">").arg(nickcolor) + QString("[%1] ").arg(timestr) + QString("%1 says:").arg(Qt::escape(who)) + "</font><br>" + QString("<font color=\"%1\">").arg(textcolor) + alerttagso + txt + alerttagsc + "</font>");
 		}
@@ -1370,11 +1372,11 @@ void GCMainDlg::setLooks()
 
 	// update the fonts
 	QFont f;
-	f.fromString(option.font[fChat]);
+	f.fromString(PsiOptions::instance()->getOption("options.ui.look.font.chat").toString());
 	ui_.log->setFont(f);
 	ui_.mle->chatEdit()->setFont(f);
 
-	f.fromString(option.font[fRoster]);
+	f.fromString(PsiOptions::instance()->getOption("options.ui.look.font.contactlist").toString());
 	ui_.lv_users->Q3ListView::setFont(f);
 
 	if (PsiOptions::instance()->getOption("options.ui.chat.central-toolbar").toBool()) {
@@ -1384,7 +1386,7 @@ void GCMainDlg::setLooks()
 	}
 	else {
 		ui_.toolbar->hide();
-		ui_.tb_emoticons->setVisible(option.useEmoticons);
+		ui_.tb_emoticons->setVisible(PsiOptions::instance()->getOption("options.ui.emoticons.use-emoticons").toBool());
 		ui_.tb_actions->show();
 	}
 

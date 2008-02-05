@@ -87,12 +87,10 @@ OptionsTabAppearanceMisc::OptionsTabAppearanceMisc(QObject *parent)
 : OptionsTab(parent, "appearance_misc", "", tr("Misc."), tr("Miscellaneous Settings"))
 {
 	w = 0;
-	o = new Options;
 }
 
 OptionsTabAppearanceMisc::~OptionsTabAppearanceMisc()
 {
-	delete o;
 }
 
 QWidget *OptionsTabAppearanceMisc::widget()
@@ -113,15 +111,15 @@ QWidget *OptionsTabAppearanceMisc::widget()
 	return w;
 }
 
-void OptionsTabAppearanceMisc::applyOptions(Options *opt)
+void OptionsTabAppearanceMisc::applyOptions()
 {
 	if ( !w )
 		return;
 
 	OptAppearanceMiscUI *d = (OptAppearanceMiscUI *)w;
 
-	opt->clNewHeadings = d->ck_newHeadings->isChecked();	
-	opt->outlineHeadings = d->ck_outlineHeadings->isChecked();	
+	PsiOptions::instance()->setOption("options.ui.look.contactlist.use-slim-group-headings", d->ck_newHeadings->isChecked());
+	PsiOptions::instance()->setOption("options.ui.look.contactlist.use-outlined-group-headings", d->ck_outlineHeadings->isChecked());
 	PsiOptions::instance()->setOption("options.ui.contactlist.opacity", d->sl_rosterop->value());
 	PsiOptions::instance()->setOption("options.ui.chat.opacity", d->sl_chatdlgop->value());
 	PsiOptions::instance()->setOption("options.ui.contactlist.avatar.show", d->cb_avatar->currentIndex());
@@ -132,18 +130,19 @@ void OptionsTabAppearanceMisc::applyOptions(Options *opt)
 	PsiOptions::instance()->setOption("options.ui.style.rosterEmoticons", d->ck_rosterEmot->isChecked());
 }
 
-void OptionsTabAppearanceMisc::restoreOptions(const Options *opt)
+void OptionsTabAppearanceMisc::restoreOptions()
 {
 	if ( !w )
 		return;
 
 	OptAppearanceMiscUI *d = (OptAppearanceMiscUI *)w;
 
-	d->ck_newHeadings->setChecked( opt->clNewHeadings );
-	d->ck_outlineHeadings->setChecked( opt->outlineHeadings );
 	
-	d->sl_rosterop->setValue( PsiOptions::instance()->getOption("options.ui.contactlist.opacity").toInt() );
-	d->sl_chatdlgop->setValue( PsiOptions::instance()->getOption("options.ui.chat.opacity").toInt() );
+	d->ck_newHeadings->setChecked(PsiOptions::instance()->getOption("options.ui.look.contactlist.use-slim-group-headings").toBool());
+	d->ck_outlineHeadings->setChecked(PsiOptions::instance()->getOption("options.ui.look.contactlist.use-outlined-group-headings").toBool());
+	
+	d->sl_rosterop->setValue(PsiOptions::instance()->getOption("options.ui.contactlist.opacity").toInt());
+	d->sl_chatdlgop->setValue(PsiOptions::instance()->getOption("options.ui.chat.opacity").toInt());
 
 	d->cb_avatar->addItem(tr("Icons Only"));
 	d->cb_avatar->addItem(tr("Icons and Avatars"));
@@ -194,7 +193,6 @@ OptionsTabAppearanceGeneral::OptionsTabAppearanceGeneral(QObject *parent)
 	w = 0;
 	bg_font = 0;
 	bg_color = 0;
-	o = new Options;
 }
 
 OptionsTabAppearanceGeneral::~OptionsTabAppearanceGeneral()
@@ -203,12 +201,10 @@ OptionsTabAppearanceGeneral::~OptionsTabAppearanceGeneral()
 		delete bg_font;
 	if ( bg_color )
 		delete bg_color;
-	delete o;
 }
 
-static QPixmap name2color(QString name) // taken from opt_general.cpp
+static QPixmap color2pixmap(QColor c) // taken from opt_general.cpp
 {
-	QColor c(name);
 	QPixmap pix(16, 16);
 	QPainter p(&pix);
 
@@ -318,38 +314,81 @@ QWidget *OptionsTabAppearanceGeneral::widget()
 	return w;
 }
 
-void OptionsTabAppearanceGeneral::applyOptions(Options *opt)
+static QColor getColor(QToolButton *button)
 {
-	if ( !w )
-		return;
-
-	//OptAppearanceUI *d = (OptAppearanceUI *)w;
-	//opt->avatarsChatdlgEnabled = d->ck_avatarsChatdlg->isChecked(); // Avatars
-
-	int n;
-	for (n = 0; n < 5; ++n)
-		opt->font[n] = le_font[n]->fontName();
-
-	for (n = 0; n < cNumColors; ++n)
-		opt->color[n] = o->color[n];
+	return button->property("psi_color").value<QColor>();
 }
 
-void OptionsTabAppearanceGeneral::restoreOptions(const Options *opt)
+
+void OptionsTabAppearanceGeneral::applyOptions()
 {
 	if ( !w )
 		return;
 
-	//OptAppearanceUI *d = (OptAppearanceUI *)w;
-	//d->ck_avatarsChatdlg->setChecked( opt->avatarsChatdlgEnabled ); // Avatars
+	OptAppearanceUI *d = (OptAppearanceUI *)w;
+  
+	PsiOptions::instance()->setOption("options.ui.look.font.contactlist", d->le_fRoster->fontName());
+	PsiOptions::instance()->setOption("options.ui.look.font.message", d->le_fMessage->fontName());
+	PsiOptions::instance()->setOption("options.ui.look.font.chat", d->le_fChat->fontName());
+	PsiOptions::instance()->setOption("options.ui.look.font.passive-popup", d->le_fPopup->fontName());
+	PsiOptions::instance()->setOption("options.ui.look.font.status", d->le_fStatus->fontName());
 
-	int n;
-	for (n = 0; n < 5; ++n)
-		le_font[n]->setFont(opt->font[n]);
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.status.online", getColor(d->pb_cOnline));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.status.offline", getColor(d->pb_cOffline));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.status.away", getColor(d->pb_cAway));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.status.do-not-disturb", getColor(d->pb_cDND));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.profile.header-foreground", getColor(d->pb_cProfileFore));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.profile.header-background", getColor(d->pb_cProfileBack));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.grouping.header-foreground", getColor(d->pb_cGroupFore));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.grouping.header-background", getColor(d->pb_cGroupBack));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.background", getColor(d->pb_cListBack));
+	PsiOptions::instance()->setOption("options.ui.look.contactlist.status-change-animation.color1", getColor(d->pb_cAnimFront));
+	PsiOptions::instance()->setOption("options.ui.look.contactlist.status-change-animation.color2", getColor(d->pb_cAnimBack));
+	PsiOptions::instance()->setOption("options.ui.look.colors.contactlist.status-messages", getColor(d->pb_cStatus));
 
-	for (n = 0; n < cNumColors; ++n) {
-		o->color[n] = opt->color[n];
-		((QPushButton*) (bg_color->buttons()[n]))->setPixmap(name2color(opt->color[n].name()));
-	}
+	PsiOptions::instance()->setOption("options.ui.look.colors.chat.my", getColor(d->pb_cChatMyName));
+	PsiOptions::instance()->setOption("options.ui.look.colors.chat.contact", getColor(d->pb_cChatContactName));
+	PsiOptions::instance()->setOption("options.ui.look.colors.chat.system", getColor(d->pb_cChatSystem));
+	PsiOptions::instance()->setOption("options.ui.look.colors.chat.spooled", getColor(d->pb_cChatSpooled));
+}
+  
+static void restoreColor(QToolButton *button, QColor c)
+{
+	button->setProperty("psi_color", c);
+	button->setPixmap(color2pixmap(c));
+}
+
+void OptionsTabAppearanceGeneral::restoreOptions()
+{
+	if ( !w )
+		return;
+
+	OptAppearanceUI *d = (OptAppearanceUI *)w;
+
+	d->le_fRoster->setFont(PsiOptions::instance()->getOption("options.ui.look.font.contactlist").toString());
+	d->le_fMessage->setFont(PsiOptions::instance()->getOption("options.ui.look.font.message").toString());
+	d->le_fChat->setFont(PsiOptions::instance()->getOption("options.ui.look.font.chat").toString());
+	d->le_fPopup->setFont(PsiOptions::instance()->getOption("options.ui.look.font.passive-popup").toString());
+	d->le_fStatus->setFont(PsiOptions::instance()->getOption("options.ui.look.font.status").toString());
+
+	restoreColor(d->pb_cOnline, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.online").value<QColor>());
+	restoreColor(d->pb_cOffline, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.offline").value<QColor>());
+	restoreColor(d->pb_cAway, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.away").value<QColor>());
+	restoreColor(d->pb_cDND, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.do-not-disturb").value<QColor>());
+	restoreColor(d->pb_cProfileFore, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.profile.header-foreground").value<QColor>());
+	restoreColor(d->pb_cProfileBack, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.profile.header-background").value<QColor>());
+	restoreColor(d->pb_cGroupFore, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-foreground").value<QColor>());
+	restoreColor(d->pb_cGroupBack, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-background").value<QColor>());
+	restoreColor(d->pb_cListBack, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.background").value<QColor>());
+	restoreColor(d->pb_cAnimFront, PsiOptions::instance()->getOption("options.ui.look.contactlist.status-change-animation.color1").value<QColor>());
+	restoreColor(d->pb_cAnimBack, PsiOptions::instance()->getOption("options.ui.look.contactlist.status-change-animation.color2").value<QColor>());
+	restoreColor(d->pb_cStatus, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status-messages").value<QColor>());
+
+	restoreColor(d->pb_cChatMyName, PsiOptions::instance()->getOption("options.ui.look.colors.chat.my").value<QColor>());
+	restoreColor(d->pb_cChatContactName, PsiOptions::instance()->getOption("options.ui.look.colors.chat.contact").value<QColor>());
+	restoreColor(d->pb_cChatSystem, PsiOptions::instance()->getOption("options.ui.look.colors.chat.system").value<QColor>());
+	restoreColor(d->pb_cChatSpooled, PsiOptions::instance()->getOption("options.ui.look.colors.chat.spooled").value<QColor>());
+
 }
 
 void OptionsTabAppearanceGeneral::setData(PsiCon *, QWidget *parentDialog)
@@ -374,14 +413,15 @@ void OptionsTabAppearanceGeneral::chooseFont(QAbstractButton* button)
 void OptionsTabAppearanceGeneral::chooseColor(QAbstractButton* button)
 {
 	QColor c;
-	int x = (bg_color->buttons()).indexOf(button);
+	//int x = (bg_color->buttons()).indexOf(button);
 
-	c = o->color[x];
+	c = button->property("psi_color").value<QColor>();
 
 	c = QColorDialog::getColor(c, parentWidget);
 	if(c.isValid()) {
-		o->color[x] = c;
-		((QPushButton*) bg_color->buttons()[x])->setPixmap(name2color(o->color[x].name()));
+		button->setProperty("psi_color", c);
+		//((QPushButton*) bg_color->buttons()[x])->setPixmap(name2color(o->color[x].name()));
+		button->setPixmap(color2pixmap(c));
 
 		emit dataChanged();
 	}

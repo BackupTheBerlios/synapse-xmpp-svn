@@ -30,29 +30,34 @@ namespace XMPP {
 	class Client;
 }
 class QString;
+class QTimer;
 
 class PsiOptions : public OptionsTree//, QObject
 {
 	Q_OBJECT
 public:
 	static PsiOptions* instance();
+	static const PsiOptions* defaults();
+	static void reset();
 	~PsiOptions();
 	bool load(QString file);
 	void load(XMPP::Client* client);
+	bool newProfile();
 	bool save(QString file);
 	void autoSave(bool autoSave, QString autoFile = "");
 
-	
-private:	
+// don't call this normally
 	PsiOptions();
-	
+
 private slots:
 	void saveToAutoFile();
 	void getOptionsStorage_finished();
-	
-private:	
+
+private:
 	QString autoFile_;
+	QTimer *autoSaveTimer_;
 	static PsiOptions* instance_;
+	static PsiOptions* defaults_;
 }; 
 
 #endif /* _PSIOPTIONS_H_ */

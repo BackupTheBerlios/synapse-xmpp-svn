@@ -47,42 +47,47 @@ QWidget *OptionsTabHistory::widget()
 	return w;
 }
 
-void OptionsTabHistory::applyOptions(Options *opt)
+void OptionsTabHistory::applyOptions()
 {
 	if ( !w )
 		return;
 
 	OptHistoryUI *d = (OptHistoryUI *)w;
 
-	opt->historyLogMessages = d->ck_logMessages->isChecked();
-	opt->historyLogFileTransfers = d->ck_logFileTransfers->isChecked();
+	PsiOptions::instance()->setOption("options.history.messages", d->ck_logMessages->isChecked());
+	PsiOptions::instance()->setOption("options.history.file-transfers", d->ck_logFileTransfers->isChecked());
 
-	opt->historyDBBackend = d->cb_backend->currentIndex();
-	opt->historyDBHost = d->le_hostname->text();
-	opt->historyDBUser = d->le_username->text();
-	opt->historyDBPassword = d->le_password->text();
-	opt->historyDBName = d->le_dbname->text();
-	opt->historyDBPort = d->sb_port->value();
+	PsiOptions::instance()->setOption("options.history.backend", d->cb_backend->currentText());
+	PsiOptions::instance()->setOption("options.history.host", d->le_hostname->text());
+	PsiOptions::instance()->setOption("options.history.user", d->le_username->text());
+	PsiOptions::instance()->setOption("options.history.password", d->le_password->text());
+	PsiOptions::instance()->setOption("options.history.database", d->le_dbname->text());
+	PsiOptions::instance()->setOption("options.history.port", d->sb_port->value());
 	
 }
 
-void OptionsTabHistory::restoreOptions(const Options *opt)
+void OptionsTabHistory::restoreOptions()
 {
 	if ( !w )
 		return;
 
 	OptHistoryUI *d = (OptHistoryUI *)w;
 
-	d->ck_logMessages->setChecked(opt->historyLogMessages);
-	d->ck_logFileTransfers->setChecked(opt->historyLogFileTransfers);
+	d->ck_logMessages->setChecked(	PsiOptions::instance()->getOption("options.history.messages").toBool());
+	d->ck_logFileTransfers->setChecked(PsiOptions::instance()->getOption("options.history.file-transfers").toBool());
 
-	d->cb_backend->setCurrentIndex(opt->historyDBBackend);
-	backendChanged(opt->historyDBBackend);
-	d->le_hostname->setText(opt->historyDBHost);
-	d->le_username->setText(opt->historyDBUser);
-	d->le_password->setText(opt->historyDBPassword);
-	d->le_dbname->setText(opt->historyDBName);
-	d->sb_port->setValue(opt->historyDBPort);
+	QString backend = PsiOptions::instance()->getOption("options.history.backend").toString();
+	int i = 0;
+	for(i=0; i<d->cb_backend->count(); i++)
+		if(d->cb_backend->itemText(i).compare(backend) == 0)
+			break;
+	d->cb_backend->setCurrentIndex(i);
+
+	d->le_hostname->setText(PsiOptions::instance()->getOption("options.history.host").toString());
+	d->le_username->setText(PsiOptions::instance()->getOption("options.history.user").toString());
+	d->le_password->setText(PsiOptions::instance()->getOption("options.history.password").toString());
+	d->le_dbname->setText(PsiOptions::instance()->getOption("options.history.database").toString());
+	d->sb_port->setValue(PsiOptions::instance()->getOption("options.history.port").toInt());
 	
 }
 

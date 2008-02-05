@@ -22,7 +22,6 @@
 
 #include "iconwidget.h"
 #include "iconset.h"
-#include "common.h"
 #include "psicon.h"
 #include <qmenubar.h>
 #include <qcursor.h>
@@ -44,25 +43,90 @@
 #include <windows.h>
 #endif
 
-static const QString psiTabDragMimeType = "application/psi-tab-drag";
+//----------------------------------------------------------------------------
+// TabDlgDelegate
+//----------------------------------------------------------------------------
+
+TabDlgDelegate::TabDlgDelegate(QObject *parent)
+		: QObject(parent) {
+}
+
+TabDlgDelegate::~TabDlgDelegate() {
+}
+
+Qt::WindowFlags TabDlgDelegate::initWindowFlags() const {
+	return (Qt::WindowFlags)0;
+}
+
+void TabDlgDelegate::create(QWidget *) {
+}
+
+void TabDlgDelegate::destroy(QWidget *) {
+}
+
+bool TabDlgDelegate::paintEvent(QWidget *, QPaintEvent *) {
+	return false;
+}
+
+bool TabDlgDelegate::resizeEvent(QWidget *, QResizeEvent *) {
+	return false;
+}
+
+bool TabDlgDelegate::mousePressEvent(QWidget *, QMouseEvent *) {
+	return false;
+}
+
+bool TabDlgDelegate::mouseMoveEvent(QWidget *, QMouseEvent *) {
+	return false;
+}
+
+bool TabDlgDelegate::mouseReleaseEvent(QWidget *, QMouseEvent *) {
+	return false;
+}
+
+bool TabDlgDelegate::changeEvent(QWidget *, QEvent *) {
+	return false;
+}
+
+bool TabDlgDelegate::event(QWidget *, QEvent *) {
+	return false;
+}
+
+bool TabDlgDelegate::eventFilter(QWidget *, QObject *, QEvent *) {
+	return false;
+}
 
 //----------------------------------------------------------------------------
 // TabDlg
 //----------------------------------------------------------------------------
 
-TabDlg::TabDlg(TabManager* tabManager)
-	: tabWidget_(0)
-	, detachButton_(0)
-	, closeButton_(0)
-	, closeCross_(0)
-	, tabMenu_(new QMenu(this))
-	, act_close_(0)
-	, act_next_(0)
-	, act_prev_(0)
-	, tabManager_(tabManager)
-{
-	if ( option.brushedMetal )
+/**
+ * Constructs a TabDlg
+ *
+ * \param tabManager The tabManager that will manage this TabDlg
+ * \param delegate If non-zero, this is a pointer to a TabDlgDelegate that
+ *        will manage some aspects of the TabDlg behavior.  Ownership is not
+ *        passed.
+ */ 
+TabDlg::TabDlg(TabManager* tabManager, QSize size, TabDlgDelegate *delegate)
+		: AdvancedWidget<QWidget>(0, delegate ? delegate->initWindowFlags() : (Qt::WindowFlags)0)
+		, delegate_(delegate)
+		, tabWidget_(0)
+		, detachButton_(0)
+		, closeButton_(0)
+		, closeCross_(0)
+		, tabMenu_(new QMenu(this))
+		, act_close_(0)
+		, act_next_(0)
+		, act_prev_(0)
+		, tabManager_(tabManager) {
+	if (delegate_) {
+		delegate_->create(this);
+	}
+
+	if (PsiOptions::instance()->getOption("options.ui.mac.use-brushed-metal-windows").toBool()) {
 		setAttribute(Qt::WA_MacMetalStyle);
+	}
 
 	// FIXME
 	qRegisterMetaType<TabDlg*>("TabDlg*");
@@ -96,11 +160,15 @@ TabDlg::TabDlg(TabManager* tabManager)
 
 	setShortcuts();
 
-	resize(option.sizeTabDlg);
+	if (size.isValid()) {
+		resize(size);
+	}
 }
 
-TabDlg::~TabDlg()
-{
+TabDlg::~TabDlg() {
+	if (delegate_) {
+		delegate_->destroy(this);
+	}
 }
 
 // FIXME: This is a bad idea to store pointers in QMimeData
@@ -109,15 +177,21 @@ Q_DECLARE_METATYPE(TabbableWidget*);
 
 void TabDlg::setShortcuts()
 {
-	//act_close_->setShortcuts(ShortcutManager::instance()->shortcuts("common.close"));
+	act_close_->setShortcuts(ShortcutManager::instance()->shortcuts("common.close"));
 	act_prev_->setShortcuts(ShortcutManager::instance()->shortcuts("chat.previous-tab"));
 	act_next_->setShortcuts(ShortcutManager::instance()->shortcuts("chat.next-tab"));
 }
 
 void TabDlg::resizeEvent(QResizeEvent *e)
 {
-	if (option.keepSizes)
-		option.sizeTabDlg = e->size();
+	AdvancedWidget<QWidget>::resizeEvent(e);
+
+	emit resized(e->size());
+
+	// delegate may want to act on resize event
+	if (delegate_) {
+		delegate_->resizeEvent(this, e);
+	}
 }
 
 void TabDlg::showTabMenu(int tab, QPoint pos, QContextMenuEvent * event)
@@ -173,7 +247,24 @@ void TabDlg::tab_aboutToShowMenu(QMenu *menu)
 	}
 	connect(sendTo, SIGNAL(triggered(QAction*)), SLOT(menu_sendTabTo(QAction*)));
 	menu->addMenu(sendTo);
+	menu->addSeparator();
+	
+	QAction *act;
+	act = menu->addAction(tr("Use for new chats"), this, SLOT(setAsDefaultForChat()));
+	act->setCheckable(true);
+	act->setChecked(tabManager_->preferredTabsForKind('C') == this); 
+	act = menu->addAction(tr("Use for new mucs"), this, SLOT(setAsDefaultForMuc()));
+	act->setCheckable(true);
+	act->setChecked(tabManager_->preferredTabsForKind('M') == this); 
 }
+
+void TabDlg::setAsDefaultForChat() {
+	tabManager_->setPreferredTabsForKind('C', this);
+}
+void TabDlg::setAsDefaultForMuc() {
+	tabManager_->setPreferredTabsForKind('M', this);
+}
+
 
 void TabDlg::menu_sendTabTo(QAction *act)
 {
@@ -208,7 +299,7 @@ void TabDlg::setLooks()
 	setWindowIcon(IconsetFactory::icon("psi/start-chat").icon());
 #endif
 	tabWidget_->setTabPosition(QTabWidget::Top);
-	if (option.putTabsAtBottom)
+	if (PsiOptions::instance()->getOption("options.ui.tabs.put-tabs-at-bottom").toBool())
 		tabWidget_->setTabPosition(QTabWidget::Bottom);
 
 	setWindowOpacity(double(qMax(MINIMUM_OPACITY,PsiOptions::instance()->getOption("options.ui.chat.opacity").toInt()))/100);
@@ -268,7 +359,7 @@ void TabDlg::detachTab(TabbableWidget* tab)
 	if (tabWidget_->count() == 1 || !tab)
 		return;
 
-	TabDlg *newTab = tabManager_->newTabs();
+	TabDlg *newTab = tabManager_->newTabs(tab);
 	sendTabTo(tab, newTab);
 }
 
@@ -456,22 +547,9 @@ void TabDlg::closeCurrentTab()
 	closeTab(static_cast<TabbableWidget*>(tabWidget_->currentPage()));
 }
 
-void TabDlg::keyPressEvent(QKeyEvent *e)
-{
-	if (e->key() == Qt::Key_Escape) {
-		closeCurrentTab();
-	}
-	else if (e->key() == Qt::Key_W && (e->modifiers() & Qt::ControlModifier)) {
-		closeCurrentTab();
-	}
-	else {
-		e->ignore();
-	}
-}
-
 void TabDlg::dragEnterEvent(QDragEnterEvent *event)
 {
-	if (event->mimeData()->hasFormat(psiTabDragMimeType)) {
+	if (event->mimeData()->hasFormat(PSITABDRAGMIMETYPE)) {
 		event->setDropAction(Qt::MoveAction);
 		event->accept();
 	}
@@ -479,10 +557,10 @@ void TabDlg::dragEnterEvent(QDragEnterEvent *event)
 
 void TabDlg::dropEvent(QDropEvent *event)
 {
-	if (!event->mimeData()->hasFormat(psiTabDragMimeType)) {
+	if (!event->mimeData()->hasFormat(PSITABDRAGMIMETYPE)) {
 		return;
 	}
-	QByteArray data = event->mimeData()->data(psiTabDragMimeType);
+	QByteArray data = event->mimeData()->data(PSITABDRAGMIMETYPE);
 
 	int remoteTab = data.toInt();
 	event->acceptProposedAction();
@@ -524,4 +602,67 @@ void TabDlg::updateFlashState()
 
 	flash = flash && !isActiveWindow();
 	doFlash(flash);
+}
+
+void TabDlg::paintEvent(QPaintEvent *event) {
+	// delegate if possible, otherwise use default
+	if (delegate_ && delegate_->paintEvent(this, event)) {
+		return;
+	} else {
+		AdvancedWidget<QWidget>::paintEvent(event);
+	}
+}
+
+void TabDlg::mousePressEvent(QMouseEvent *event) {
+	// delegate if possible, otherwise use default
+	if (delegate_ && delegate_->mousePressEvent(this, event)) {
+		return;
+	} else {
+		AdvancedWidget<QWidget>::mousePressEvent(event);
+	}
+}
+
+void TabDlg::mouseMoveEvent(QMouseEvent *event) {
+	// delegate if possible, otherwise use default
+	if (delegate_ && delegate_->mouseMoveEvent(this, event)) {
+		return;
+	} else {
+		AdvancedWidget<QWidget>::mouseMoveEvent(event);
+	}
+}
+
+void TabDlg::mouseReleaseEvent(QMouseEvent *event) {
+	// delegate if possible, otherwise use default
+	if (delegate_ && delegate_->mouseReleaseEvent(this, event)) {
+		return;
+	} else {
+		AdvancedWidget<QWidget>::mouseReleaseEvent(event);
+	}
+}
+
+void TabDlg::changeEvent(QEvent *event) {
+	// delegate if possible, otherwise use default
+	if (delegate_ && delegate_->changeEvent(this, event)) {
+		return;
+	} else {
+		AdvancedWidget<QWidget>::changeEvent(event);
+	}
+}
+
+bool TabDlg::event(QEvent *event) {
+	// delegate if possible, otherwise use default
+	if (delegate_ && delegate_->event(this, event)) {
+		return true;
+	} else {
+		return AdvancedWidget<QWidget>::event(event);
+	}
+}
+
+bool TabDlg::eventFilter(QObject *obj, QEvent *event) {
+	// delegate if possible, otherwise use default
+	if (delegate_ && delegate_->eventFilter(this, obj, event)) {
+		return true;
+	} else {
+		return AdvancedWidget<QWidget>::eventFilter(obj, event);
+	}
 }

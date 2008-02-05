@@ -960,7 +960,7 @@ public:
 	XData xdata;
 	QMap<QString,HTMLElement> htmlElements;
 	QString htmlString;
- 	QDomElement wb;
+	QDomElement sxe;
 	AMPRules *amp_rules;
 	
 	int mucStatus;
@@ -1442,14 +1442,14 @@ const XData& Message::getForm() const
 	return d->xdata;
 }
 
-const QDomElement& Message::whiteboard() const
+const QDomElement& Message::sxe() const
 {
-	return d->wb;
+	return d->sxe;
 }
 
-void Message::setWhiteboard(const QDomElement& e)
+void Message::setSxe(const QDomElement& e)
 {
-	d->wb = e;
+	d->sxe = e;
 }
 
 AMPRules *Message::ampRules() const
@@ -1664,9 +1664,9 @@ Stanza Message::toStanza(Stream *stream) const
 		s.appendChild(s.createTextElement("http://jabber.org/protocol/nick", "nick", d->nick));
 	}
 
-	// wb
-	if(!d->wb.isNull()) {
-		s.appendChild(d->wb);
+	// sxe
+	if(!d->sxe.isNull()) {
+		s.appendChild(d->sxe);
 	}
 
 	// muc
@@ -1920,12 +1920,12 @@ bool Message::fromStanza(const Stanza &s, int timeZoneOffset)
 	else
 		d->nick = QString();
 
-	// wb
-	t = root.elementsByTagNameNS("http://jabber.org/protocol/svgwb", "wb").item(0).toElement();
+	// sxe
+	t = root.elementsByTagNameNS("http://jabber.org/protocol/sxe", "sxe").item(0).toElement();
 	if(!t.isNull())
-		d->wb = t;
+		d->sxe = t;
 	else
-		d->wb = QDomElement();
+		d->sxe = QDomElement();
 
 	t = root.elementsByTagNameNS("http://jabber.org/protocol/muc#user", "x").item(0).toElement();
 	if(!t.isNull()) {

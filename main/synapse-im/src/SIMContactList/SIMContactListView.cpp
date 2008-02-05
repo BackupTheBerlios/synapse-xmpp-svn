@@ -237,7 +237,7 @@ void SIMContactListView::mousePressEvent(QMouseEvent *e)
 
 void SIMContactListView::qlv_doubleclick(const QModelIndex &index)
 {
-	if(option.singleclick)
+	if(PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool())
 		return;
 	if(!index.isValid())
 		return;
@@ -271,9 +271,9 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 				group->contactList()->setGroupOpen(group->name(), isExpanded(index));
 			done = true;
 		}
-		else if(option.useleft) {
+		else if(PsiOptions::instance()->getOption("options.ui.contactlist.use-left-click").toBool()) {
 			if(e->button() == Qt::LeftButton) {
-				if(option.singleclick) {
+				if(PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool()) {
 					model()->setData(index,QVariant(mapToGlobal(e->pos())),SIMContactListModel::ContextMenuRole);
 					done = true;
 				}
@@ -284,7 +284,7 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 //					QTimer::singleShot(QApplication::doubleClickInterval()/2, this, SLOT(leftClickTimeOut()));
 //				}
 			}
-			else if(option.singleclick && e->button() == Qt::RightButton) {
+			else if(PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool() && e->button() == Qt::RightButton) {
 				if(item->type() == SIMContactListItem::Contact || item->type() == SIMContactListItem::Meta) {
 					scActionDefault(item);
 					done = false;
@@ -296,7 +296,7 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 				model()->setData(index,QVariant(mapToGlobal(e->pos())),SIMContactListModel::ContextMenuRole);
 				done = true;
 			}
-			if(e->button() == Qt::LeftButton && option.singleclick) {
+			if(e->button() == Qt::LeftButton && PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool()) {
 				if(item->type() == SIMContactListItem::Contact || item->type() == SIMContactListItem::Meta) {
 					scActionDefault(item);
 					done = false;

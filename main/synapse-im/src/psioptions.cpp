@@ -26,6 +26,7 @@
 #include "xmpp_task.h"
 #include "xmpp_jid.h"
 #include "xmpp_client.h"
+#include "statuspreset.h"
 
 using namespace XMPP;
 
@@ -107,6 +108,79 @@ PsiOptions* PsiOptions::instance()
 }
 
 /**
+ * Returns the instance of this class containing default values of all options
+ * \return Instance of PsiOptions
+ */
+const PsiOptions* PsiOptions::defaults()
+{
+	if ( !defaults_ )
+		defaults_ = new PsiOptions();
+	return defaults_;
+}
+
+/**
+ * Reset the singleton instance of this class
+ * this delete the old instance so be sure no references are there anymore
+ */
+void PsiOptions::reset() {
+	instance_ = 0;
+	delete instance_;
+}
+
+
+/**
+ * initizialises the default options for a new profile
+ */
+bool PsiOptions::newProfile() {
+	bool ok = true;
+	if (!load(":/options/newprofile.xml")) {
+		ok = false;
+	}
+	StatusPreset(QObject::tr("Away from desk"),
+				 QObject::tr("I am away from my desk.  Leave a message."),
+				 XMPP::Status::Away
+				).toOptions(this);
+	StatusPreset(QObject::tr("Showering"),
+				 QObject::tr("I'm in the shower.  You'll have to wait for me to get out."),
+				 XMPP::Status::Away
+				).toOptions(this);
+	StatusPreset(QObject::tr("Eating"),
+				 QObject::tr("Out eating.  Mmmm.. food."),
+				 XMPP::Status::Away
+				).toOptions(this);
+	StatusPreset(QObject::tr("Sleep"),
+				 QObject::tr("Sleep is good.  Zzzzz"),
+				 XMPP::Status::DND
+				).toOptions(this);
+	StatusPreset(QObject::tr("Work"),
+				 QObject::tr("Can't chat.  Gotta work."),
+				 XMPP::Status::DND
+				).toOptions(this);
+	StatusPreset(QObject::tr("Air"),
+				 QObject::tr("Stepping out to get some fresh air."),
+				 XMPP::Status::Away
+				).toOptions(this);
+	StatusPreset(QObject::tr("Movie"),
+				 QObject::tr("Out to a movie.  Is that OK with you?"),
+				 XMPP::Status::Away
+				).toOptions(this);
+	StatusPreset(QObject::tr("Secret"),
+				 QObject::tr("I'm not available right now and that's all you need to know."),
+				 XMPP::Status::XA
+				).toOptions(this);
+	StatusPreset(QObject::tr("Out for the night"),
+				 QObject::tr("Out for the night."),
+				 XMPP::Status::Away
+				).toOptions(this);
+	StatusPreset(QObject::tr("Greece"),
+				 QObject::tr("I have gone to a far away place.  I will be back someday!"),
+				 XMPP::Status::XA
+				).toOptions(this);
+	return ok;
+}
+
+
+/**
  * Loads the options present in the xml config file named.
  * \param file Name of the xml config file to load
  * \return Success
@@ -139,14 +213,18 @@ bool PsiOptions::save(QString file)
 	return saveOptions(file, "options", ApplicationInfo::optionsNS(), ApplicationInfo::version());
 }
 
-/**
- * Default (private) constructor
- */
 PsiOptions::PsiOptions()
 	: OptionsTree()
+	, autoSaveTimer_(0)
 {
+	autoSaveTimer_ = new QTimer(this);
+	autoSaveTimer_->setSingleShot(true);
+	autoSaveTimer_->setInterval(1000);
+	connect(autoSaveTimer_, SIGNAL(timeout()), SLOT(saveToAutoFile()));
+
 	setParent(QCoreApplication::instance());
 	autoSave(false);
+
 //	if (!load(":/options/default.xml"))
 	if (!load(ApplicationInfo::resourcesDir() + "/options/default.xml"))
 		qWarning("ERROR: Failed to load default options");
@@ -161,12 +239,14 @@ PsiOptions::PsiOptions()
 #endif
 }
 
-/**
- * Boom (Destructor)
- */
 PsiOptions::~PsiOptions()
 {
-	
+	// since we queue connection to saveToAutoFile, so if some option was saved prior
+	// to program termination, the PsiOptions is never given the chance to save
+	// the changed option
+	if (!autoFile_.isEmpty()) {
+		saveToAutoFile();
+	}
 }
 
 /**
@@ -178,15 +258,13 @@ PsiOptions::~PsiOptions()
 void PsiOptions::autoSave(bool autoSave, QString autoFile)
 {
 	if (autoSave) {
-		connect(this, SIGNAL(optionChanged(const QString&)), SLOT(saveToAutoFile()));
-		autoFile_=autoFile;
+		connect(this, SIGNAL(optionChanged(const QString&)), autoSaveTimer_, SLOT(start()));
+		autoFile_ = autoFile;
 	}
 	else {
-		disconnect(this, SLOT(saveToAutoFile()));
-		autoFile="";
+		disconnect(this, SIGNAL(optionChanged(const QString&)), autoSaveTimer_, SLOT(start()));
+		autoFile = "";
 	}
-		
-	
 }
 
 /**
@@ -194,8 +272,9 @@ void PsiOptions::autoSave(bool autoSave, QString autoFile)
  */
 void PsiOptions::saveToAutoFile()
 {
-	if (autoFile_ != "")
+	if (autoFile_ != "") {
 		save(autoFile_);
+	}
 }
 
 /**
@@ -212,4 +291,5 @@ void PsiOptions::getOptionsStorage_finished()
 }
 
 PsiOptions* PsiOptions::instance_ = NULL;
+PsiOptions* PsiOptions::defaults_ = NULL;
 

@@ -51,7 +51,6 @@
 #include "psiaccount.h"
 #include "psicon.h"
 #include "busywidget.h"
-#include "common.h"
 #include "iconaction.h"
 #include "psiiconset.h"
 #include "psitooltip.h"

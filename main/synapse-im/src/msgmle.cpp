@@ -32,7 +32,6 @@
 #include <QTextDocument>
 #include <QTimer>
 
-#include "common.h"
 #include "msgmle.h"
 #include "shortcutmanager.h"
 #include "spellhighlighter.h"
@@ -79,28 +78,6 @@ bool ChatView::focusNextPrevChild(bool next)
 
 void ChatView::keyPressEvent(QKeyEvent *e)
 {
-	if(dialog_) {
-		QKeySequence k(e->key() + (e->modifiers() & ~Qt::KeypadModifier));
-
-		// Temporary workaround for what i think is a Qt bug
-		if(ShortcutManager::instance()->shortcuts("common.close").contains(k)
-			|| ShortcutManager::instance()->shortcuts("message.send").contains(k)) {
-			e->ignore();
-			return;
-		}
-
-		// Ignore registered key sequences (and pass them up)
-		foreach(QAction* act, dialog_->actions()) {
-			foreach(QKeySequence keyseq, act->shortcuts()) {
-				if(!keyseq.isEmpty() && keyseq.matches(k) == QKeySequence::ExactMatch) {
-					e->ignore();
-					//act->trigger();
-					return;
-				}
-			}
-		}
-	}
-
 /*	if(e->key() == Qt::Key_Escape)
 		e->ignore(); 
 #ifdef Q_WS_MAC
@@ -128,7 +105,7 @@ void ChatView::keyPressEvent(QKeyEvent *e)
  */
 void ChatView::autoCopy()
 {
-	if (isReadOnly() && option.autoCopy) {
+	if (isReadOnly() && PsiOptions::instance()->getOption("options.ui.automatically-copy-selected-text").toBool()) {
 		copy();
 	}
 }
@@ -246,28 +223,17 @@ bool ChatEdit::focusNextPrevChild(bool next)
 	return QWidget::focusNextPrevChild(next);
 }
 
+// Qt text controls are quite greedy to grab key events.
+// disable that.
+bool ChatEdit::event(QEvent * event) {
+	if (event->type() == QEvent::ShortcutOverride) {
+		return false;
+	}
+	return QTextEdit::event(event);
+}
+
 void ChatEdit::keyPressEvent(QKeyEvent *e)
 {
-	if(dialog_) {
-		QKeySequence k(e->key() + (e->modifiers() & ~Qt::KeypadModifier));
-		// Temporary workaround for what i think is a Qt bug
-		if(ShortcutManager::instance()->shortcuts("common.close").contains(k)
-			|| ShortcutManager::instance()->shortcuts("chat.send").contains(k)) {
-			e->ignore();
-			return;
-		}
-
-		// Ignore registered key sequences (and pass them up)
-		foreach(QAction* act, dialog_->actions()) {
-			foreach(QKeySequence keyseq, act->shortcuts()) {
-				if(!keyseq.isEmpty() && keyseq.matches(k) == QKeySequence::ExactMatch) {
-					e->ignore();
-					//act->trigger();
-					return;
-				}
-			}
-		}
-	}
 /*	if(e->key() == Qt::Key_Escape || (e->key() == Qt::Key_W && e->modifiers() & Qt::ControlModifier))
 		e->ignore();
 	else if(e->key() == Qt::Key_Return && 
@@ -285,7 +251,7 @@ void ChatEdit::keyPressEvent(QKeyEvent *e)
 		e->ignore();
 	else*/ if(e->key() == Qt::Key_U && (e->modifiers() & Qt::ControlModifier))
 		setText("");
-/*	else if((e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) && !((e->modifiers() & Qt::ShiftModifier) || (e->modifiers() & Qt::AltModifier)) && option.chatSoftReturn)
+/*	else if((e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) && !((e->modifiers() & Qt::ShiftModifier) || (e->modifiers() & Qt::AltModifier)) && LEGOPTS.chatSoftReturn)
 		e->ignore();
 	else if((e->key() == Qt::Key_PageUp || e->key() == Qt::Key_PageDown) && (e->modifiers() & Qt::ShiftModifier))
 		e->ignore();

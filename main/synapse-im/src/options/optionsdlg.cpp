@@ -166,7 +166,7 @@ class OptionsDlg::Private : public QObject
 {
 	Q_OBJECT
 public:
-	Private(OptionsDlg *dlg, PsiCon *_psi, const Options &_opt);
+	Private(OptionsDlg *dlg, PsiCon *_psi);
 
 public slots:
 	void doApply();
@@ -185,7 +185,6 @@ private slots:
 public:
 	OptionsDlg *dlg;
 	PsiCon *psi;
-	Options opt;
 	bool dirty, noDirty;
 	Q3Dict<QWidget> id2widget;
 	Q3PtrList<OptionsTab> tabs;
@@ -193,11 +192,10 @@ public:
 	QMap<QString, QByteArray> changedMap;
 };
 
-OptionsDlg::Private::Private(OptionsDlg *d, PsiCon *_psi, const Options &_opt)
+OptionsDlg::Private::Private(OptionsDlg *d, PsiCon *_psi)
 {
 	dlg = d;
 	psi = _psi;
-	opt = _opt; // option
 	noDirty = false;
 	dirty = false;
 
@@ -441,7 +439,7 @@ void OptionsDlg::Private::openTab(QString id)
 
 				bool d = dirty;
 
-				opttab->restoreOptions( &opt ); // initialize widgets' values
+				opttab->restoreOptions(); // initialize widgets' values
 
 				dirty = d;
 				dlg->pb_apply->setEnabled( dirty );
@@ -531,10 +529,10 @@ void OptionsDlg::Private::doApply()
 	for ( ; it.current(); ++it) {
 		opttab = it.current();
 
-		opttab->applyOptions( &opt );
+		opttab->applyOptions();
 	}
 
-	emit dlg->applyOptions( opt );
+	emit dlg->applyOptions();
 
 	dirty = false;
 	dlg->pb_apply->setEnabled(false);
@@ -544,12 +542,12 @@ void OptionsDlg::Private::doApply()
 // OptionsDlg
 //----------------------------------------------------------------------------
 
-OptionsDlg::OptionsDlg(PsiCon *psi, const Options &opt, QWidget *parent)
+OptionsDlg::OptionsDlg(PsiCon *psi, QWidget *parent)
 	: QDialog(parent)
 {
 	setAttribute(Qt::WA_DeleteOnClose);
 	setupUi(this);
-	d = new Private(this, psi, opt);
+	d = new Private(this, psi);
 	setModal(false);
 	d->psi->dialogRegister(this);
 

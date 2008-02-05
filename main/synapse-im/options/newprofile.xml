@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!DOCTYPE psi>
+<!--
+	This file is used for one time merge defaults on account creating.
+	This is mostly for composite options (maps/lists) that are composed
+	of multiple options.
+	-->
+<psi version="defaults">
+  <options>
+    <ui>
+      <contactlist>
+        <toolbars>
+          <a0>
+            <dock>
+              <extra-offset type="int">0</extra-offset>
+              <index type="int">1</index>
+              <nl type="bool">true</nl>
+              <position type="int">8</position>
+            </dock>
+            <actions type="QStringList" >
+              <item>button_options</item>
+              <item>button_status</item>
+	          </actions>
+            <locked type="bool">true</locked>
+            <name type="QString">Buttons</name>
+            <stretchable type="bool">true</stretchable>
+            <visible type="bool">true</visible>
+          </a0>
+          <a1>
+            <dock>
+              <extra-offset type="int">0</extra-offset>
+              <index type="int">4</index>
+              <nl type="bool">true</nl>
+              <position type="int">2</position>
+            </dock>
+            <actions type="QStringList" >
+              <item>show_offline</item>
+              <item>show_hidden</item>
+              <item>show_agents</item>
+              <item>show_self</item>
+              <item>show_statusmsg</item>
+            </actions>
+            <locked type="bool">true</locked>
+            <name type="QString">Show contacts</name>
+            <stretchable type="bool">false</stretchable>
+            <visible type="bool">false</visible>
+          </a1>
+        </toolbars>
+      </contactlist>
+    </ui>
+    <iconsets>
+      <service-status>
+        <m0>
+          <iconset type="QString">crystal-aim.jisp</iconset>
+          <key type="QString">aim</key>
+        </m0>
+        <m1>
+          <iconset type="QString">crystal-gadugadu.jisp</iconset>
+          <key type="QString">gadugadu</key>
+        </m1>
+        <m2>
+          <iconset type="QString">crystal-icq.jisp</iconset>
+          <key type="QString">icq</key>
+        </m2>
+        <m3>
+          <iconset type="QString">crystal-msn.jisp</iconset>
+          <key type="QString">msn</key>
+        </m3>
+        <m4>
+          <iconset type="QString">crystal-sms.jisp</iconset>
+          <key type="QString">sms</key>
+        </m4>
+        <m5>
+          <iconset type="QString">crystal-service.jisp</iconset>
+          <key type="QString">transport</key>
+        </m5>
+        <m6>
+          <iconset type="QString">crystal-yahoo.jisp</iconset>
+          <key type="QString">yahoo</key>
+        </m6>
+      </service-status>
+    </iconsets>
+    <status>
+      <presets>
+      </presets>
+    </status>
+  </options>
+</psi>

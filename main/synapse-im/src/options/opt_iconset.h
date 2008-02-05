@@ -6,7 +6,6 @@
 #include <QEvent>
 
 class QWidget;
-struct Options;
 class QListWidgetItem;
 class IconsetLoadThread;
 class QTreeWidgetItem;
@@ -19,8 +18,8 @@ public:
 	~OptionsTabIconsetSystem();
 
 	QWidget *widget();
-	void applyOptions(Options *opt);
-	void restoreOptions(const Options *opt);
+	void applyOptions();
+	void restoreOptions();
 	bool stretchable() const { return true; }
 
 private slots:
@@ -36,7 +35,6 @@ private:
 
 	int numIconsets, iconsetsLoaded;
 	IconsetLoadThread *thread;
-	Options *o;
 };
 
 class OptionsTabIconsetEmoticons : public OptionsTab
@@ -47,8 +45,8 @@ public:
 	~OptionsTabIconsetEmoticons();
 
 	QWidget *widget();
-	void applyOptions(Options *opt);
-	void restoreOptions(const Options *opt);
+	void applyOptions();
+	void restoreOptions();
 	bool stretchable() const { return true; }
 
 private slots:
@@ -74,8 +72,8 @@ public:
 	~OptionsTabIconsetRoster();
 
 	QWidget *widget();
-	void applyOptions(Options *opt);
-	void restoreOptions(const Options *opt);
+	void applyOptions();
+	void restoreOptions();
 	bool stretchable() const { return true; }
 
 private slots:
@@ -100,11 +98,18 @@ protected:
 	void cancelThread();
 
 private:
-	QWidget *w, *parentWidget;
-
+	QWidget* w;
+	QWidget* parentWidget;
 	int numIconsets, iconsetsLoaded;
 	IconsetLoadThread *thread;
-	Options *o;
+
+	enum {
+		IconsetRole = Qt::UserRole + 0,
+		ServiceRole = Qt::UserRole + 1,
+		RegexpRole  = Qt::UserRole + 2
+	};
+
+	void addService(const QString& id, const QString& name);
 };
 
 #endif

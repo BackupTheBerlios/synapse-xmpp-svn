@@ -41,11 +41,33 @@ class QContextMenuEvent;
 class PsiTabWidget;
 class TabManager;
 
+class TabDlg;
+
+class TabDlgDelegate : public QObject
+{
+	Q_OBJECT
+public:
+	TabDlgDelegate(QObject *parent = 0);
+	~TabDlgDelegate();
+
+	virtual Qt::WindowFlags initWindowFlags() const;
+	virtual void create(QWidget *widget);
+	virtual void destroy(QWidget *widget);
+	virtual bool paintEvent(QWidget *widget, QPaintEvent *event);
+	virtual bool resizeEvent(QWidget *widget, QResizeEvent *event);
+	virtual bool mousePressEvent(QWidget *widget, QMouseEvent *event);
+	virtual bool mouseMoveEvent(QWidget *widget, QMouseEvent *event);
+	virtual bool mouseReleaseEvent(QWidget *widget, QMouseEvent *event);
+	virtual bool changeEvent(QWidget *widget, QEvent *event);
+	virtual bool event(QWidget *widget, QEvent *event);
+	virtual bool eventFilter(QWidget *widget, QObject *obj, QEvent *event);
+};
+
 class TabDlg : public AdvancedWidget<QWidget>
 {
 	Q_OBJECT
 public:
-	TabDlg(TabManager* tabManager);
+	TabDlg(TabManager* tabManager, QSize size, TabDlgDelegate *delegate = 0);
 	~TabDlg();
 	bool managesTab(const TabbableWidget*) const;
 	bool tabOnTop(const TabbableWidget*) const;
@@ -62,17 +84,23 @@ protected:
 
 	// reimplemented
 	void closeEvent(QCloseEvent*);
-	void keyPressEvent(QKeyEvent *);
 	void windowActivationChange(bool);
 	void resizeEvent(QResizeEvent *);
 	void dragEnterEvent(QDragEnterEvent *event);
 	void dropEvent(QDropEvent *event);
 
+	// delegate-only
+	virtual void paintEvent(QPaintEvent *event);
+	virtual void mousePressEvent(QMouseEvent *event);
+	virtual void mouseMoveEvent(QMouseEvent *event);
+	virtual void mouseReleaseEvent(QMouseEvent *event);
+	virtual void changeEvent(QEvent *event);
+	virtual bool event(QEvent *event);
+	virtual bool eventFilter(QObject *obj, QEvent *event);
+
 protected slots:
 	void detachCurrentTab();
 	void mouseDoubleClickTab(QWidget*);
-	void detachTab(TabbableWidget*);
-	void sendTabTo(TabbableWidget*, TabDlg *);
 
 public slots:
 	void addTab(TabbableWidget *tab);
@@ -82,7 +110,12 @@ public slots:
 	void selectTab(TabbableWidget*);
 	void activated();
 	void optionsUpdate();
+	void detachTab(TabbableWidget*);
+	void sendTabTo(TabbableWidget*, TabDlg *);
 
+signals:
+	void resized(QSize size);
+	
 private slots:
 	void updateFlashState();
 	void tabSelected(QWidget* selected);
@@ -92,11 +125,14 @@ private slots:
 	void nextTab();
 	void previousTab();
 	void tab_aboutToShowMenu(QMenu *menu);
+	void setAsDefaultForChat();
+	void setAsDefaultForMuc();
 	void menu_sendTabTo(QAction *act);
 	void queuedSendTabTo(TabbableWidget* chat, TabDlg *dest);
 	void showTabMenu(int tab, QPoint pos, QContextMenuEvent * event);
 
 private:
+	TabDlgDelegate *delegate_;
 	QList<TabbableWidget*> tabs_;
 	PsiTabWidget *tabWidget_;
 	QPushButton *detachButton_;

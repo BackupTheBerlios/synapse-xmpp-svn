@@ -5,8 +5,8 @@
 
 #include "psitrayicon.h"
 #include "iconset.h"
-#include "common.h" // options
 #include "alerticon.h"
+#include "psioptions.h"
 
 // TODO: remove the QPoint parameter from the signals when we finally move
 // to the new system.
@@ -179,7 +179,7 @@ void PsiTrayIcon::animate()
 	if ( !icon_ )
 		return;
 
-	QString cachedName = "PsiTray/" + option.defaultRosterIconset + "/" + icon_->name() + "/" + QString::number( icon_->frameNumber() );
+	QString cachedName = "PsiTray/" + PsiOptions::instance()->getOption("options.iconsets.status").toString() + "/" + icon_->name() + "/" + QString::number( icon_->frameNumber() );
 
 	QPixmap p;
 	if ( !QPixmapCache::find(cachedName, p) ) {

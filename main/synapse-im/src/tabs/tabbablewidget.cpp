@@ -21,7 +21,6 @@
 #include "tabbablewidget.h"
 #include "tabmanager.h"
 #include "tabdlg.h"
-#include "common.h"
 #include "jidutil.h"
 #include "groupchatdlg.h"
 #include <QTimer>
@@ -48,10 +47,8 @@ void TabbableWidget::ensureTabbedCorrectly()
 {
 	if (tabManager_->shouldBeTabbed(this)) {
 		if (!isTabbed()) {
-			tabManager_->getTabs()->addTab(this);
+			tabManager_->getTabs(this)->addTab(this);
 		}
-		if(tabManager_->getTabs()->tabOnTop(this))
-			show();
 	}
 	else {
 		if (isTabbed()) {

@@ -89,6 +89,7 @@
 #include "desktoputil.h"
 #include "historydb.h"
 #include "tabmanager.h"
+#include "psicontactlist.h"
 
 #ifdef Q_WS_MAC
 #include "mac_dock.h"
@@ -123,7 +124,7 @@ public:
 public slots:
 	void playSound(QString file)
 	{
-		if ( file.isEmpty() || !useSound )
+		if ( file.isEmpty() || !PsiOptions::instance()->getOption("options.ui.notifications.sounds.enable").toBool() )
 			return;
 
 		soundPlay(file);
@@ -174,8 +175,9 @@ struct item_dialog
 	QString className;
 };
 
-class PsiCon::Private
+class PsiCon::Private : public QObject
 {
+	Q_OBJECT
 public:
 	Private(PsiCon *parent)
 		: contactList(0), iconSelect(0)
@@ -191,21 +193,34 @@ public:
 
 	void saveProfile(UserAccountList acc)
 	{
-		pro.recentGCList = recentGCList;
-		pro.recentBrowseList = recentBrowseList;
-		for(int i=0; i<5; i++)
-			pro.lastStatusStrings[i] = lastStatusStrings[i];
-		pro.lastStatusString = lastStatusString;
-		pro.useSound = useSound;
-		pro.prefs = option;
-		if ( proxy )
-			pro.proxyList = proxy->itemList();
-
-		pro.acc = acc;
-
-		pro.toFile(pathToProfileConfig(activeProfile));
+		// clear it
+		accountTree.removeOption("accounts", true);
+		// save accounts with known base
+		QSet<QString> cbases;
+		foreach(UserAccount ua, acc) {
+			if (!ua.optionsBase.isEmpty()) {
+				ua.toOptions(&accountTree);
+				cbases += ua.optionsBase;
+			}
+		}
+		// save new accounts
+		int idx = 0;
+		foreach(UserAccount ua, acc) {
+			if (ua.optionsBase.isEmpty()) {
+				QString base;
+				do {
+					base = "accounts.a"+QString::number(idx++);
+				} while (cbases.contains(base));
+				cbases += base;
+				ua.toOptions(&accountTree, base);
+			}
+		}
+		QFile accountsFile(pathToProfile( activeProfile ) + "/accounts.xml");	
+		accountTree.saveOptions(accountsFile.fileName(), "accounts", ApplicationInfo::optionsNS(), ApplicationInfo::version());;
+		
 	}
 
+private slots:
 	void updateIconSelect()
 	{
 		Iconset iss;
@@ -220,16 +235,17 @@ public:
 		iconSelect->setIconset(iss);
 	}
 
+public:
 	PsiCon* psi;
 	PsiContactList* contactList;
-	UserProfile pro;
-	QString lastStatusString;
-	LastStatus lastStatusStrings[5];
+//	OptionsMigration optionsMigration;
+	OptionsTree accountTree;
+//	LastStatus lastStatusStrings[5];
 	MainWin *mainwin;
 	Idle idle;
 	QList<item_dialog*> dialogList;
 	int eventId;
-	QStringList recentGCList, recentBrowseList, recentNodeList;
+	QStringList recentNodeList;
 //	EDB *edb;
 	S5BServer *s5bServer;
 	ProxyManager *proxy;
@@ -257,17 +273,10 @@ PsiCon::PsiCon()
 	d = new Private(this);
 	d->tabManager = new TabManager(this);
 
-	for(int i=0; i<5; i++)
-	{
-		d->lastStatusStrings[i].status = "None";
-		d->lastStatusStrings[i].type = Status::Offline;
-	}
-	useSound = true;
 	d->mainwin = 0;
 	d->ftwin = 0;
 
 	d->eventId = 0;
-//	d->edb = new EDBFlatFile;
 
 	d->s5bServer = 0;
 	d->proxy = 0;
@@ -311,7 +320,13 @@ bool PsiCon::init()
 	connect(d->contactList, SIGNAL(accountActivityChanged()), SIGNAL(accountActivityChanged()));
 	connect(d->contactList, SIGNAL(saveAccounts()), SLOT(saveAccounts()));
 	connect(this, SIGNAL(emitOptionsUpdate()), ((SIMContactList*)d->contactList), SLOT(dataChanged()));
-
+	
+	// advanced widget
+	GAdvancedWidget::setStickEnabled( false ); //until this is bugless
+	GAdvancedWidget::setStickToWindows( false ); //again
+	GAdvancedWidget::setStickAt( 5 );
+	
+	
 	// To allow us to upgrade from old hardcoded options gracefully, be careful about the order here
 	PsiOptions *options=PsiOptions::instance();
 	//load the system-wide defaults, if they exist
@@ -323,11 +338,24 @@ bool PsiCon::init()
 	// Create the tune controller
 	d->tuneController = new CombinedTuneController();
 
-	// load the old profile
-	d->pro.reset();
-	d->pro.fromFile(pathToProfileConfig(activeProfile));
+	// calculate the small font size
+	const int minimumFontSize = 7;
+	common_smallFontSize = qApp->font().pointSize();
+	common_smallFontSize -= 2;
+	if ( common_smallFontSize < minimumFontSize )
+		common_smallFontSize = minimumFontSize;
+	FancyLabel::setSmallFontSize( common_smallFontSize );
+	
+	
+	if (!QFile::exists(optionsFile()) && !QFile::exists(pathToProfileConfig(activeProfile))) {
+		if (!options->load(":/options/newprofile.xml")) {
+			qWarning("ERROR: Failed to new profile default options");
+		}
+	}
+	
 
-	d->contactList->groupStates = d->pro.groupStates;
+	QFile userProfileFile(pathToProfile( activeProfile ) + "/user-profile.xml");
+	UserProfile::instance()->load(userProfileFile.fileName());
 	
 	//load the new profile
 	//Save every time an option is changed
@@ -337,24 +365,26 @@ bool PsiCon::init()
 	//just set a dummy option to trigger saving
 	options->setOption("trigger-save",false);
 	options->setOption("trigger-save",true);
-	
-	connect(options, SIGNAL(optionChanged(const QString&)), SLOT(optionsUpdate()));
+		
+	QFile accountsFile(pathToProfile( activeProfile ) + "/accounts.xml");
+	d->accountTree.loadOptions(accountsFile.fileName(), "accounts", ApplicationInfo::optionsNS());
+ 
+ 	// proxy
+ 	d->proxy = new ProxyManager(&d->accountTree, this);
+ 	connect(d->proxy, SIGNAL(settingsChanged()), SLOT(proxy_settingsChanged()));
+ 	
+ 	connect(options, SIGNAL(optionChanged(const QString&)), SLOT(optionChanged(const QString&)));
 	
 	QDir profileDir( pathToProfile( activeProfile ) );
 	profileDir.rmdir( "info" ); // remove unused dir
 
-	d->recentGCList = d->pro.recentGCList;
-	d->recentBrowseList = d->pro.recentBrowseList;
-	for(int i=0; i<5; i++)
-		d->lastStatusStrings[i] = d->pro.lastStatusStrings[i];
-	useSound = d->pro.useSound;
-
-	option = d->pro.prefs;
+	d->iconSelect = new IconSelectPopup(0);
+	connect(PsiIconset::instance(), SIGNAL(emoticonsChanged()), d, SLOT(updateIconSelect()));
 
 	// first thing, try to load the iconset
 	if( !PsiIconset::instance()->loadAll() ) {
-		//option.iconset = "stellar";
-		//if(!is.load(option.iconset)) {
+		//LEGOPTS.iconset = "stellar";
+		//if(!is.load(LEGOPTS.iconset)) {
 			QMessageBox::critical(0, tr("Error"), tr("Unable to load iconset!  Please make sure Psi is properly installed."));
 			return false;
 		//}
@@ -367,12 +397,9 @@ bool PsiCon::init()
 		
 	Anim::setMainThread(QThread::currentThread());
 
-	d->iconSelect = new IconSelectPopup(0);
-	d->updateIconSelect();
-
 	// setup the main window
-	d->mainwin = new MainWin(option.alwaysOnTop, (option.useDock && option.dockToolMW), this, "psimain"); 
-	d->mainwin->setUseDock(option.useDock);
+	d->mainwin = new MainWin(PsiOptions::instance()->getOption("options.ui.contactlist.always-on-top").toBool(), (PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool() && PsiOptions::instance()->getOption("options.contactlist.use-toolwindow").toBool()), this, "psimain"); 
+	d->mainwin->setUseDock(PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool());
 
 	connect(d->mainwin, SIGNAL(closeProgram()), SLOT(closeProgram()));
 	connect(d->mainwin, SIGNAL(changeProfile()), SLOT(changeProfile()));
@@ -391,12 +418,14 @@ bool PsiCon::init()
 	connect(this, SIGNAL(emitOptionsUpdate()), d->mainwin->cvlist, SLOT(optionsUpdate()));
 	connect(this, SIGNAL(emitOptionsUpdate()), ((SIMContactList*)d->contactList), SLOT(updateOptions()));
 
-	d->mainwin->restoreSavedGeometry(d->pro.mwgeom);
-	d->mainwin->updateStatusLastMenu();
+	QRect geom = PsiOptions::instance()->getOption("options.ui.contactlist.saved-window-geometry").toRect();
+	if (geom.isValid()) d->mainwin->restoreSavedGeometry(geom);
 	
-	if(!(option.useDock && option.dockHideMW))
-		d->mainwin->show();
+	d->mainwin->updateStatusLastMenu();
 
+	if(!(PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool() && PsiOptions::instance()->getOption("options.contactlist.hide-on-start").toBool()))
+		d->mainwin->show();
+	
 	d->ftwin = new FileTransDlg(this);
 
 	d->idle.start();
@@ -405,35 +434,6 @@ bool PsiCon::init()
 	d->s5bServer = new S5BServer;
 	s5b_init();
 
-	// proxy
-	d->proxy = new ProxyManager(this);
-	d->proxy->setItemList(d->pro.proxyList);
-	connect(d->proxy, SIGNAL(settingsChanged()), SLOT(proxy_settingsChanged()));
-
-	// Disable accounts if necessary, and overwrite locked properties
-	if (PsiOptions::instance()->getOption("options.ui.account.single").toBool() || !PsiOptions::instance()->getOption("options.account.domain").toString().isEmpty()) {
-		bool haveEnabled = false;
-		for(UserAccountList::Iterator it = d->pro.acc.begin(); it != d->pro.acc.end(); ++it) {
-			// With single accounts, only modify the first account
-			if (PsiOptions::instance()->getOption("options.ui.account.single").toBool()) {
-				if (!haveEnabled) {
-					haveEnabled = it->opt_enabled;
-					if (it->opt_enabled) {
-						if (!PsiOptions::instance()->getOption("options.account.domain").toString().isEmpty())
-							it->jid = JIDUtil::accountFromString(Jid(it->jid).user()).bare();
-					}
-				}
-				else
-					it->opt_enabled = false;
-			}
-			else {
-				// Overwirte locked properties
-				if (!PsiOptions::instance()->getOption("options.account.domain").toString().isEmpty())
-					it->jid = JIDUtil::accountFromString(Jid(it->jid).user()).bare();
-			}
-		}
-	}
-	
 	// Connect to the system monitor
 	SystemWatch* sw = SystemWatch::instance();
 	connect(sw, SIGNAL(sleep()), this, SLOT(doSleep()));
@@ -487,11 +487,46 @@ bool PsiCon::init()
 	registerCaps("mr", QStringList("urn:xmpp:receipts"));
 
 	// load accounts
-	d->contactList->loadAccounts(d->pro.acc);
+	{
+		QList<UserAccount> accs;
+		QStringList bases = d->accountTree.getChildOptionNames("accounts", true, true);
+		foreach (QString base, bases) {
+			UserAccount ua;
+			ua.fromOptions(&d->accountTree, base);
+			accs += ua;
+		}
+		
+		// Disable accounts if necessary, and overwrite locked properties
+		if (PsiOptions::instance()->getOption("options.ui.account.single").toBool() || !PsiOptions::instance()->getOption("options.account.domain").toString().isEmpty()) {
+			bool haveEnabled = false;
+			for(UserAccountList::Iterator it = accs.begin(); it != accs.end(); ++it) {
+				// With single accounts, only modify the first account
+				if (PsiOptions::instance()->getOption("options.ui.account.single").toBool()) {
+					if (!haveEnabled) {
+						haveEnabled = it->opt_enabled;
+						if (it->opt_enabled) {
+							if (!PsiOptions::instance()->getOption("options.account.domain").toString().isEmpty())
+								it->jid = JIDUtil::accountFromString(Jid(it->jid).user()).bare();
+						}
+					}
+					else
+						it->opt_enabled = false;
+				}
+				else {
+					// Overwirte locked properties
+					if (!PsiOptions::instance()->getOption("options.account.domain").toString().isEmpty())
+						it->jid = JIDUtil::accountFromString(Jid(it->jid).user()).bare();
+				}
+			}
+		}
+		
+		d->contactList->loadAccounts(accs);
+	}	
+	
 #ifdef LINKLOCAL
 	{
 		bool found = false;
-		foreach(UserAccount ua, d->pro.acc) {
+		foreach(UserAccount ua, d->contactList->getUserAccountList()) {
 			if(ua.name.compare("Link-Local") == 0) {
 				found = true;
 				break;
@@ -507,6 +542,8 @@ bool PsiCon::init()
 		}
 	}
 #endif
+
+
 	checkAccountsEmpty();
 	// try autologin if needed
 	foreach(PsiAccount* account, d->contactList->accounts()) {
@@ -550,7 +587,7 @@ void PsiCon::deinit()
 	d->idle.stop();
 
 	// shut down all accounts
-	d->pro.groupStates = d->contactList->groupStates;
+// 	d->pro.groupStates = d->contactList->groupStates;
 	UserAccountList acc = d->contactList->getUserAccountList();
 	delete d->contactList;
 
@@ -560,6 +597,11 @@ void PsiCon::deinit()
 	delete d->ftwin;
 
 	if(d->mainwin) {
+		// shut down mainwin
+		if (!d->mainwin->isHidden() && !d->mainwin->isMinimized()) {
+			PsiOptions::instance()->setOption("options.ui.contactlist.saved-window-geometry", d->mainwin->saveableGeometry());
+		}
+
 		delete d->mainwin;
 		d->mainwin = 0;
 	}
@@ -571,11 +613,6 @@ void PsiCon::deinit()
 	d->saveProfile(acc);
 }
 
-void PsiCon::optionsUpdate()
-{
-	// Global shortcuts
-	setShortcuts();
-}
 
 void PsiCon::setShortcuts()
 {
@@ -757,11 +794,13 @@ void PsiCon::deleteAllDialogs()
 
 AccountsComboBox *PsiCon::accountsComboBox(QWidget *parent, bool online_only)
 {
-	AccountsComboBox *acb = new AccountsComboBox(this, parent, online_only);
+	AccountsComboBox* acb = new AccountsComboBox(parent);
+	acb->setController(this);
+	acb->setOnlineOnly(online_only);
 	return acb;
 }
 
-void PsiCon::createAccount(const QString &name, const Jid &j, const QString &pass, bool opt_host, const QString &host, int port, bool legacy_ssl_probe, UserAccount::SSLFlag ssl, int proxy)
+void PsiCon::createAccount(const QString &name, const Jid &j, const QString &pass, bool opt_host, const QString &host, int port, bool legacy_ssl_probe, UserAccount::SSLFlag ssl, QString proxy)
 {
 	d->contactList->createAccount(name, j, pass, opt_host, host, port, legacy_ssl_probe, ssl, proxy);
 }
@@ -773,8 +812,10 @@ PsiAccount *PsiCon::createAccount(const UserAccount& acc)
 	connect(pa, SIGNAL(updatedActivity()), SLOT(pa_updatedActivity()));
 	connect(pa, SIGNAL(updatedAccount()), SLOT(pa_updatedAccount()));
 	connect(pa, SIGNAL(queueChanged()), SLOT(queueChanged()));
-	if(d->s5bServer)
+	connect(pa, SIGNAL(startBounce()), SLOT(startBounce()));
+	if (d->s5bServer) {
 		pa->client()->s5bManager()->setServer(d->s5bServer);
+	}
 	return pa;
 }
 
@@ -785,30 +826,30 @@ void PsiCon::removeAccount(PsiAccount *pa)
 
 void PsiCon::statusMenuChanged(int x)
 {
-	if(x == STATUS_OFFLINE && !option.askOffline) {
+	if(x == STATUS_OFFLINE && !PsiOptions::instance()->getOption("options.status.ask-for-message-on-offline").toBool()) {
 		setGlobalStatus(Status(Status::Offline, "Logged out", 0));
-		if(option.useDock == true)
+		if(PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool() == true)
 			d->mainwin->setTrayToolTip(Status(Status::Offline, "", 0));
 	}
 	else {
-		if(x == STATUS_ONLINE && !option.askOnline) {
+		if(x == STATUS_ONLINE && !PsiOptions::instance()->getOption("options.status.ask-for-message-on-online").toBool()) {
 			setGlobalStatus(Status());
-			if(option.useDock == true)
+			if(PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool() == true)
 				d->mainwin->setTrayToolTip(Status());
 		}
 		else if(x == STATUS_INVISIBLE){
 			Status s("","",0,true);
 			s.setIsInvisible(true);
 			setGlobalStatus(s);
-			if(option.useDock == true)
+			if(PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool() == true)
 				d->mainwin->setTrayToolTip(s);
 		}
 		else {
 			// Create a dialog with the last status message
-			StatusSetDlg *w = new StatusSetDlg(this, makeStatus(x, d->lastStatusString));
+			StatusSetDlg *w = new StatusSetDlg(this, makeStatus(x, PsiOptions::instance()->getOption("options.status.last-message").toString()));
 			connect(w, SIGNAL(set(const XMPP::Status &, bool)), SLOT(setStatusFromDialog(const XMPP::Status &, bool)));
 			connect(w, SIGNAL(cancelled()), SLOT(updateMainwinStatus()));
-			if(option.useDock == true)
+			if(PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool() == true)
 				connect(w, SIGNAL(set(const XMPP::Status &, bool)), d->mainwin, SLOT(setTrayToolTip(const XMPP::Status &, bool)));
 			w->show();
 		}
@@ -817,23 +858,17 @@ void PsiCon::statusMenuChanged(int x)
 
 LastStatus *PsiCon::getLastStatus(int i)
 {
-	return &d->lastStatusStrings[i];
+	return UserProfile::instance()->getLastStatus(i);
 }
 
 void PsiCon::setStatusFromDialog(const Status &s, bool withPriority, int pos)
 {
 	if(!s.status().isEmpty())
 	{
-		if(pos == -1)
-			pos = 4;
-		for(int i=pos-1; i>-1; i--)
-			d->lastStatusStrings[i+1] = d->lastStatusStrings[i];
-
-		d->lastStatusStrings[0].status = s.status();
-		d->lastStatusStrings[0].type = s.type();
+		UserProfile::instance()->setLastStatus(s.type(), s.status());
 		d->mainwin->updateStatusLastMenu();
 	}
-	d->lastStatusString = s.status();
+	PsiOptions::instance()->setOption("options.status.last-message", s.status());
 //	lastStatusString = s.status();
 	setGlobalStatus(s, withPriority);
 }
@@ -859,7 +894,7 @@ void PsiCon::setGlobalStatus(const Status &s,  bool withPriority)
 
 void PsiCon::setLastStatusGlobal(int i)
 {
-	setStatusFromDialog(Status(d->lastStatusStrings[i].type, d->lastStatusStrings[i].status), false);
+	setStatusFromDialog(Status(UserProfile::instance()->getLastStatus(i)->type, UserProfile::instance()->getLastStatus(i)->status), false);
 }
 
 void PsiCon::pa_updatedActivity()
@@ -884,10 +919,6 @@ void PsiCon::pa_updatedAccount()
 void PsiCon::saveAccounts()
 {
 	UserAccountList acc = d->contactList->getUserAccountList();
-
-	d->pro.proxyList = d->proxy->itemList();
-	//d->pro.acc = acc;
-	//d->pro.toFile(pathToProfileConfig(activeProfile));
 	d->saveProfile(acc);
 }
 
@@ -920,35 +951,14 @@ void PsiCon::updateMainwinStatus()
 	}
 }
 
-void PsiCon::setToggles(bool tog_offline, bool tog_away, bool tog_agents, bool tog_hidden, bool tog_self)
-{
-	if(d->contactList->enabledAccounts().count() > 1)
-		return;
-
-	((SIMContactList*)d->contactList)->setShowOffline(tog_offline);
-	((SIMContactList*)d->contactList)->setShowAway(tog_away);
-	((SIMContactList*)d->contactList)->setShowAgents(tog_agents);
-//	d->mainwin->cvlist->setShowHidden(tog_hidden);
-	((SIMContactList*)d->contactList)->setShowSelf(tog_self);
-}
-
-void PsiCon::getToggles(bool *tog_offline, bool *tog_away, bool *tog_agents, bool *tog_hidden, bool *tog_self)
-{
-	*tog_offline = ((SIMContactList*)d->contactList)->showOffline();
-	*tog_away = ((SIMContactList*)d->contactList)->showAway();
-	*tog_agents = ((SIMContactList*)d->contactList)->showAgents();
-	//*tog_hidden = d->mainwin->cvlist->showHidden();
-	*tog_self = ((SIMContactList*)d->contactList)->showSelf();
-}
-
 void PsiCon::doOptions()
 {
 	OptionsDlg *w = (OptionsDlg *)dialogFind("OptionsDlg");
 	if(w)
 		bringToFront(w);
 	else {
-		w = new OptionsDlg(this, option);
-		connect(w, SIGNAL(applyOptions(const Options &)), SLOT(slotApplyOptions(const Options &)));
+		w = new OptionsDlg(this);
+		connect(w, SIGNAL(applyOptions()), SLOT(slotApplyOptions()));
 		w->show();
 	}
 }
@@ -960,13 +970,16 @@ void PsiCon::doFileTransDlg()
 
 void PsiCon::checkAccountsEmpty()
 {
-	if (d->pro.acc.count() == 0) {
+	if (d->contactList->accounts().count() == 0) {
 		promptUserToCreateAccount();
 	}
 }
 
 void PsiCon::doOpenUri(const QUrl &uriToOpen)
-{/*
+{
+	Q_UNUSED(uriToOpen);	
+	
+/*
 	QUrl uri(uriToOpen);	// got to copy, because setQueryDelimiters() is not const
 
 	qWarning("uri:  " + uri.toString());
@@ -1055,97 +1068,70 @@ void PsiCon::doToolbars()
 		bringToFront(w);
 	}
 	else {
-		w = new OptionsDlg(this, option);
-		connect(w, SIGNAL(applyOptions(const Options &)), SLOT(slotApplyOptions(const Options &)));
+		w = new OptionsDlg(this);
+		connect(w, SIGNAL(applyOptions()), SLOT(slotApplyOptions()));
 		w->openTab("toolbars");
 		w->show();
 	}
 }
 
-void PsiCon::slotApplyOptions(const Options &opt)
+void PsiCon::optionChanged(const QString& option)
 {
-	Options oldOpt = option;
 	bool notifyRestart = true;
 
-	option = opt;
+	// Global shortcuts
+	setShortcuts();
+
+	if (option == "options.ui.notifications.alert-style") {
+		alertIconUpdateAlertStyle();
+	}
+
+	if (option == "options.ui.tabs.use-tabs") {
+		QMessageBox::information(0, tr("Information"), tr("Some of the options you changed will only have full effect upon restart."));
+		notifyRestart = false;
+	}
+
+	// update s5b
+	if (option == "options.p2p.bytestreams.listen-port") {
+		s5b_init();
+	}
+}
+
+void PsiCon::slotApplyOptions()
+{
+	PsiOptions *o = PsiOptions::instance();
+	PsiIconset::instance()->reloadRoster();
 
 #ifndef Q_WS_MAC
-	if (option.hideMenubar) {
+	if (!PsiOptions::instance()->getOption("options.ui.contactlist.show-menubar").toBool()) {
 		// check if all toolbars are disabled
 		bool toolbarsVisible = false;
-		QList<Options::ToolbarPrefs>::ConstIterator it = option.toolbars["mainWin"].begin();
-		for ( ; it != option.toolbars["mainWin"].end() && !toolbarsVisible; ++it) {
-			toolbarsVisible = toolbarsVisible || (*it).on;
+		QStringList bases = o->getChildOptionNames("options.ui.contactlist.toolbars", true, true);
+		foreach(QString base, bases) {
+			toolbarsVisible = toolbarsVisible || o->getOption( base + ".visible").toBool();
 		}
 
 		// Check whether it is legal to disable the menubar
 		if ( !toolbarsVisible ) {
 			QMessageBox::warning(0, tr("Warning"),
-				tr("You can not disable <i>all</i> toolbars <i>and</i> the menubar. If you do so, you will be unable to enable them back, when you'll change your mind.\n"
-					"<br><br>\n"
-					"If you really-really want to disable all toolbars and the menubar, you need to edit the config.xml file by hand."),
-				tr("I understand"));
-			option.hideMenubar = false;
+				tr("You can not disable <i>all</i> toolbars <i>and</i> the menubar. If you do so, you will be unable to enable them back, when you'll change your mind."),
+  				tr("I understand"));
+			PsiOptions::instance()->setOption("options.ui.contactlist.show-menubar", true);
 		}
 	}
 #endif
 
-	if ( option.useTabs != oldOpt.useTabs ) {
-		QMessageBox::information(0, tr("Information"), tr("Some of the options you changed will only have full effect upon restart."));
-		notifyRestart = false;
-	}
 
-	// change icon set
-	if ( option.systemIconset		!= oldOpt.systemIconset		||
-	     option.emoticons			!= oldOpt.emoticons		||
-	     option.defaultRosterIconset	!= oldOpt.defaultRosterIconset	||
-	     operator!=(option.serviceRosterIconset,oldOpt.serviceRosterIconset)	||
-	     operator!=(option.customRosterIconset,oldOpt.customRosterIconset) )
-	{
-		if ( notifyRestart && PsiIconset::instance()->optionsChanged(&oldOpt) )
-			QMessageBox::information(0, tr("Information"), tr("The complete iconset update will happen on next Psi start."));
-
-		// update icon selector
-		d->updateIconSelect();
-
-		// flush the QPixmapCache
-		QPixmapCache::clear();
-	}
-
-	if ( oldOpt.alertStyle != option.alertStyle )
-		alertIconUpdateAlertStyle();
-
-	d->mainwin->buildToolbars();
-
-	d->contactList->contactListView()->updateOptions();
-
-	/*// change pgp engine
-	if(option.pgp != oldpgp) {
-		if(d->pgp) {
-			delete d->pgp;
-			d->pgp = 0;
-			pgpToggled(false);
-		}
-		pgp_init(option.pgp);
-	}*/
-
-	// update s5b
 	updateS5BServerAddresses();
-	if(oldOpt.dtPort != option.dtPort)
-		s5b_init();
 
 	// mainwin stuff
-	d->mainwin->setWindowOpts(option.alwaysOnTop, (option.useDock && option.dockToolMW));
-	d->mainwin->setUseDock(option.useDock);
 
 	HistoryDB::instance()->optionsUpdate();
+	d->mainwin->setWindowOpts(PsiOptions::instance()->getOption("options.ui.contactlist.always-on-top").toBool(), (PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool() && PsiOptions::instance()->getOption("options.contactlist.use-toolwindow").toBool()));
+	d->mainwin->setUseDock(PsiOptions::instance()->getOption("options.ui.systemtray.enable").toBool());
+ 
 	// notify about options change
-	emitOptionsUpdate();
-
-	// save just the options
-	//d->pro.prefs = option;
-	//d->pro.toFile(pathToProfileConfig(activeProfile));
-	d->saveProfile(d->pro.acc);
+	emit emitOptionsUpdate();
 }
 
 int PsiCon::getId()
@@ -1163,37 +1149,28 @@ void PsiCon::queueChanged()
 
 #ifdef Q_WS_MAC
 	{
-		// The Mac Dock icon
-
 		// Update the event count
-		if (nextAmount) 
-			MacDock::overlay(QString::number(nextAmount));
-		else 
-			MacDock::overlay(QString::null);
+		MacDock::overlay(nextAmount ? QString::number(nextAmount) : QString());
 
-		// Check if bouncing is necessary
-		bool doBounce = false;
-		foreach(PsiAccount* account, d->contactList->enabledAccounts()) {
-			if (account->eventQueue()->count() && pa->status().type() != XMPP::Status::DND) {
-				doBounce = true;
-				break;
-			}
-		}
-
-		// Bouncy bouncy
-		if (doBounce) {
-			if (option.bounceDock != Options::NoBounce) {
-				MacDock::startBounce();
-				if (option.bounceDock == Options::BounceOnce) 
-					MacDock::stopBounce();
-			}
-		}
-		else 
+		if (!nextAmount) {
 			MacDock::stopBounce();
+		}
 	}
 #endif
 
 	d->mainwin->updateReadNext(nextAnim, nextAmount);
+}
+
+void PsiCon::startBounce()
+{
+#ifdef Q_WS_MAC
+	if (PsiOptions::instance()->getOption("options.ui.notifications.bounce-dock").toString() != "never") {
+		MacDock::startBounce();
+		if (PsiOptions::instance()->getOption("options.ui.notifications.bounce-dock").toString() == "once") {
+			MacDock::stopBounce();
+		}
+	}
+#endif
 }
 
 void PsiCon::recvNextEvent()
@@ -1211,7 +1188,7 @@ void PsiCon::recvNextEvent()
 
 void PsiCon::playSound(const QString &str)
 {
-	if(str.isEmpty() || !useSound)
+	if(str.isEmpty() || !PsiOptions::instance()->getOption("options.ui.notifications.sounds.enable").toBool())
 		return;
 
 	soundPlay(str);
@@ -1222,50 +1199,59 @@ void PsiCon::raiseMainwin()
 	d->mainwin->showNoFocus();
 }
 
-const QStringList & PsiCon::recentGCList() const
+QStringList PsiCon::recentGCList() const
 {
-	return d->recentGCList;
+	return PsiOptions::instance()->getOption("options.muc.recent-joins.jids").toStringList();
 }
 
 void PsiCon::recentGCAdd(const QString &str)
 {
+	QStringList recentList = recentGCList();
+	
 	// remove it if we have it
-	for(QStringList::Iterator it = d->recentGCList.begin(); it != d->recentGCList.end(); ++it) {
+	for(QStringList::Iterator it = recentList.begin(); it != recentList.end(); ++it) {
 		if(*it == str) {
-			d->recentGCList.remove(it);
+			recentList.remove(it);
 			break;
 		}
 	}
 
 	// put it in the front
-	d->recentGCList.prepend(str);
+	recentList.prepend(str);
 
 	// trim the list if bigger than 10
-	while(d->recentGCList.count() > PsiOptions::instance()->getOption("options.muc.recent-joins.maximum").toInt())
-		d->recentGCList.remove(d->recentGCList.fromLast());
+	while(recentList.count() > PsiOptions::instance()->getOption("options.muc.recent-joins.maximum").toInt()) {
+		recentList.remove(recentList.fromLast());
+	}
+	
+	PsiOptions::instance()->setOption("options.muc.recent-joins.jids", recentList);
 }
 
-const QStringList & PsiCon::recentBrowseList() const
+QStringList PsiCon::recentBrowseList() const
 {
-	return d->recentBrowseList;
+	return PsiOptions::instance()->getOption("options.ui.service-discovery.recent-jids").toStringList();
 }
 
 void PsiCon::recentBrowseAdd(const QString &str)
 {
+	QStringList recentList = recentBrowseList();
 	// remove it if we have it
-	for(QStringList::Iterator it = d->recentBrowseList.begin(); it != d->recentBrowseList.end(); ++it) {
+	for(QStringList::Iterator it = recentList.begin(); it != recentList.end(); ++it) {
 		if(*it == str) {
-			d->recentBrowseList.remove(it);
+			recentList.remove(it);
 			break;
 		}
 	}
 
 	// put it in the front
-	d->recentBrowseList.prepend(str);
+	recentList.prepend(str);
 
 	// trim the list if bigger than 10
-	while(d->recentBrowseList.count() > 10)
-		d->recentBrowseList.remove(d->recentBrowseList.fromLast());
+	while(recentList.count() > 10) {
+		recentList.remove(recentList.fromLast());
+	}
+	
+	PsiOptions::instance()->setOption("options.ui.service-discovery.recent-jids", recentList);
 }
 
 const QStringList & PsiCon::recentNodeList() const
@@ -1293,19 +1279,6 @@ void PsiCon::recentNodeAdd(const QString &str)
 
 void PsiCon::proxy_settingsChanged()
 {
-	// properly index accounts
-	foreach(PsiAccount* account, d->contactList->accounts()) {
-		UserAccount acc = account->userAccount();
-		if(acc.proxy_index > 0) {
-			int x = d->proxy->findOldIndex(acc.proxy_index-1);
-			if(x == -1)
-				acc.proxy_index = 0;
-			else
-				acc.proxy_index = x+1;
-			account->setUserAccount(acc);
-		}
-	}
-
 	saveAccounts();
 }
 
@@ -1362,7 +1335,7 @@ void PsiCon::processEvent(PsiEvent *e, ActivationType activationType)
 		PsiAccount* account = e->account();
 		XMPP::Jid from = e->from();
 
-		if ( option.alertOpenChats && sentToChatWindow ) {
+		if ( PsiOptions::instance()->getOption("options.ui.chat.alert-for-already-open-chats").toBool() && sentToChatWindow ) {
 			// Message already displayed, need only to pop up chat dialog, so that
 			// it will be read (or marked as read)
 			ChatDlg *c = account->findChatDialog(from);
@@ -1402,7 +1375,7 @@ MainWin *PsiCon::mainWin()
 void PsiCon::mainWinGeomChanged(QRect saveableGeometry)
 {
 	if (!saveableGeometry.isNull())
-		d->pro.mwgeom = saveableGeometry;
+		PsiOptions::instance()->setOption("options.ui.contactlist.saved-window-geometry", saveableGeometry);
 }
 
 void PsiCon::updateS5BServerAddresses()
@@ -1437,17 +1410,17 @@ void PsiCon::updateS5BServerAddresses()
 		slist += (*hit).toString();
 
 	// add external
-	if(!option.dtExternal.isEmpty()) {
+	if(!PsiOptions::instance()->getOption("options.p2p.bytestreams.external-address").toString().isEmpty()) {
 		bool found = false;
 		for(QStringList::ConstIterator sit = slist.begin(); sit != slist.end(); ++sit) {
 			const QString &s = *sit;
-			if(s == option.dtExternal) {
+			if(s == PsiOptions::instance()->getOption("options.p2p.bytestreams.external-address").toString()) {
 				found = true;
 				break;
 			}
 		}
 		if(!found)
-			slist += option.dtExternal;
+			slist += PsiOptions::instance()->getOption("options.p2p.bytestreams.external-address").toString();
 	}
 
 	// set up the server
@@ -1459,9 +1432,9 @@ void PsiCon::s5b_init()
 	if(d->s5bServer->isActive())
 		d->s5bServer->stop();
 
-	if (option.dtPort) {
-		if(!d->s5bServer->start(option.dtPort)) {
-			QMessageBox::warning(0, tr("Warning"), tr("Unable to bind to port %1 for Data Transfer.\nThis may mean you are already running another instance of Psi. You may experience problems sending and/or receiving files.").arg(option.dtPort));
+	if (PsiOptions::instance()->getOption("options.p2p.bytestreams.listen-port").toInt()) {
+		if(!d->s5bServer->start(PsiOptions::instance()->getOption("options.p2p.bytestreams.listen-port").toInt())) {
+			QMessageBox::warning(0, tr("Warning"), tr("Unable to bind to port %1 for Data Transfer.\nThis may mean you are already running another instance of Psi. You may experience problems sending and/or receiving files.").arg(PsiOptions::instance()->getOption("options.p2p.bytestreams.listen-port").toInt()));
 		}
 	}
 }
@@ -1477,32 +1450,16 @@ void PsiCon::doWakeup()
 	//setGlobalStatus(Status());
 
 	foreach(PsiAccount* account, d->contactList->enabledAccounts()) {
-		if (account->userAccount().opt_reconn) {
+		if (account->userAccount().opt_connectAfterSleep) {
 			// Should we do this when the network comes up ?
 			account->setStatus(Status("", "", account->userAccount().priority));
 		}
 	}
 }
 
-
-QList<PsiToolBar*> PsiCon::toolbarList() const
+void PsiCon::addToolbar(const QString &base)
 {
-	return d->mainwin->toolbars;
-}
-
-PsiToolBar *PsiCon::findToolBar(QString group, int index)
-{
-	PsiToolBar *toolBar = 0;
-
-	if (( group == "mainWin" ) && (index < d->mainwin->toolbars.size()))
-		toolBar = d->mainwin->toolbars.at(index);
-
-	return toolBar;
-}
-
-void PsiCon::buildToolbars()
-{
-	d->mainwin->buildToolbars();
+	d->mainwin->addToolbar(base);
 }
 
 PsiActionList *PsiCon::actionList() const
@@ -1540,7 +1497,6 @@ QString PsiCon::optionsFile() const
 
 void PsiCon::forceSavePreferences()
 {
-	slotApplyOptions(option);
 	PsiOptions::instance()->save(optionsFile());
 }
  

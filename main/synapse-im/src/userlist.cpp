@@ -537,7 +537,7 @@ QString UserListItem::makeBareTip(bool trim, bool doLinkify) const
 			if(isSecure(r.name()) && PsiOptions::instance()->getOption("options.ui.contactlist.tooltip.pgp").toBool())
 				secstr += QString(" <%1=\"psi/cryptoYes\">").arg(imgTag);
 			QString key;
-			if(option.useTransportIconsForContacts) {
+			if(PsiOptions::instance()->getOption("options.ui.contactlist.use-transport-icons").toBool()) {
 				QMap<QString, QRegExp> services;
 				services["aim"]		= QRegExp("^aim");
 				services["gadugadu"]	= QRegExp("^gg");
@@ -553,16 +553,16 @@ QString UserListItem::makeBareTip(bool trim, bool doLinkify) const
 				for( ; it != services.end(); ++it) {
 					QRegExp rx = it.data();
 					if ( rx.search(jid().host()) != -1 ) {
-						QMap<QString, QString>::Iterator it2 = option.serviceRosterIconset.find(it.key());
-						if ( it2 != option.serviceRosterIconset.end() ) {
-							key += QString(it2.data()) + QString("/"); // <- name of choosen iconset
+						QString ics = PsiOptions::instance()->mapLookup("options.iconsets.service-status", it.key());
+						 {
+							key += ics + QString("/"); // <- name of choosen iconset
 						}
 					}
 				}
 			}
 			key += istr;
 			
-			str += QString("<div style='white-space:pre'>") + QString("<%1=\"%2\"> ").arg(imgTag).arg(key) + QString("<b>%1</b> ").arg(Qt::escape(name)) + QString("(%1)").arg(r.priority()) + secstr + "</div>";
+			str += QString("<div style='white-space:pre'>") + /*QString("<%1=\"%2\"> ").arg(imgTag).arg(key) +*/ QString("<b>%1</b> ").arg(Qt::escape(name)) + QString("(%1)").arg(r.priority()) + secstr + "</div>";
 
 			if(!r.publicKeyID().isEmpty() && PsiOptions::instance()->getOption("options.ui.contactlist.tooltip.pgp").toBool()) {
 				int v = r.pgpVerifyStatus();
@@ -646,7 +646,7 @@ QString UserListItem::makeBareTip(bool trim, bool doLinkify) const
 					s = TextUtil::plain2rich(s);
 				if ( doLinkify )
 					s = TextUtil::linkify(s);
-				if( option.useEmoticons && !doLinkify )
+				if( PsiOptions::instance()->getOption("options.ui.emoticons.use-emoticons").toBool() && !doLinkify )
 					s = TextUtil::emoticonify(s);
 				if( !doLinkify && PsiOptions::instance()->getOption("options.ui.chat.legacy-formatting").toBool() )
 					s = TextUtil::legacyFormat(s);
@@ -676,7 +676,7 @@ QString UserListItem::makeBareTip(bool trim, bool doLinkify) const
 				s = TextUtil::plain2rich(s);
 			if ( doLinkify )
 				s = TextUtil::linkify(s);
-			if ( option.useEmoticons && !doLinkify )
+			if ( PsiOptions::instance()->getOption("options.emoticons.use-emoticons").toBool() && !doLinkify )
 				s = TextUtil::emoticonify(s);
 			
 			str += QString("<div style='white-space:pre'><u>%1</u></div><div>%2</div>").arg(head).arg(s);

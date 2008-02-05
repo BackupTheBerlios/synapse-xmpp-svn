@@ -20,6 +20,7 @@
 
 #include "psiactionlist.h"
 #include "iconset.h"
+#include "psioptions.h"
 
 #include <qobject.h>
 
@@ -55,6 +56,10 @@ private:
 	};
 
 	void createActionList( QString name, int id, ActionNames * );
+
+private slots:
+	void optionsChanged();
+
 };
 
 PsiActionList::Private::Private(PsiActionList *_list, PsiCon *_psi)
@@ -70,6 +75,9 @@ PsiActionList::Private::Private(PsiActionList *_list, PsiCon *_psi)
 	createMessage();
 	createChat();
 	createGroupchat();
+
+	connect(PsiOptions::instance(), SIGNAL(optionChanged(const QString&)), SLOT(optionsChanged()));
+	optionsChanged();
 }
 
 PsiActionList::Private::~Private()
@@ -176,13 +184,13 @@ void PsiActionList::Private::createMainWin()
 
 	{
 		IconAction *add_act = 0;
-		if (!option.lockdown.roster)
+		if (!PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool())
 			add_act = new MAction(IconsetFactory::icon("psi/addContact"), tr("&Add a contact"), 0, psi, this);
 
 		IconAction *lw_act = new MAction(IconsetFactory::icon("psi/xml"), tr("&XML Console"), 2, psi, this);
 
 		IconAction *actDisco = 0;
-		if(!option.lockdown.services)
+		if(!PsiOptions::instance()->getOption("options.ui.contactlist.disable-service-discovery").toBool())
 			actDisco = new MAction(IconsetFactory::icon("psi/disco"), tr("Service &Discovery"), 3, psi, this);
 
 //		IconAction *actReadme = new IconAction (tr("ReadMe"), tr("&ReadMe"), 0, this);
@@ -344,16 +352,22 @@ void PsiActionList::Private::createMainWin()
 		IconAction *actAboutQt = new IconAction (tr("About Qt"), tr("About &Qt"), 0, this);
 		actAboutQt->setMenuRole(QAction::AboutQtRole);
 
+		IconAction *actDiagQCAPlugin = new IconAction (tr("Security Plugins"), tr("Security &Plugins"), 0, this);
+
+		IconAction *actDiagQCAKeyStore = new IconAction (tr("Key Storage"), tr("&Key Storage"), 0, this);
+
 		ActionNames actions[] = {
-			{ "help_readme",      actReadme     },
-			{ "help_tip",         actTip        },
-			{ "help_online_help", actOnlineHelp },
-			{ "help_online_wiki", actOnlineWiki },
-			{ "help_online_home", actOnlineHome },
-			{ "help_psi_muc",     actPsiMUC     },
-			{ "help_report_bug",  actBugReport  },
-			{ "help_about",       actAbout      },
-			{ "help_about_qt",    actAboutQt    },
+			{ "help_readme",           actReadme          },
+			{ "help_tip",              actTip             },
+			{ "help_online_help",      actOnlineHelp      },
+			{ "help_online_wiki",      actOnlineWiki      },
+			{ "help_online_home",      actOnlineHome      },
+			{ "help_psi_muc",          actPsiMUC          },
+			{ "help_report_bug",       actBugReport       },
+			{ "help_about",            actAbout           },
+			{ "help_about_qt",         actAboutQt         },
+			{ "help_diag_qcaplugin",   actDiagQCAPlugin  },
+			{ "help_diag_qcakeystore", actDiagQCAKeyStore },
 			{ "", 0 }
 		};
 
@@ -383,6 +397,14 @@ void PsiActionList::Private::createChat()
 
 void PsiActionList::Private::createGroupchat()
 {
+}
+
+void PsiActionList::Private::optionsChanged()
+{
+	ActionList *statusList = list->actionList(tr("Status"));
+	statusList->action("status_chat")->setVisible(PsiOptions::instance()->getOption("options.ui.menu.status.chat").toBool());
+	statusList->action("status_xa")->setVisible(PsiOptions::instance()->getOption("options.ui.menu.status.xa").toBool());
+//	statusList->action("status_invisible")->setVisible(PsiOptions::instance()->getOption("options.ui.menu.status.invisible").toBool());
 }
 
 //----------------------------------------------------------------------------

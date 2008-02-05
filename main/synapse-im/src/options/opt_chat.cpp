@@ -56,6 +56,8 @@ QWidget *OptionsTabChat::widget()
 	bg_delChats->insert( d->rb_delChatsHour);
 	bg_delChats->insert( d->rb_delChatsDay);
 	bg_delChats->insert( d->rb_delChatsNever);
+	
+	connect(d->ck_tabChats, SIGNAL(toggled(bool)), d->cb_tabGrouping, SLOT(setEnabled(bool)));
 
 	QWhatsThis::add(d->rb_defActMsg,
 		tr("Make the default action open a normal message window."));
@@ -90,21 +92,61 @@ QWidget *OptionsTabChat::widget()
 	return w;
 }
 
-void OptionsTabChat::applyOptions(Options *opt)
+void OptionsTabChat::applyOptions()
 {
 	if ( !w )
 		return;
 
 	OptChatUI *d = (OptChatUI *)w;
 
-	opt->defaultAction   = bg_defAct->buttons().indexOf(bg_defAct->checkedButton());
-	opt->alertOpenChats  = d->ck_alertOpenChats->isChecked();
-	opt->raiseChatWindow = d->ck_raiseChatWindow->isChecked();
-	opt->oldSmallChats 	 = opt->smallChats;
-	opt->smallChats      = d->ck_smallChats->isChecked();
-	opt->delChats        = bg_delChats->buttons().indexOf( bg_delChats->checkedButton() );
-	opt->useTabs		 = d->ck_tabChats->isChecked();
-	opt->chatLineEdit    = d->ck_autoResize->isChecked();
+	PsiOptions::instance()->setOption("options.messages.default-outgoing-message-type", bg_defAct->buttons().indexOf(bg_defAct->checkedButton()) == 0 ? "message" : "chat");
+	PsiOptions::instance()->setOption("options.ui.chat.alert-for-already-open-chats", d->ck_alertOpenChats->isChecked());
+	PsiOptions::instance()->setOption("options.ui.chat.raise-chat-windows-on-new-messages", d->ck_raiseChatWindow->isChecked());
+	PsiOptions::instance()->setOption("options.ui.chat.use-small-chats", d->ck_smallChats->isChecked());
+	
+	QString delafter;
+	switch (bg_delChats->buttons().indexOf( bg_delChats->checkedButton() )) {
+		case 0:
+			delafter = "instant";
+			break;
+		case 1:
+			delafter = "hour";
+			break;
+		case 2:
+			delafter = "day";
+			break;
+		case 3:
+			delafter = "never";
+			break;
+	}
+	PsiOptions::instance()->setOption("options.ui.chat.delete-contents-after", delafter);
+	PsiOptions::instance()->setOption("options.ui.tabs.use-tabs", d->ck_tabChats->isChecked());
+	QString tabGrouping;
+	int idx = d->cb_tabGrouping->currentIndex();
+	switch (idx) {
+		case 0:
+			tabGrouping = "C";
+			break;
+		case 1:
+			tabGrouping = "M";
+			break;
+		case 2:
+			tabGrouping = "C:M";
+			break;
+		case 3:
+			tabGrouping = "CM";
+			break;
+	}
+	if (!tabGrouping.isEmpty()) {
+		PsiOptions::instance()->setOption("options.ui.tabs.grouping", tabGrouping);
+	} else {
+		if (d->cb_tabGrouping->count() == 5) {
+			d->cb_tabGrouping->removeItem(4);
+		}
+	}
+	
+	PsiOptions::instance()->setOption("options.ui.chat.use-expanding-line-edit", d->ck_autoResize->isChecked());
+
 	PsiOptions::instance()->setOption("options.ui.chat.style",d->cb_chatStyle->currentText());
 	PsiOptions::instance()->setOption("options.ui.chat.toolbox",d->ck_showToolbox->isChecked());
 	
@@ -124,21 +166,53 @@ void OptionsTabChat::applyOptions(Options *opt)
 	}
 }
 
-void OptionsTabChat::restoreOptions(const Options *opt)
+void OptionsTabChat::restoreOptions()
 {
 	if ( !w )
 		return;
 
 	OptChatUI *d = (OptChatUI *)w;
 
-	bg_defAct->buttons()[opt->defaultAction]->setChecked(true);
-	d->ck_alertOpenChats->setChecked( opt->alertOpenChats );
-	d->ck_raiseChatWindow->setChecked( opt->raiseChatWindow );
-	d->ck_smallChats->setChecked( opt->smallChats );
-	d->ck_tabChats->setChecked( opt->useTabs );
-	d->ck_autoResize->setChecked( opt->chatLineEdit );
+	bg_defAct->buttons()[PsiOptions::instance()->getOption("options.messages.default-outgoing-message-type").toString() == "message" ? 0 : 1]->setChecked(true);
+	d->ck_alertOpenChats->setChecked( PsiOptions::instance()->getOption("options.ui.chat.alert-for-already-open-chats").toBool() );
+	d->ck_raiseChatWindow->setChecked( PsiOptions::instance()->getOption("options.ui.chat.raise-chat-windows-on-new-messages").toBool() );
+	d->ck_smallChats->setChecked( PsiOptions::instance()->getOption("options.ui.chat.use-small-chats").toBool() );
+	d->ck_tabChats->setChecked( PsiOptions::instance()->getOption("options.ui.tabs.use-tabs").toBool() );
+	QString tabGrouping = PsiOptions::instance()->getOption("options.ui.tabs.grouping").toString();
+	bool custom = false;
+	if (tabGrouping == "C") {
+		d->cb_tabGrouping->setCurrentIndex(0);
+	} else if (tabGrouping == "M") {
+		d->cb_tabGrouping->setCurrentIndex(1);
+	} else if (tabGrouping == "C:M") {
+		d->cb_tabGrouping->setCurrentIndex(2);
+	} else if (tabGrouping == "CM") {
+		d->cb_tabGrouping->setCurrentIndex(3);
+	} else {
+		if (d->cb_tabGrouping->count() == 5) {
+			d->cb_tabGrouping->setCurrentIndex(4);
+		} else {
+			d->cb_tabGrouping->setCurrentIndex(-1);
+		}
+		custom = true;
+	}
+	if (!custom && d->cb_tabGrouping->count() == 5) {
+		d->cb_tabGrouping->removeItem(4);
+	}
+	d->ck_autoResize->setChecked( PsiOptions::instance()->getOption("options.ui.chat.use-expanding-line-edit").toBool() );
+	QString delafter = PsiOptions::instance()->getOption("options.ui.chat.delete-contents-after").toString();
+	if (delafter == "instant") {
+		d->rb_delChatsClose->setChecked(true);
+	} else if (delafter == "hour") {
+		d->rb_delChatsHour->setChecked(true);
+	} else if (delafter == "day") {
+		d->rb_delChatsDay->setChecked(true);
+	} else if (delafter == "never") {
+		d->rb_delChatsNever->setChecked(true);
+	}
+	d->ck_chatSoftReturn->setChecked(ShortcutManager::instance()->shortcuts("chat.send").contains(QKeySequence(Qt::Key_Return)));
+
 	d->ck_showToolbox->setChecked(PsiOptions::instance()->getOption("options.ui.chat.toolbox").toBool());
-	bg_delChats->buttons()[opt->delChats]->setChecked(true);
 	d->ck_chatSoftReturn->setChecked(ShortcutManager::instance()->shortcuts("chat.send").contains(QKeySequence(Qt::Key_Return)));
 	for(int i=0; i< d->cb_chatStyle->count(); i++)
 	if(d->cb_chatStyle->itemText(i) == PsiOptions::instance()->getOption("options.ui.chat.style").toString())

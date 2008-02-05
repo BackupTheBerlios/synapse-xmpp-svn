@@ -67,9 +67,8 @@ public:
 	QMap<QString, QAction*> actions;
 
 	SIMContactListView *cvlist;
-	QList<PsiToolBar*> toolbars;
+	void addToolbar(const QString &base);
 
-	void buildToolbars();
 	void saveToolbarsPositions();
 	PsiCon *psiCon() const;
 	DBus *dbus;
@@ -143,6 +142,8 @@ private slots:
 	void actPublishTuneActivated (bool);
 	void actPublishMood();
 	void actTipActivated();
+	void actDiagQCAPluginActivated();
+	void actDiagQCAKeyStoreActivated();
 
 	bool showDockMenu(const QPoint &);
 	void dockActivated();
@@ -167,6 +168,7 @@ public slots:
 
 private:
 	void buildGeneralMenu(QMenu *);
+	void buildinitialToolbars();
 	QString numEventsString(int) const;
 
 	bool askQuit();
@@ -178,6 +180,7 @@ private:
 	class Private;
 	Private *d;
 	friend class Private;
+	QList<PsiToolBar*> toolbars;
 };
 
 #endif

@@ -232,8 +232,9 @@ signals:
 	void updateContact(const Jid &, bool);
 	void nickChanged();
 	void pgpKeyChanged();
-	void encryptedMessageSent(int, bool, int);
+	void encryptedMessageSent(int, bool, int, const QString &);
 	void enabledChanged();
+	void startBounce();
 
 public slots:
 	void setStatus(const XMPP::Status &, bool withStatus = false, bool withPlaying = false);
@@ -299,7 +300,8 @@ public slots:
 	void actionHistoryBox(PsiEvent *);
 	void actionRegister(const Jid &);
 	void actionSearch(const Jid &);
-	void actionJoin(const Jid &, const QString & = QString());
+	void actionJoin(const Jid& mucJid, const QString& password = QString());
+	void actionJoin(const ConferenceBookmark& bookmark, bool connectImmediately);
 	void actionDisco(const Jid &, const QString &);
 	void actionInvite(const Jid &, const QString &);
 	void actionVoice(const Jid&);
@@ -357,7 +359,7 @@ private slots:
 	void serverFeaturesChanged();
 	void setPEPAvailable(bool);
 
-	void getBookmarks_success(const QList<URLBookmark>&, const QList<ConferenceBookmark>&);
+	void bookmarksAvailabilityChanged();
 
 	void incomingHttpAuthRequest(const PsiHttpAuthRequest &);
 

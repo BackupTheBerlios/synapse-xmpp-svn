@@ -25,6 +25,8 @@
 #include "anim.h"
 #include "applicationinfo.h"
 
+#include "psioptions.h"
+
 #include <QFileInfo>
 #include <Q3Dict>
 #include <Q3PtrList>
@@ -42,6 +44,10 @@ private:
 	PsiIconset *psi;
 public:
 	Iconset system;
+	QString cur_system, cur_status;
+	QStringList cur_emoticons;
+	QMap<QString, QString> cur_service_status;
+	QMap<QString, QString> cur_custom_status;
 
 	Private(PsiIconset *_psi) {
 		psi = _psi;
@@ -97,11 +103,24 @@ public:
 				PsiIcon *toIcon = (PsiIcon *)to->icon(icon->name());
 				if ( toIcon ) {
 					if ( icon->anim() ) {
+						// setAnim and setImpix both
+						//   emit pixmapChanged(),
+						//   however we only want this
+						//   to happen once, and only
+						//   after both functions have
+						//   been processed.  so we
+						//   block signals during the
+						//   first call.
+						bool b = toIcon->blockSignals(true);
 						toIcon->setAnim  ( *icon->anim(), false );
+						toIcon->blockSignals(b);
 						toIcon->setImpix ( icon->impix(), false );
 					}
 					else {
+						// same as above
+						bool b = toIcon->blockSignals(true);
 						toIcon->setAnim  ( Anim(),        false );
+						toIcon->blockSignals(b);
 						toIcon->setImpix ( icon->impix(), false );
 					}
 				}
@@ -119,7 +138,7 @@ public:
 		PsiIcon *icon = (PsiIcon *)IconsetFactory::iconPtr(iconName);
 
 		// second level -- transport icon
-		if ( jid.user().isEmpty() || option.useTransportIconsForContacts ) {
+		if ( jid.user().isEmpty() || PsiOptions::instance()->getOption("options.ui.contactlist.use-transport-icons").toBool() ) {
 			QMap<QString, QRegExp> services;
 			services["aim"]		= QRegExp("^aim");
 			services["gadugadu"]	= QRegExp("^gg");
@@ -133,14 +152,14 @@ public:
 
 			bool found = false;
 
-			QMap<QString, QRegExp>::Iterator it = services.begin();
-			for ( ; it != services.end(); ++it) {
-				QRegExp rx = it.data();
-				if ( rx.search(jid.host()) != -1 ) {
-					// get the iconset name of the current service
-					QMap<QString, QString>::Iterator it2 = option.serviceRosterIconset.find(it.key());
-					if ( it2 != option.serviceRosterIconset.end() ) {
-						Iconset *is = psi->roster.find(it2.data());
+			
+			foreach(QVariant serviceV, PsiOptions::instance()->mapKeyList("options.iconsets.service-status")) {
+				QString service = serviceV.toString();
+				if (services.contains(service)) {
+					if (services[service].search(jid.host()) != -1 ) {
+						Iconset *is = psi->roster.find(
+								PsiOptions::instance()->getOption(
+								PsiOptions::instance()->mapLookup("options.iconsets.service-status", service)+".iconset").toString());
 						if ( is ) {
 							PsiIcon *i = (PsiIcon *)is->icon(iconName);
 							if ( i ) {
@@ -152,24 +171,30 @@ public:
 					}
 				}
 			}
+			
 
 			// let's try the default transport iconset then...
 			if ( !found && jid.user().isEmpty() ) {
-				Iconset *is = psi->roster.find(option.serviceRosterIconset["transport"]);
-				if ( is ) {
-					PsiIcon *i = (PsiIcon *)is->icon(iconName);
-					if ( i )
-						icon = i;
+				if (PsiOptions::instance()->mapKeyList("options.iconsets.service-status").contains("transport")) {
+					Iconset *is = psi->roster.find(
+								PsiOptions::instance()->getOption(
+								PsiOptions::instance()->mapLookup("options.iconsets.service-status", "transport")+".iconset").toString());			  
+					if ( is ) {
+						PsiIcon *i = (PsiIcon *)is->icon(iconName);
+						if ( i )
+							icon = i;
+					}
 				}
 			}
 		}
 
 		// third level -- custom icons
-		QMap<QString, QString>::Iterator it = option.customRosterIconset.begin();
-		for ( ; it != option.customRosterIconset.end(); ++it) {
-			QRegExp rx = QRegExp(it.key());
+		
+		QStringList customicons = PsiOptions::instance()->getChildOptionNames("options.iconsets.custom-status", true, true);
+		foreach(QString base, customicons) {
+			QRegExp rx = QRegExp(PsiOptions::instance()->getOption(base + ".regexp").toString());
 			if ( rx.search(jid.userHost()) != -1 ) {
-				Iconset *is = psi->roster.find(it.data());
+				Iconset *is = psi->roster.find(PsiOptions::instance()->getOption(base + ".iconset").toString());
 				if ( is ) {
 					PsiIcon *i = (PsiIcon *)is->icon(iconName);
 					if ( i )
@@ -186,9 +211,9 @@ public:
 		Iconset def;
 		*ok = def.load(":/iconsets/system/default");
 
-		if ( option.systemIconset != "default" ) {
+		if ( PsiOptions::instance()->getOption("options.iconsets.system").toString() != "default" ) {
 			Iconset is;
-			is.load ( iconsetPath("system/" + option.systemIconset) );
+			is.load ( iconsetPath("system/" + PsiOptions::instance()->getOption("options.iconsets.system").toString()) );
 
 			loadIconset(&def, &is);
 		}
@@ -203,9 +228,9 @@ public:
 		Iconset *def = new Iconset;
 		*ok = def->load (":/iconsets/roster/default");
 
-		if ( option.defaultRosterIconset != "default" ) {
+		if ( PsiOptions::instance()->getOption("options.iconsets.status").toString() != "default" ) {
 			Iconset is;
-			is.load ( iconsetPath("roster/" + option.defaultRosterIconset) );
+			is.load ( iconsetPath("roster/" + PsiOptions::instance()->getOption("options.iconsets.status").toString()) );
 
 			loadIconset(def, &is);
 		}
@@ -219,7 +244,7 @@ public:
 	{
 		Q3PtrList<Iconset> emo;
 
-		foreach(QString name, option.emoticons) {
+		foreach(QString name, PsiOptions::instance()->getOption("options.iconsets.emoticons").toStringList()) {
 			Iconset *is = new Iconset;
 			if ( is->load ( iconsetPath("emoticons/" + name) ) ) {
 				PsiIconset::removeAnimation(is);
@@ -238,6 +263,7 @@ PsiIconset::PsiIconset()
 	: QObject(QCoreApplication::instance())
 {
 	d = new Private(this);
+	connect(PsiOptions::instance(), SIGNAL(optionChanged(const QString&)), SLOT(optionChanged(const QString&)));
 }
 
 PsiIconset::~PsiIconset()
@@ -247,113 +273,179 @@ PsiIconset::~PsiIconset()
 
 bool PsiIconset::loadSystem()
 {
-	bool ok;
-	Iconset sys = d->systemIconset(&ok);
-	d->loadIconset( &d->system, &sys );
+	bool ok = true;
+	QString cur_system = PsiOptions::instance()->getOption("options.iconsets.system").toString();
+	if (d->cur_system != cur_system) {
+		Iconset sys = d->systemIconset(&ok);
+		d->loadIconset(&d->system, &sys);
 
-	//d->system = d->systemIconset();
-	d->system.addToFactory();
+		//d->system = d->systemIconset();
+		d->system.addToFactory();
+
+		d->cur_system = cur_system;
+	}
 
 	return ok;
 }
 
-bool PsiIconset::loadAll()
+bool PsiIconset::loadRoster()
 {
-	if ( !loadSystem() )
-		return false;
-
-	bool ok;
-
 	// load roster
 	roster.clear();
 
 	// default roster iconset
+	bool ok;
 	Iconset *def = d->defaultRosterIconset(&ok);
 	def->addToFactory();
-	roster.insert (option.defaultRosterIconset, def);
+	roster.insert(PsiOptions::instance()->getOption("options.iconsets.status").toString(), def);
+
+	d->cur_status = PsiOptions::instance()->getOption("options.iconsets.status").toString();
 
 	// load only necessary roster iconsets
-	QStringList rosterIconsets;
+	QSet<QString> rosterIconsets;
+	d->cur_service_status.clear();
 
-	QMap<QString, QString>::Iterator it = option.serviceRosterIconset.begin();
-	for ( ; it != option.serviceRosterIconset.end(); ++it)
-		if ( rosterIconsets.findIndex( it.data() ) == -1 )
-			rosterIconsets << it.data();
-
-	it = option.customRosterIconset.begin();
-	for ( ; it != option.customRosterIconset.end(); ++it)
-		if ( rosterIconsets.findIndex( it.data() ) == -1 )
-			rosterIconsets << it.data();
-
-	QStringList::Iterator it2 = rosterIconsets.begin();
-	for ( ; it2 != rosterIconsets.end(); ++it2) {
-		if ( *it2 == option.defaultRosterIconset )
-			continue;
-
-		Iconset *is = new Iconset;
-		if ( is->load (d->iconsetPath("roster/" + *it2)) ) {
-			is->addToFactory ();
-			d->stripFirstAnimFrame( *is );
-			roster.insert (*it2, is);
-		}
-		else
-		     delete is;
+	foreach(QVariant service, PsiOptions::instance()->mapKeyList("options.iconsets.service-status")) {
+		QString val = PsiOptions::instance()->getOption(
+		                  PsiOptions::instance()->mapLookup("options.iconsets.service-status", service) + ".iconset").toString();
+		rosterIconsets << val;
+		d->cur_service_status.insert(service.toString(), val);
 	}
 
-	// load emoticons
-	emoticons.clear();
-	emoticons = d->emoticons();
+	QStringList customicons = PsiOptions::instance()->getChildOptionNames("options.iconsets.custom-status", true, true);
+	d->cur_custom_status.clear();
+	foreach(QString base, customicons) {
+		QString regexp = PsiOptions::instance()->getOption(base + ".regexp").toString();
+		QString iconset = PsiOptions::instance()->getOption(base + ".iconset").toString();
+		rosterIconsets << iconset;
+		d->cur_custom_status.insert(regexp, iconset);
+	}
+
+	foreach(QString it2, rosterIconsets) {
+		if (it2 == PsiOptions::instance()->getOption("options.iconsets.status").toString()) {
+			continue;
+		}
+
+		Iconset *is = new Iconset;
+		if (is->load(d->iconsetPath("roster/" + it2))) {
+			is->addToFactory();
+			d->stripFirstAnimFrame(*is);
+			roster.insert(it2, is);
+		}
+		else {
+			delete is;
+		}
+	}
 
 	return ok;
 }
 
-bool PsiIconset::optionsChanged(const Options *old)
+void PsiIconset::loadEmoticons()
 {
-	bool ok = loadSystem();
+	QStringList cur_emoticons = PsiOptions::instance()->getOption("options.iconsets.emoticons").toStringList();
+	if (d->cur_emoticons != cur_emoticons) {
+		emoticons.clear();
+		emoticons = d->emoticons();
 
+		d->cur_emoticons = cur_emoticons;
+		emit emoticonsChanged();
+	}
+}
+
+bool PsiIconset::loadAll()
+{
+	if (!loadSystem() || !loadRoster())
+		return false;
+
+	loadEmoticons();
+	return true;
+}
+
+void PsiIconset::optionChanged(const QString& option)
+{
+	if (option == "options.iconsets.system") {
+		loadSystem();
+	}
+	else if (option == "options.iconsets.emoticons") {
+		loadEmoticons();
+	}
+
+	// currently we rely on PsiCon calling reloadRoster() when
+	// all options are already applied. otherwise we risk the chance
+	// being called too many times
+
+	// else if (option == "options.iconsets.status"                   ||
+	//          option.startsWith("options.iconsets.service-status.") ||
+	//          option.startsWith("options.iconsets.custom-status."))
+	// {
+	// 	reloadRoster();
+	// }
+}
+
+void PsiIconset::reloadRoster()
+{
+	bool ok;
+	QString cur_status = PsiOptions::instance()->getOption("options.iconsets.status").toString();
 	// default roster iconset
-	if ( old->defaultRosterIconset != option.defaultRosterIconset ) {
+	if (d->cur_status != cur_status) {
 		Iconset *newDef = d->defaultRosterIconset(&ok);
-		Iconset *oldDef = roster[old->defaultRosterIconset];
-		d->loadIconset( oldDef, newDef );
+		Iconset *oldDef = roster[d->cur_status];
+		d->loadIconset(oldDef, newDef);
 
 		roster.setAutoDelete(false);
-		roster.remove(old->defaultRosterIconset);
+		roster.remove(d->cur_status);
 		roster.setAutoDelete(true);
 
-		roster.insert (option.defaultRosterIconset, oldDef);
+		roster.insert(cur_status, oldDef);
 		delete newDef;
+		d->cur_status = cur_status;
+	}
+
+	QMap<QString, QString> cur_service_status;
+	QMap<QString, QString> cur_custom_status;
+
+	foreach(QVariant service, PsiOptions::instance()->mapKeyList("options.iconsets.service-status")) {
+		QString val = PsiOptions::instance()->getOption(
+		                  PsiOptions::instance()->mapLookup("options.iconsets.service-status", service) + ".iconset").toString();
+		cur_service_status.insert(service.toString(), val);
+	}
+
+	QStringList customicons = PsiOptions::instance()->getChildOptionNames("options.iconsets.custom-status", true, true);
+	foreach(QString base, customicons) {
+		QString regexp = PsiOptions::instance()->getOption(base + ".regexp").toString();
+		QString iconset = PsiOptions::instance()->getOption(base + ".iconset").toString();
+		cur_custom_status.insert(regexp, iconset);
 	}
 
 	// service&custom roster iconsets
-	if (  operator!=(old->serviceRosterIconset,option.serviceRosterIconset) || operator!=(old->customRosterIconset,option.customRosterIconset)) {
+	if (operator!=(d->cur_service_status, cur_service_status) || operator!=(d->cur_custom_status, cur_custom_status)) {
 		QStringList rosterIconsets;
-
-		QMap<QString, QString>::Iterator it = option.serviceRosterIconset.begin();
-		for ( ; it != option.serviceRosterIconset.end(); ++it)
-			if ( rosterIconsets.findIndex( it.data() ) == -1 )
+	
+		QMap<QString, QString>::Iterator it = cur_service_status.begin();
+		for (; it != cur_service_status.end(); ++it)
+			if (rosterIconsets.findIndex(it.data()) == -1)
 				rosterIconsets << it.data();
-
-		it = option.customRosterIconset.begin();
-		for ( ; it != option.customRosterIconset.end(); ++it)
-			if ( rosterIconsets.findIndex( it.data() ) == -1 )
+	
+		it = cur_custom_status.begin();
+		for (; it != cur_custom_status.end(); ++it)
+			if (rosterIconsets.findIndex(it.data()) == -1)
 				rosterIconsets << it.data();
-
+	
 		QStringList::Iterator it2 = rosterIconsets.begin();
-		for ( ; it2 != rosterIconsets.end(); ++it2) {
-			if ( *it2 == option.defaultRosterIconset )
+		for (; it2 != rosterIconsets.end(); ++it2) {
+			if (*it2 == PsiOptions::instance()->getOption("options.iconsets.status").toString())
 				continue;
-
+	
 			Iconset *is = new Iconset;
-			if ( is->load (d->iconsetPath("roster/" + *it2)) ) {
-				d->stripFirstAnimFrame( *is );
+			if (is->load(d->iconsetPath("roster/" + *it2))) {
+				d->stripFirstAnimFrame(*is);
 				Iconset *oldis = roster[*it2];
-
-				if ( oldis )
-					d->loadIconset( oldis, is );
+	
+				if (oldis)
+					d->loadIconset(oldis, is);
 				else {
-					is->addToFactory ();
-					roster.insert (*it2, is);
+					is->addToFactory();
+					roster.insert(*it2, is);
 				}
 			}
 			else
@@ -361,33 +453,28 @@ bool PsiIconset::optionsChanged(const Options *old)
 		}
 
 		bool clear = false;
-		while ( !clear ) {
+		while (!clear) {
 			clear = true;
-
-			Q3DictIterator<Iconset> it3 ( roster );
-			for ( ; it3.current(); ++it3) {
+	
+			Q3DictIterator<Iconset> it3(roster);
+			for (; it3.current(); ++it3) {
 				QString name = it3.currentKey();
-				if ( name == option.defaultRosterIconset )
+				if (name == PsiOptions::instance()->getOption("options.iconsets.status").toString())
 					continue;
 
-				it2 = rosterIconsets.find( name );
-				if ( it2 == rosterIconsets.end() ) {
+				it2 = rosterIconsets.find(name);
+				if (it2 == rosterIconsets.end()) {
 					// remove redundant iconset
-					roster.remove( name );
+					roster.remove(name);
 					clear = false;
 					break;
 				}
 			}
 		}
-	}
 
-	// load emoticons
-	if ( old->emoticons != option.emoticons ) {
-		emoticons.clear();
-		emoticons = d->emoticons();
+		d->cur_service_status = cur_service_status;
+		d->cur_custom_status  = cur_custom_status;
 	}
-
-	return old->defaultRosterIconset != option.defaultRosterIconset;
 }
 
 PsiIcon *PsiIconset::event2icon(PsiEvent *e)
@@ -486,16 +573,14 @@ PsiIcon PsiIconset::status(const XMPP::Status &s)
 PsiIcon *PsiIconset::transportStatusPtr(QString name, int s)
 {
 	PsiIcon *icon = 0;
-
-	QMap<QString, QString>::Iterator it = option.serviceRosterIconset.begin();
-	for ( ; it != option.serviceRosterIconset.end(); ++it) {
-		if (name == it.key()) {
-			Iconset *is = roster.find(it.data());
-			if ( is ) {
-				icon = (PsiIcon *)is->icon(status2name(s));
-				if ( icon )
-					break;
-			}
+	
+	QVariantList serviceicons = PsiOptions::instance()->mapKeyList("options.iconsets.service-status");
+	if (serviceicons.contains(name)) {
+		Iconset *is = roster.find(
+							PsiOptions::instance()->getOption(
+							PsiOptions::instance()->mapLookup("options.iconsets.service-status", name)+".iconset").toString());
+		if ( is ) {
+			icon = (PsiIcon *)is->icon(status2name(s));
 		}
 	}
 

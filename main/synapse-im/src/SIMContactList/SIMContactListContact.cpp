@@ -15,6 +15,8 @@
 #include "pgputil.h"
 #include "avatars.h"
 #include "desktoputil.h"
+#include "bookmarkmanagedlg.h"
+#include "bookmarkmanager.h"
 
 #ifdef USE_PEP
 #include "serverinfomanager.h"
@@ -102,16 +104,16 @@ const SIMContactName &SIMContactListContact::contactName()
 const QColor &SIMContactListContact::textColor()
 {
 	if(status().type() == Status::Away || status().type() == Status::XA) {
-		return option.color[cAway];
+		return PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.away").value<QColor>();
 	}
 	else if (status().type() == Status::Offline) {
-		return option.color[cOffline];
+		return PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.offline").value<QColor>();
 	}
 	else if (status().type() == Status::DND) {
-		return option.color[cDND];
+		return PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.do-not-disturb").value<QColor>();
 	}
 	else {
-		return option.color[cOnline];
+		return PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.online").value<QColor>();
 	}
 
 }
@@ -143,10 +145,10 @@ void SIMContactListContact::setUserListItem(const UserListItem &_u)
 	if(!description().isEmpty()) {
 		QFont fnt;
 		QFont fnt2;
-		fnt2.fromString(option.font[fRoster]);
-		fnt.fromString(option.font[fStatus]);
+		fnt2.fromString(PsiOptions::instance()->getOption("options.ui.look.font.contactlist").toString());
+		fnt.fromString(PsiOptions::instance()->getOption("options.ui.look.font.status").toString());
 		int size = fnt.pointSize() - fnt2.pointSize();
-		s += "<br><font size='"+QString("%1").arg(size)+"' color='" + option.color[cStatus].name() + "'>";		
+		s += "<br><font size='"+QString("%1").arg(size)+"' color='" + PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status-messages").value<QColor>().name() + "'>";		
 		if(fnt.bold())
 			s += "<b>";
 		if(fnt.italic())
@@ -194,6 +196,9 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	QAction *status = NULL;
 	QAction *mood = NULL;
 
+	QAction *bookmarksManage = NULL;
+	QMap<QAction*,int> bookmarks;
+
 	QAction *addToContactList = NULL;
 	QAction *serviceDiscovery = NULL;
 	QAction *xmlConsole = NULL;
@@ -240,13 +245,28 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			avatClear = set->addAction(SIMContactList::tr("Unset Avatar"));
 		}
 #endif
+
+		QMenu *bm = pm.addMenu(SIMContactList::tr("Bookmarks"));
+		bookmarksManage = bm->addAction(SIMContactList::tr("Manage..."));
+		if (account()->bookmarkManager()->isAvailable()) {
+			int idx = 0;
+			bm->insertSeparator();
+			foreach(ConferenceBookmark c, account()->bookmarkManager()->conferences()) {
+				bookmarks[bm->addAction(QString(SIMContactList::tr("Join %1")).arg(c.name()))] = idx;
+				idx++;
+			}
+		}
+		else {
+			bm->setEnabled(false);
+		}
+
 		addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), SIMContactList::tr("&Add a contact"));
 		serviceDiscovery = pm.addAction(IconsetFactory::icon("psi/disco").icon(), SIMContactList::tr("Service &Discovery"));
 		xmlConsole = pm.addAction(IconsetFactory::icon("psi/xml").icon(), SIMContactList::tr("&XML Console"));
 		pm.addSeparator();
 	} else {
 
-		if(!inList && !isPrivate && !option.lockdown.roster && online) {
+		if(!inList && !isPrivate && !PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool() && online) {
 			addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), SIMContactList::tr("Add/Authorize to contact list"));
 		
 			pm.addSeparator();
@@ -264,7 +284,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 #endif
 	}
 
-	if(!isPrivate && option.useRC) {
+	if(!isPrivate && PsiOptions::instance()->getOption("options.external-control.adhoc-remote-control.enable").toBool()) {
 		RC = pm.addAction(SIMContactList::tr("E&xecute command"));
 	}
 
@@ -296,7 +316,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 
 	info = pm.addAction(IconsetFactory::icon("psi/vCard").icon(), SIMContactList::tr("User &Info"));
 
-	if(!self && online && !option.lockdown.roster) {
+	if(!self && online && !PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool()) {
 		QMenu *manage = pm.addMenu(SIMContactList::tr("Manage"));
 
 		rename = manage->addAction(IconsetFactory::icon("psi/edit/clear").icon(), SIMContactList::tr("Re&name"));
@@ -535,6 +555,17 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 		i = i+6;
 		url = url.mid(i, j - i);
 		DesktopUtil::openUrl(url);
+	} else if (ret == bookmarksManage) {
+		BookmarkManageDlg *dlg = account()->findDialog<BookmarkManageDlg*>();
+		if(dlg) {
+			bringToFront(dlg);
+		} else {
+			dlg = new BookmarkManageDlg(account());
+			dlg->show();
+		}
+	} else {
+		ConferenceBookmark c = account()->bookmarkManager()->conferences()[bookmarks[ret]];
+		account()->actionJoin(c, true);
 	}
 }
 

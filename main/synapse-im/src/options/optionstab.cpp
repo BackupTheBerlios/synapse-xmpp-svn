@@ -76,11 +76,11 @@ PsiIcon *OptionsTab::psiIcon() const
 	return (PsiIcon *)IconsetFactory::iconPtr( v_iconName );
 }
 
-void OptionsTab::applyOptions(Options *)
+void OptionsTab::applyOptions()
 {
 }
 
-void OptionsTab::restoreOptions(const Options *)
+void OptionsTab::restoreOptions()
 {
 }
 
@@ -107,7 +107,7 @@ class OptionsTabWidget : public QTabWidget
 public:
 	OptionsTabWidget(QWidget *parent);
 	void addTab(OptionsTab *);
-	void restoreOptions(const Options *);
+	void restoreOptions();
 
 signals:
 	void connectDataChanged(QWidget *);
@@ -124,14 +124,12 @@ private:
 		bool initialized;
 	};
 	QMap<QWidget *, TabData> w2tab;
-	Options *opt;
 };
 
 OptionsTabWidget::OptionsTabWidget(QWidget *parent)
 : QTabWidget(parent)
 {
 	connect(this, SIGNAL(currentChanged(QWidget *)), SLOT(updateCurrent(QWidget *)));
-	opt = 0;
 }
 
 void OptionsTabWidget::addTab(OptionsTab *tab)
@@ -175,11 +173,10 @@ void OptionsTabWidget::updateCurrent(QWidget *w)
 		if ( !opttab->stretchable() )
 			vbox->addStretch();
 
-		if ( opt ) {
-			emit noDirty(true);
-			opttab->restoreOptions(opt);
-			emit noDirty(false);
-		}
+		emit noDirty(true);
+		opttab->restoreOptions();
+		emit noDirty(false);
+		
 		emit connectDataChanged(tab);
 
 		tab->show();
@@ -187,16 +184,11 @@ void OptionsTabWidget::updateCurrent(QWidget *w)
 	}
 }
 
-void OptionsTabWidget::restoreOptions(const Options *o)
+void OptionsTabWidget::restoreOptions()
 {
-	bool doRestore = !opt;
-	opt = (Options *)o;
-
-	if ( doRestore ) {
-		emit noDirty(true);
-		w2tab[currentPage()].tab->restoreOptions(opt);
-		emit noDirty(false);
-	}
+	emit noDirty(true);
+	w2tab[currentPage()].tab->restoreOptions();
+	emit noDirty(false);
 }
 
 //----------------------------------------------------------------------------
@@ -258,23 +250,25 @@ QWidget *MetaOptionsTab::widget()
 	return w;
 }
 
-void MetaOptionsTab::applyOptions(Options *opt)
+void MetaOptionsTab::applyOptions()
 {
 	Q3PtrListIterator<OptionsTab> it(tabs);
-	for ( ; it.current(); ++it)
-		it.current()->applyOptions(opt);
+	for ( ; it.current(); ++it) {
+		it.current()->applyOptions();
+	}
 }
 
-void MetaOptionsTab::restoreOptions(const Options *opt)
+void MetaOptionsTab::restoreOptions()
 {
 	if ( w ) {
 		OptionsTabWidget *d = (OptionsTabWidget *)w;
-		d->restoreOptions(opt);
+		d->restoreOptions();
 	}
 
 	Q3PtrListIterator<OptionsTab> it(tabs);
-	for ( ; it.current(); ++it)
-		it.current()->restoreOptions(opt);
+	for ( ; it.current(); ++it) {
+		it.current()->restoreOptions();
+	}
 }
 
 void MetaOptionsTab::setData(PsiCon *psi, QWidget *w)

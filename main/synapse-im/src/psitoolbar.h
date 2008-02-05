@@ -34,25 +34,29 @@ class PsiToolBar : public QToolBar
 	Q_OBJECT
 
 public:
+	static PsiToolBar *fromOptions(const QString &base, QMainWindow* mainWindow, PsiCon* psi, PsiActionList::ActionsType t);
+	static void structToOptions(const QString &base, ToolbarPrefs *s);
+	
 	PsiToolBar(const QString& label, QMainWindow* mainWindow, PsiCon* psi);
 	~PsiToolBar();
 
 	PsiActionList::ActionsType type() const;
 	void setType( PsiActionList::ActionsType );
-	void initialize( Options::ToolbarPrefs &, bool createUniqueActions );
-
-	QString group() const;
-	int groupIndex() const;
-	void setGroup( QString group, int index );
-	
-	bool isCustomizeable() const;
+	void initialize( QString base, bool createUniqueActions );
+  
+/*	bool isCustomizeable() const;
 	void setCustomizeable( bool );
 
 	bool isMoveable() const;
-	void setMoveable( bool );
+	void setMoveable( bool );*/
 	
 signals:
 	void registerAction( IconAction * );
+	
+public slots:
+	void optionChanged(const QString& option);
+	void update();
+	void optionRemoved(const QString& option);
 
 protected:
 	void contextMenuEvent(QContextMenuEvent *e);

@@ -5,6 +5,7 @@
 #include "SIMContactListGroup.h"
 #include "SIMContactListModel.h"
 #include "psiaccount.h"
+#include "profiles.h"
 
 SIMContactList::SIMContactList(QObject* parent)
 : QObject(parent), showOffline_(false), showGroups_(true), showAccounts_(false), showAway_(true), showSelf_(true), showAgents_(true)
@@ -100,11 +101,11 @@ void SIMContactList::setSearch(const QString& search)
 
 bool SIMContactList::isGroupOpen(const QString &s)
 {
-	return groupStates[s];
+	UserProfile::instance()->isGroupOpen(s);
 }
 void SIMContactList::setGroupOpen(const QString &s, bool b)
 {
-	groupStates[s] = b;
+	UserProfile::instance()->setGroupOpen(s,b);
 }
 
 bool SIMContactList::showOffline()
