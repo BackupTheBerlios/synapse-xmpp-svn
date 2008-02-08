@@ -127,7 +127,7 @@ void PsiPopup::Private::init(const PsiIcon *_titleIcon, QString titleText, PsiAc
 	display = true;
 	if ( !PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.enabled").toBool() )
 		return;
-	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
+	if(PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.type").toString() == "Full") {
 
 	if ( !psiPopupList )
 		psiPopupList = new QList<PsiPopup *>();
@@ -153,7 +153,7 @@ void PsiPopup::Private::init(const PsiIcon *_titleIcon, QString titleText, PsiAc
 	if ( _titleIcon )
 		id += _titleIcon->name();
 	id += titleText;
-	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic")
+	} else if (PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.type").toString() == "Basic")
 	{
 		printf("basic\n");
 		titleText_ = titleText;
@@ -309,7 +309,7 @@ PsiPopup::PsiPopup(PopupType type, PsiAccount *acc)
 void PsiPopup::setData(const PsiIcon *icon, QString text,const Jid& j) //sets layout in popup
 {
 	d->jid = j;
-	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
+	if(PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.type").toString() == "Full") {
 	if ( !d->popup ) {
 		deleteLater();
 		return;
@@ -322,7 +322,7 @@ void PsiPopup::setData(const PsiIcon *icon, QString text,const Jid& j) //sets la
 	d->popup->setData(d->createContactPixmap((QPixmap*)&icon->pixmap(),j), d->createContactInfo(icon, text));
 
 //	show();
-	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic") {
+	} else if (PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.type").toString() == "Basic") {
 		show();
 	}
 }
@@ -331,7 +331,7 @@ void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, c
 {
 	d->jid    = j;
 	d->name_ = (u && !u->name().isEmpty()) ? u->name() : j.bare();
-	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
+	if(PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.type").toString() == "Full") {
 
 	if ( !d->popup ) {
 		deleteLater();
@@ -415,14 +415,14 @@ void PsiPopup::setData(const Jid &j, const Resource &r, const UserListItem *u, c
 
 		show();
 	}
-	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic") {
+	} else if (PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.type").toString() == "Basic") {
 		show();
 	}
 }
 
 void PsiPopup::show()
 {
-	if(PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Full") {
+	if(PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.type").toString() == "Full") {
 	if ( !d->popup ) {
 		deleteLater();
 		return;
@@ -446,7 +446,7 @@ void PsiPopup::show()
 		deleteLater();
 	}
 
-	} else if (PsiOptions::instance()->getOption("options.ui.popupType").toString() == "Basic") {
+	} else if (PsiOptions::instance()->getOption("options.ui.notifications.passive-popups.type").toString() == "Basic") {
 		printf("basic\n");
 		d->psi->mainWin()->showMessage(d->titleText_, d->name_/*jid.bare()*/,QSystemTrayIcon::MessageIcon(0), 5000);
 	}

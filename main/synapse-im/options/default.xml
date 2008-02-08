@@ -333,7 +333,10 @@
 						<online type="bool">true</online>
 						<other-changes type="bool">false</other-changes>
 					</status>
-				</passive-popups>
+					
+					<place type="int">3</place>
+					<timeout type="int">5000</timeout>
+					<type type="QString">Full</type>				</passive-popups>
 				<popup-dialogs>
 					<suppress-when-not-on-roster type="bool">false</suppress-when-not-on-roster>
 					<suppress-while-away type="bool">false</suppress-while-away>
