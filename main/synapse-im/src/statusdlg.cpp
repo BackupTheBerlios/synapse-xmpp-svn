@@ -272,13 +272,13 @@ void StatusSetDlg::doButton()
  	else 
 		switch(d->setStatusMode) {
 			case setStatusForAccount:
-				emit set(makeStatus(type,str), d->le_priority->text().toInt());
+				emit set(makeStatus(type,str,d->le_priority->text().toInt()), d->le_priority->text().toInt());
 				break;
 			case setStatusForJid:
-				emit setForJid(d->j, makeStatus(type,str), d->le_priority->text().toInt());
+				emit setForJid(d->j, makeStatus(type,str,d->le_priority->text().toInt()), d->le_priority->text().toInt());
 				break;
 			case setStatusForJidList:
-				emit setForJidList(d->jl, makeStatus(type,str), d->le_priority->text().toInt());
+				emit setForJidList(d->jl, makeStatus(type,str,d->le_priority->text().toInt()), d->le_priority->text().toInt());
 				break;
 		}
 
