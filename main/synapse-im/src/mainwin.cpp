@@ -61,9 +61,9 @@
 #include "mucjoindlg.h"
 #include "psicontactlist.h"
 
-#include "SIMContactListModel.h"
-#include "SIMContactListView.h"
-#include "SIMContactDelegate.h"
+#include "Model.h"
+#include "View.h"
+#include "Delegate.h"
 
 #include "mainwin_p.h"
 #include "mooddlg.h"
@@ -291,15 +291,15 @@ MainWin::MainWin(bool _onTop, bool _asTool, PsiCon *psi, const char *name)
 	d->cb_search = new QComboBox(center);
 	d->cb_search->setEditable(true);
 
-	cvlist = new SIMContactListView(center,d->cb_search);
+	cvlist = new SIMContactList::View(center,d->cb_search);
 
 	d->eventNotifier = new HoverLabel(cvlist, HoverLabel::BottomLeft);
  	connect(cvlist, SIGNAL(resizeEventNotifier(QWidget*)), d->eventNotifier,  SLOT(resizeEvent(QWidget*)));
 	connect(d->eventNotifier, SIGNAL(clicked()), SLOT(doRecvNextEvent()));
 
-	cvlist->setItemDelegate(new SIMContactDelegate);
-	((SIMContactList *)d->psi->contactList())->setContactListView(cvlist);
-	SIMContactListModel *model = new SIMContactListModel(d->psi->contactList());
+	cvlist->setItemDelegate(new SIMContactList::Delegate);
+	((SIMContactList::List *)d->psi->contactList())->setContactListView(cvlist);
+	SIMContactList::Model *model = new SIMContactList::Model(d->psi->contactList());
 	cvlist->setModel(model);
 	QPalette pal = cvlist->palette();
 	pal.setColor(QPalette::Base, PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.background").value<QColor>());
@@ -453,11 +453,11 @@ void MainWin::registerAction( IconAction *action )
 		const char *slot;
 	
 	} actionlist[] = {
-		{ "show_offline", toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowOffline(bool) ) },
-		{ "show_away",    toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowAway(bool) ) },
-		{ "show_groups", toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowGroups(bool) ) },
-		{ "show_agents",  toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowAgents(bool) ) },
-		{ "show_self",    toggled, ((SIMContactList*)d->psi->contactList()), SLOT( setShowSelf(bool) ) },
+		{ "show_offline", toggled, ((SIMContactList::List*)d->psi->contactList()), SLOT( setShowOffline(bool) ) },
+		{ "show_away",    toggled, ((SIMContactList::List*)d->psi->contactList()), SLOT( setShowAway(bool) ) },
+		{ "show_groups", toggled, ((SIMContactList::List*)d->psi->contactList()), SLOT( setShowGroups(bool) ) },
+		{ "show_agents",  toggled, ((SIMContactList::List*)d->psi->contactList()), SLOT( setShowAgents(bool) ) },
+		{ "show_self",    toggled, ((SIMContactList::List*)d->psi->contactList()), SLOT( setShowSelf(bool) ) },
 
 		{ "button_options", activated, this, SIGNAL( doOptions() ) },
 
@@ -518,12 +518,12 @@ void MainWin::registerAction( IconAction *action )
 		const char *slot;
 		bool checked;
 	} reverseactionlist[] = {
-		{ "show_away",    ((SIMContactList *)d->psi->contactList()), SIGNAL( showAway(bool) ), setChecked, ((SIMContactList *)d->psi->contactList())->showAway()},
-//		{ "show_hidden",  ((SIMContactList *)d->psi->contactList()), SIGNAL( showHidden(bool) ), setChecked, cvlist->showHidden()},
-		{ "show_offline", ((SIMContactList *)d->psi->contactList()), SIGNAL( showOffline(bool) ), setChecked, ((SIMContactList *)d->psi->contactList())->showOffline()},
-		{ "show_self",    ((SIMContactList *)d->psi->contactList()), SIGNAL( showSelf(bool) ), setChecked, ((SIMContactList *)d->psi->contactList())->showSelf()},
-		{ "show_agents",  ((SIMContactList *)d->psi->contactList()), SIGNAL( showAgents(bool) ), setChecked, ((SIMContactList *)d->psi->contactList())->showAgents()},
-		{ "show_groups", ((SIMContactList *)d->psi->contactList()), SIGNAL( showGroups(bool) ), setChecked, ((SIMContactList *)d->psi->contactList())->showGroups()},
+		{ "show_away",    ((SIMContactList::List *)d->psi->contactList()), SIGNAL( showAway(bool) ), setChecked, ((SIMContactList::List *)d->psi->contactList())->showAway()},
+//		{ "show_hidden",  ((SIMContactList::List *)d->psi->contactList()), SIGNAL( showHidden(bool) ), setChecked, cvlist->showHidden()},
+		{ "show_offline", ((SIMContactList::List *)d->psi->contactList()), SIGNAL( showOffline(bool) ), setChecked, ((SIMContactList::List *)d->psi->contactList())->showOffline()},
+		{ "show_self",    ((SIMContactList::List *)d->psi->contactList()), SIGNAL( showSelf(bool) ), setChecked, ((SIMContactList::List *)d->psi->contactList())->showSelf()},
+		{ "show_agents",  ((SIMContactList::List *)d->psi->contactList()), SIGNAL( showAgents(bool) ), setChecked, ((SIMContactList::List *)d->psi->contactList())->showAgents()},
+		{ "show_groups", ((SIMContactList::List *)d->psi->contactList()), SIGNAL( showGroups(bool) ), setChecked, ((SIMContactList::List *)d->psi->contactList())->showGroups()},
 		{ "", 0, 0, 0, false }
 	};
 

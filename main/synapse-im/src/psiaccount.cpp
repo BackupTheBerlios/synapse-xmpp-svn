@@ -287,7 +287,7 @@ public:
 	}
 
 	PsiContactList* contactList;
-	SIMContactListAccount *contactListAccount;
+	SIMContactList::Account *contactListAccount;
 	PsiCon *psi;
 	PsiAccount *account;
 	PsiOptions *options;
@@ -1016,7 +1016,7 @@ const QString & PsiAccount::name() const
 	return d->acc.name;
 }
 
-void PsiAccount::setContactListAccount(SIMContactListAccount * cla)
+void PsiAccount::setContactListAccount(SIMContactList::Account * cla)
 {
 	d->contactListAccount = cla;
 }
@@ -1048,7 +1048,7 @@ Client *PsiAccount::client() const
 	return d->client;
 }
 
-SIMContactListAccount *PsiAccount::contactListAccount() const
+SIMContactList::Account *PsiAccount::contactListAccount() const
 {
 	return d->contactListAccount;
 }

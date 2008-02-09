@@ -5,19 +5,21 @@
 
 #include <QScrollBar>
 
-#include "SIMContactList.h"
-#include "SIMContactListModel.h"
-#include "SIMContactListView.h"
-#include "SIMContactListItem.h"
-#include "SIMContactListMeta.h"
-#include "SIMContactListContact.h"
-#include "SIMContactListGroup.h"
+#include "List.h"
+#include "Model.h"
+#include "View.h"
+#include "Item.h"
+#include "Meta.h"
+#include "Contact.h"
+#include "Group.h"
 
 #include "psioptions.h"
 #include "psiaccount.h"
 #include "common.h"
 
-SIMContactListView::SIMContactListView(QWidget* parent, QComboBox *search) : QTreeView(parent)
+using namespace SIMContactList;
+
+View::View(QWidget* parent, QComboBox *search) : QTreeView(parent)
 {
 	setUniformRowHeights(false);
 	setRootIsDecorated(false);
@@ -36,48 +38,48 @@ SIMContactListView::SIMContactListView(QWidget* parent, QComboBox *search) : QTr
 	connect(this, SIGNAL(doubleClicked(const QModelIndex&)), SLOT(qlv_doubleclick(const QModelIndex&)));
 }
 
-int SIMContactListView::showIcons() const
+int View::showIcons() const
 {
 	return showIcons_;
 }
 
-void SIMContactListView::setShowIcons(int k)
+void View::setShowIcons(int k)
 {
 	showIcons_ = k;
-	if (header()->count() > SIMContactListModel::PixmapColumn) {
-		header()->setSectionHidden(SIMContactListModel::PixmapColumn,!(k>1));
+	if (header()->count() > Model::PixmapColumn) {
+		header()->setSectionHidden(Model::PixmapColumn,!(k>1));
 	}
 	
 	if (k == IconsOnly) {
-		showColumn(SIMContactListModel::StateColumn);
-		hideColumn(SIMContactListModel::PixmapColumn);
-		hideColumn(SIMContactListModel::AvatarColumn);
+		showColumn(Model::StateColumn);
+		hideColumn(Model::PixmapColumn);
+		hideColumn(Model::AvatarColumn);
 	} else if (k == IconsAndAvatars) {
-		showColumn(SIMContactListModel::StateColumn);
-		hideColumn(SIMContactListModel::PixmapColumn);
-		showColumn(SIMContactListModel::AvatarColumn);
+		showColumn(Model::StateColumn);
+		hideColumn(Model::PixmapColumn);
+		showColumn(Model::AvatarColumn);
 	} else if (k == IconsOnAvatars) {
-		hideColumn(SIMContactListModel::StateColumn);
-		showColumn(SIMContactListModel::PixmapColumn);
-		hideColumn(SIMContactListModel::AvatarColumn);
+		hideColumn(Model::StateColumn);
+		showColumn(Model::PixmapColumn);
+		hideColumn(Model::AvatarColumn);
 	}
 }
 
 
-void SIMContactListView::resetExpandedState()
+void View::resetExpandedState()
 {
 	QAbstractItemModel* m = model();
 	for (int i=0; i < m->rowCount(QModelIndex()); i++) {
 		QModelIndex index = m->index(i,0);
-		if (m->data(index,SIMContactListModel::ExpandedRole).toBool()) {
-			SIMContactListGroup *group = (static_cast<SIMContactListGroup*>(index.internalPointer()));
+		if (m->data(index,Model::ExpandedRole).toBool()) {
+			Group *group = (static_cast<Group*>(index.internalPointer()));
 			if(group)
 				setExpanded(index, group->contactList()->isGroupOpen(group->name()));
 		}
 	}
 }
 
-void SIMContactListView::resizeEvent(QResizeEvent *e)
+void View::resizeEvent(QResizeEvent *e)
 {
 	QTreeView::resizeEvent(e);
 	// hack to deal with QItemDelegate which needs to change width when scrollbar is in use.
@@ -86,13 +88,13 @@ void SIMContactListView::resizeEvent(QResizeEvent *e)
 	emit resizeEventNotifier((QWidget*)this);
 }
 
-void SIMContactListView::doItemsLayout()
+void View::doItemsLayout()
 {
 	QTreeView::doItemsLayout();
 	resetExpandedState();
 }
 
-bool SIMContactListView::event(QEvent *event)
+bool View::event(QEvent *event)
 {
 	if (event->type() == QEvent::ToolTip) {
 		QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
@@ -134,21 +136,21 @@ bool SIMContactListView::event(QEvent *event)
 
 // Drag & Drop
 
-void SIMContactListView::dragEnterEvent(QDragEnterEvent *e)
+void View::dragEnterEvent(QDragEnterEvent *e)
 {
 	if(e->mimeData()->hasFormat("application/x-contact-data") || e->mimeData()->hasUrls())
 		e->acceptProposedAction();
 }
 	
-void SIMContactListView::dragMoveEvent(QDragMoveEvent *e)
+void View::dragMoveEvent(QDragMoveEvent *e)
 {
 	if(e->mimeData()->hasFormat("application/x-contact-data") || e->mimeData()->hasUrls())
 		e->acceptProposedAction();
 }
 
-void SIMContactListView::dropEvent(QDropEvent *e)
+void View::dropEvent(QDropEvent *e)
 {
-	SIMContactListItem *item = static_cast<SIMContactListItem*>(indexAt(e->pos()).internalPointer());
+	Item *item = static_cast<Item*>(indexAt(e->pos()).internalPointer());
 	if (item == NULL || !item->account()->loggedIn()) {
 		e->ignore();
 		return;
@@ -162,25 +164,25 @@ void SIMContactListView::dropEvent(QDropEvent *e)
 		QPoint offset;
 		dataStream >> pixmap >> offset;
 		
-		SIMContactListContact *contact = static_cast<SIMContactListContact*>(indexAt(offset).internalPointer());
+		Contact *contact = static_cast<Contact*>(indexAt(offset).internalPointer());
 
 		if(item && contact) {
 // Przebudować dla obsługi Metakontaktów -- should work!
-			if (item->type() == SIMContactListItem::Contact)
+			if (item->type() == Item::TContact)
 				item = item->parent();
 
-			if (item->type() == SIMContactListItem::Group)
+			if (item->type() == Item::TGroup)
 			{
-				SIMContactListGroup *group = static_cast<SIMContactListGroup*>(item);
-				SIMContactListGroup *oldParent = static_cast<SIMContactListGroup*>(contact->parent());
+				Group *group = static_cast<Group*>(item);
+				Group *oldParent = static_cast<Group*>(contact->parent());
 				contact->setDefaultParent(item);
 				contact->updateParents();
 				contact->account()->actionGroupRemove(contact->jid(), oldParent->name());
 				contact->account()->actionGroupAdd(contact->jid(), group->name());
-			} else  if (item->type() == SIMContactListItem::Meta) {
-				SIMContactListMeta *meta = static_cast<SIMContactListMeta*>(item);
-				SIMContactListGroup *oldParent = static_cast<SIMContactListGroup*>(contact->parent());
-				SIMContactListGroup *newgroup = static_cast<SIMContactListGroup*>(item->parent());
+			} else  if (item->type() == Item::TMeta) {
+				Meta *meta = static_cast<Meta*>(item);
+				Group *oldParent = static_cast<Group*>(contact->parent());
+				Group *newgroup = static_cast<Group*>(item->parent());
 				contact->setDefaultParent(item);
 				contact->updateParents();
 				contact->account()->actionGroupRemove(contact->jid(), oldParent->name());
@@ -190,9 +192,9 @@ void SIMContactListView::dropEvent(QDropEvent *e)
 			e->accept();
 		}
 	} else if (e->mimeData()->hasUrls()) {
-		if (item->type() == SIMContactListItem::Meta)
+		if (item->type() == Item::TMeta)
 			item = item->child(0);
-		SIMContactListContact *contact = static_cast<SIMContactListContact*>(item);
+		Contact *contact = static_cast<Contact*>(item);
 		if (contact) {
 			QStringList filesList;
 			QList<QUrl> urlList(e->mimeData()->urls());
@@ -205,13 +207,13 @@ void SIMContactListView::dropEvent(QDropEvent *e)
 	}
 }
 
-void SIMContactListView::mousePressEvent(QMouseEvent *e)
+void View::mousePressEvent(QMouseEvent *e)
 {
 	if (e->modifiers().testFlag(Qt::ShiftModifier)) {
 		//drag event!!
-		SIMContactListItem *item = static_cast<SIMContactListItem*>(indexAt(e->pos()).internalPointer());
-		if(item && (item->type() == SIMContactListItem::Contact) && item->account()->loggedIn()) {
-			SIMContactListContact *contact = static_cast<SIMContactListContact*>(item);
+		Item *item = static_cast<Item*>(indexAt(e->pos()).internalPointer());
+		if(item && (item->type() == Item::TContact) && item->account()->loggedIn()) {
+			Contact *contact = static_cast<Contact*>(item);
 			if(contact) {
 				QPixmap pixmap = contact->state();
 				QByteArray itemData;
@@ -235,18 +237,18 @@ void SIMContactListView::mousePressEvent(QMouseEvent *e)
 	QTreeView::mousePressEvent(e);
 }
 
-void SIMContactListView::qlv_doubleclick(const QModelIndex &index)
+void View::qlv_doubleclick(const QModelIndex &index)
 {
 	if(PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool())
 		return;
 	if(!index.isValid())
 		return;
-	SIMContactListItem* item = static_cast<SIMContactListItem*>(index.internalPointer());
+	Item* item = static_cast<Item*>(index.internalPointer());
 	if(item)
 		scActionDefault(item);
 }
 
-bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
+bool View::qlv_singleclick(QMouseEvent *e)
 {
 	bool done = false;
 
@@ -255,18 +257,18 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 		return false;
 
 	QAbstractItemModel* m = model();
-	SIMContactListItem* item = static_cast<SIMContactListItem*>(index.internalPointer());
+	Item* item = static_cast<Item*>(index.internalPointer());
 
 	if(e->button() == Qt::MidButton) {
-		if(item->type() == SIMContactListItem::Contact || item->type() == SIMContactListItem::Meta) {
+		if(item->type() == Item::TContact || item->type() == Item::TMeta) {
 			scActionDefault(item);
 			done = true;
 		}
 	}
 	else {
-		if (e->button() == Qt::LeftButton && item->type() == SIMContactListItem::Group) {
-			setExpanded(index, m->data(index,SIMContactListModel::ExpandedRole).toBool() && !isExpanded(index));
-			SIMContactListGroup *group = static_cast<SIMContactListGroup*>(item);
+		if (e->button() == Qt::LeftButton && item->type() == Item::TGroup) {
+			setExpanded(index, m->data(index,Model::ExpandedRole).toBool() && !isExpanded(index));
+			Group *group = static_cast<Group*>(item);
 			if(group)
 				group->contactList()->setGroupOpen(group->name(), isExpanded(index));
 			done = true;
@@ -274,7 +276,7 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 		else if(PsiOptions::instance()->getOption("options.ui.contactlist.use-left-click").toBool()) {
 			if(e->button() == Qt::LeftButton) {
 				if(PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool()) {
-					model()->setData(index,QVariant(mapToGlobal(e->pos())),SIMContactListModel::ContextMenuRole);
+					model()->setData(index,QVariant(mapToGlobal(e->pos())),Model::ContextMenuRole);
 					done = true;
 				}
 //				else {
@@ -285,7 +287,7 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 //				}
 			}
 			else if(PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool() && e->button() == Qt::RightButton) {
-				if(item->type() == SIMContactListItem::Contact || item->type() == SIMContactListItem::Meta) {
+				if(item->type() == Item::TContact || item->type() == Item::TMeta) {
 					scActionDefault(item);
 					done = false;
 				}
@@ -293,11 +295,11 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 		}
 		else {
 			if(e->button() == Qt::RightButton) {
-				model()->setData(index,QVariant(mapToGlobal(e->pos())),SIMContactListModel::ContextMenuRole);
+				model()->setData(index,QVariant(mapToGlobal(e->pos())),Model::ContextMenuRole);
 				done = true;
 			}
 			if(e->button() == Qt::LeftButton && PsiOptions::instance()->getOption("options.ui.contactlist.use-single-click").toBool()) {
-				if(item->type() == SIMContactListItem::Contact || item->type() == SIMContactListItem::Meta) {
+				if(item->type() == Item::TContact || item->type() == Item::TMeta) {
 					scActionDefault(item);
 					done = false;
 				}
@@ -309,54 +311,54 @@ bool SIMContactListView::qlv_singleclick(QMouseEvent *e)
 //	d->typeAhead = "";
 }
 
-void SIMContactListView::scActionDefault(SIMContactListItem *item)
+void View::scActionDefault(Item *item)
 {
-	if (item->type() == SIMContactListItem::Meta)
+	if (item->type() == Item::TMeta)
 		item = item->child(0);
 	
-	if (item->type() == SIMContactListItem::Contact) {
-		item->account()->actionDefault((static_cast<SIMContactListContact*>(item))->jid());
-	} else if (item->type() == SIMContactListItem::Meta) {
-		item->account()->actionDefault((static_cast<SIMContactListMeta*>(item))->jid());
+	if (item->type() == Item::TContact) {
+		item->account()->actionDefault((static_cast<Contact*>(item))->jid());
+	} else if (item->type() == Item::TMeta) {
+		item->account()->actionDefault((static_cast<Meta*>(item))->jid());
 	}
 }
 
-void SIMContactListView::resizeColumns()
+void View::resizeColumns()
 {
 	QHeaderView* headerView = header();
 	int columns = headerView->count();
-	if (columns > SIMContactListModel::NameColumn) {
-		headerView->setResizeMode(SIMContactListModel::NameColumn,QHeaderView::Stretch);
+	if (columns > Model::NameColumn) {
+		headerView->setResizeMode(Model::NameColumn,QHeaderView::Stretch);
 	}
-	if (columns > SIMContactListModel::StateColumn) {
-		headerView->setResizeMode(SIMContactListModel::StateColumn,QHeaderView::Fixed);
-		headerView->resizeSection(SIMContactListModel::StateColumn,20);
+	if (columns > Model::StateColumn) {
+		headerView->setResizeMode(Model::StateColumn,QHeaderView::Fixed);
+		headerView->resizeSection(Model::StateColumn,20);
 	}
-	if (columns >  SIMContactListModel::PixmapColumn) {
-		headerView->setResizeMode(SIMContactListModel::PixmapColumn,QHeaderView::Fixed);
-		headerView->resizeSection(SIMContactListModel::PixmapColumn,iconSize().width()+2);
+	if (columns >  Model::PixmapColumn) {
+		headerView->setResizeMode(Model::PixmapColumn,QHeaderView::Fixed);
+		headerView->resizeSection(Model::PixmapColumn,iconSize().width()+2);
 	}
-	if (columns > SIMContactListModel::AvatarColumn) {
-		headerView->setResizeMode(SIMContactListModel::AvatarColumn,QHeaderView::Fixed);
-		headerView->resizeSection(SIMContactListModel::AvatarColumn,iconSize().width());
+	if (columns > Model::AvatarColumn) {
+		headerView->setResizeMode(Model::AvatarColumn,QHeaderView::Fixed);
+		headerView->resizeSection(Model::AvatarColumn,iconSize().width());
 	}
 }
 
-void SIMContactListView::setModel(QAbstractItemModel* model)
+void View::setModel(QAbstractItemModel* model)
 {
 	QTreeView::setModel(model);
 	resizeColumns();
 	setShowIcons(showIcons());
 }
 
-void SIMContactListView::updateOptions()
+void View::updateOptions()
 {
 	int iconSize = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt() + 4;
 	setShowIcons(PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toInt());
 	setIconSize(QSize(iconSize,iconSize));
 	resizeColumns();
 	if(model())
-		((SIMContactListModel*)model())->contactList_changed();
+		((Model*)model())->contactList_changed();
 }
 
 // Branches ? We don't want no steenking branches !

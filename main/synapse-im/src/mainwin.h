@@ -45,7 +45,9 @@ class PsiToolBar;
 class PsiAccount;
 class IconAction;
 class PsiIcon;
-class SIMContactListView;
+namespace SIMContactList {
+	class View;
+};
 class DBus;
 namespace XMPP {
 	class Status;
@@ -66,7 +68,7 @@ public:
 	QStringList actionList;
 	QMap<QString, QAction*> actions;
 
-	SIMContactListView *cvlist;
+	SIMContactList::View *cvlist;
 	void addToolbar(const QString &base);
 
 	void saveToolbarsPositions();

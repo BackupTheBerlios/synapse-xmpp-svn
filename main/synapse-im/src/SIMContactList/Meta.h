@@ -1,15 +1,17 @@
-#include "SIMContactListItem.h"
-#include "SIMContactName.h"
+#include "Item.h"
+#include "Name.h"
 #include "userlist.h"
 //#include "iconset.h"
 
-#ifndef SIMCONTACTLISTMETA_H
-#define SIMCONTACTLISTMETA_H
+#ifndef META_H
+#define META_H
 
-class SIMContactListMeta : public SIMContactListItem {
+namespace SIMContactList {
+
+class Meta : public Item {
 public:
-	SIMContactListMeta(const QString &_name, PsiAccount *_pa, SIMContactList *cl, SIMContactListItem *parent);
-	~SIMContactListMeta();
+	Meta(const QString &_name, PsiAccount *_pa, List *cl, Item *parent);
+	~Meta();
 
 	QString name();
 	XMPP::Jid jid();
@@ -17,7 +19,7 @@ public:
 	QPixmap pixmap();
 	QPixmap avatar();
 	const QString &description();
-	const SIMContactName &contactName();
+	const Name &contactName();
 	const QColor &textColor();
 
 // 	bool alerting();
@@ -31,10 +33,12 @@ public:
 	void showContextMenu(const QPoint&);
 	QString toolTip();
 
-	SIMContactListItem *updateParent();
+	Item *updateParent();
 //	void updateOptions();
 private:
 	QString name_;
+};
+
 };
 
 #endif

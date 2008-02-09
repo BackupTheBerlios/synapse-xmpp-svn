@@ -1,29 +1,31 @@
 include_directories(SIMContactList)
 
 set(simcontactlist_noMOC_SRCS
-	SIMContactList/SIMContactListAccount.cpp
-	SIMContactList/SIMContactListContact.cpp
-	SIMContactList/SIMContactListMeta.cpp
-	SIMContactList/SIMContactList.cpp
-	SIMContactList/SIMContactListGroup.cpp
-	SIMContactList/SIMContactListItem.cpp
-	SIMContactList/SIMContactListModel.cpp
-	SIMContactList/SIMContactListView.cpp
-	SIMContactList/SIMContactDelegate.cpp
-	SIMContactList/SIMContactName.cpp
+	SIMContactList/Account.cpp
+	SIMContactList/Contact.cpp
+#	SIMContactList/PubSub.cpp
+	SIMContactList/Meta.cpp
+	SIMContactList/List.cpp
+	SIMContactList/Group.cpp
+	SIMContactList/Item.cpp
+	SIMContactList/Model.cpp
+	SIMContactList/View.cpp
+	SIMContactList/Delegate.cpp
+	SIMContactList/Name.cpp
 )
 
 set(simcontactlist_H
-	SIMContactList/SIMContactListAccount.h
-	SIMContactList/SIMContactListContact.h
-	SIMContactList/SIMContactListMeta.h
-	SIMContactList/SIMContactList.h
-	SIMContactList/SIMContactListGroup.h
-	SIMContactList/SIMContactListItem.h
-	SIMContactList/SIMContactListModel.h
-	SIMContactList/SIMContactListView.h
-	SIMContactList/SIMContactDelegate.h
-	SIMContactList/SIMContactName.h
+	SIMContactList/Account.h
+	SIMContactList/Contact.h
+#	SIMContactList/PubSub.h
+	SIMContactList/Meta.h
+	SIMContactList/List.h
+	SIMContactList/Group.h
+	SIMContactList/Item.h
+	SIMContactList/Model.h
+	SIMContactList/View.h
+	SIMContactList/Delegate.h
+	SIMContactList/Name.h
 )
 
 MY_AUTOMOC(simcontactlist_SRCS)

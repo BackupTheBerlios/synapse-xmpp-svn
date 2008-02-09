@@ -32,7 +32,7 @@
 #include "psiaccount.h"
 #include "psiiconset.h"
 //#include "contactview.h"
-#include "SIMContactList.h"
+#include "List.h"
 #include "busywidget.h"
 #include "common.h"
 #include "iconwidget.h"
@@ -85,7 +85,7 @@ AddUserDlg::AddUserDlg(const QStringList &services, const QStringList &names, co
 	QString str = tr("<None>");
 	cb_group->insertItem(str);
 	cb_group->insertStringList(groups);
-	str = SIMContactList::tr("Hidden");
+	str = SIMContactList::List::tr("Hidden");
 	if(!groups.contains(str))
 		cb_group->insertItem(str);
 	cb_group->setAutoCompletion(true);

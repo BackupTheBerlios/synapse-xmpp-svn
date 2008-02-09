@@ -43,7 +43,7 @@
 #include "vcardfactory.h"
 #include "iconwidget.h"
 //#include "contactview.h"
-#include "SIMContactListAccount.h"
+#include "Account.h"
 #include "psirichtext.h"
 #include "psioptions.h"
 #include "psioptions.h"

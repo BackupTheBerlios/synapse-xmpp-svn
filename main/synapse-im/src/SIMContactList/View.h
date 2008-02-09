@@ -1,5 +1,5 @@
-#ifndef SIMCONTACTLISTVIEW_H
-#define SIMCONTACTLISTVIEW_H
+#ifndef VIEW_H
+#define VIEW_H
 
 #include <QTreeView>
 #include <QComboBox>
@@ -7,12 +7,15 @@
 #include "xmpp_status.h"
 
 class QWidget;
-class SIMContactListItem;
 class QWheelEvent;
 
 using namespace XMPP;
 
-class SIMContactListView : public QTreeView
+namespace SIMContactList {
+
+class Item;
+
+class View : public QTreeView
 {
 	Q_OBJECT
 
@@ -23,7 +26,7 @@ class SIMContactListView : public QTreeView
 	};
 
 public:
-	SIMContactListView(QWidget* parent = 0, QComboBox *seach = 0);
+	View(QWidget* parent = 0, QComboBox *seach = 0);
 
 
 	// Reimplemented
@@ -49,7 +52,7 @@ protected:
 
 	virtual void doItemsLayout();
 
-	void scActionDefault(SIMContactListItem *item);
+	void scActionDefault(Item *item);
 
 private:
 	int showIcons() const;
@@ -61,6 +64,8 @@ private:
 
 	int showIcons_;
 	QComboBox *search_;
+};
+
 };
 
 #endif

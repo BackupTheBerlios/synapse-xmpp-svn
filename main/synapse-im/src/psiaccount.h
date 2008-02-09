@@ -82,7 +82,10 @@ class PEPManager;
 class ServerInfoManager;
 class TabManager;
 class GArchive;
-class SIMContactListAccount;
+
+namespace SIMContactList {
+    class Account;
+};
 //#ifdef GOOGLE_FT
 //class GoogleFileTransfer;
 //#endif
@@ -117,7 +120,7 @@ public:
 	bool isGroupOpen(QString) const;
 	void setGroupOpen(QString, bool);
 
-	void setContactListAccount(SIMContactListAccount *);
+	void setContactListAccount(SIMContactList::Account *);
 	const UserAccount & userAccount() const;
 	void setUserAccount(const UserAccount &);
 	const Jid & jid() const;
@@ -125,7 +128,7 @@ public:
 
 	XMPP::Client *client() const;
 //	ContactProfile *contactProfile() const;
-	SIMContactListAccount *contactListAccount() const;
+	SIMContactList::Account *contactListAccount() const;
 	EventQueue *eventQueue() const;
 //	EDB *edb() const;
 	PsiCon *psi() const;

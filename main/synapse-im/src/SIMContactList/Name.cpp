@@ -1,6 +1,6 @@
-#include "SIMContactListView.h"
-#include "SIMContactListModel.h"
-#include "SIMContactName.h"
+#include "View.h"
+#include "Model.h"
+#include "Name.h"
 #include "psioptions.h"
 #include "psirichtext.h"
 #include "common.h"
@@ -9,7 +9,9 @@
 
 #include <QPainter>
 
-SIMContactName::SIMContactName() : clv_(0)
+using namespace SIMContactList;
+
+Name::Name() : clv_(0)
 {
 	v_rt = new QTextDocument();
 	v_rt->setUndoRedoEnabled(false);
@@ -19,7 +21,7 @@ SIMContactName::SIMContactName() : clv_(0)
 	}
 }
 
-SIMContactName::SIMContactName(const QString &txt, const QColor &color, SIMContactListView *clv) : color_(color), clv_(clv)
+Name::Name(const QString &txt, const QColor &color, View *clv) : color_(color), clv_(clv)
 {
 	v_rt = new QTextDocument();
 	v_rt->setUndoRedoEnabled(false);
@@ -30,7 +32,7 @@ SIMContactName::SIMContactName(const QString &txt, const QColor &color, SIMConta
 	setText(txt, color, clv);
 }
 
-void SIMContactName::setText(const QString &txt, const QColor &color, SIMContactListView *clv)
+void Name::setText(const QString &txt, const QColor &color, View *clv)
 {
 	clv_ = clv;
 	color_ = color;
@@ -42,10 +44,10 @@ void SIMContactName::setText(const QString &txt, const QColor &color, SIMContact
 	QFont fnt;
 	fnt.fromString(PsiOptions::instance()->getOption("options.ui.look.font.contactlist").toString());
 	v_rt->setDefaultFont(fnt);
-	PsiRichText::ensureTextLayouted(v_rt, clv_->columnWidth(SIMContactListModel::NameColumn)-2);
+	PsiRichText::ensureTextLayouted(v_rt, clv_->columnWidth(Model::NameColumn)-2);
 }
 
-void SIMContactName::paint(QPainter *painter, const QRect &rect, const QPalette &palette, EditMode mode) const
+void Name::paint(QPainter *painter, const QRect &rect, const QPalette &palette, EditMode mode) const
 {
 //	PsiRichText::ensureTextLayouted(v_rt, rect.width()-2);
 	painter->save();
@@ -70,8 +72,8 @@ void SIMContactName::paint(QPainter *painter, const QRect &rect, const QPalette 
 	painter->restore();
 }
 
-QSize SIMContactName::sizeHint(const QRect &rect) const
+QSize Name::sizeHint(const QRect &rect) const
 {
-	PsiRichText::ensureTextLayouted(v_rt, clv_->columnWidth(SIMContactListModel::NameColumn)-2);
+	PsiRichText::ensureTextLayouted(v_rt, clv_->columnWidth(Model::NameColumn)-2);
 	return v_rt->size().toSize();
 }

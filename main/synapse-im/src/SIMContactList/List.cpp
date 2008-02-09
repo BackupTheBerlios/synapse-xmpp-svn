@@ -1,43 +1,45 @@
-#include "SIMContactList.h"
-#include "SIMContactListView.h"
-#include "SIMContactListItem.h"
-#include "SIMContactListContact.h"
-#include "SIMContactListGroup.h"
-#include "SIMContactListModel.h"
+#include "List.h"
+#include "View.h"
+#include "Item.h"
+#include "Contact.h"
+#include "Group.h"
+#include "Model.h"
 #include "psiaccount.h"
 #include "profiles.h"
 
-SIMContactList::SIMContactList(QObject* parent)
+using namespace SIMContactList;
+
+List::List(QObject* parent)
 : QObject(parent), showOffline_(false), showGroups_(true), showAccounts_(false), showAway_(true), showSelf_(true), showAgents_(true)
 {
-	root_ = new SIMContactListItem(SIMContactListItem::Root, 0, this);
-	invisibleGroup_ = new SIMContactListItem(SIMContactListItem::Root, 0, this);
-	searchGroup_ = new SIMContactListItem(SIMContactListItem::Root, 0, this);
+	root_ = new Item(Item::TRoot, 0, this);
+	invisibleGroup_ = new Item(Item::TRoot, 0, this);
+	searchGroup_ = new Item(Item::TRoot, 0, this);
 }
 
-SIMContactList::~SIMContactList()
+List::~List()
 {
 	delete root_;
 }
 
-SIMContactListItem *SIMContactList::rootItem()
+Item *List::rootItem()
 {
 	return root_;
 }
 
-SIMContactListItem *SIMContactList::invisibleGroup()
+Item *List::invisibleGroup()
 {
 	return invisibleGroup_;
 }
 
-SIMContactListItem *SIMContactList::searchGroup()
+Item *List::searchGroup()
 {
 	return searchGroup_;
 }
 
-SIMContactListItem *SIMContactList::findItem(const QString &name, int _type)
+Item *List::findItem(const QString &name, int _type)
 {
-	SIMContactListItem *cli = root_->findItem(name, _type);
+	Item *cli = root_->findItem(name, _type);
 	if(cli)
 		return cli;
 	cli = invisibleGroup_->findItem(name, _type);
@@ -47,9 +49,9 @@ SIMContactListItem *SIMContactList::findItem(const QString &name, int _type)
 	return cli;
 }
 
-SIMContactListContact *SIMContactList::findEntry(const QString &j, bool self)
+Contact *List::findEntry(const QString &j, bool self)
 {
-	SIMContactListContact *clc = root_->findEntry(j,self);
+	Contact *clc = root_->findEntry(j,self);
 	if(clc)
 		return clc;
 	clc = invisibleGroup_->findEntry(j,self);
@@ -59,9 +61,9 @@ SIMContactListContact *SIMContactList::findEntry(const QString &j, bool self)
 	return clc;
 }
 
-SIMContactListAccount *SIMContactList::addAccount(PsiAccount *pa)
+Account *List::addAccount(PsiAccount *pa)
 {
-	SIMContactListAccount *account = new SIMContactListAccount(pa, this, root_);
+	Account *account = new Account(pa, this, root_);
 	pa->setContactListAccount(account);
 	if(showAccounts())
 		root_->appendChild(account);
@@ -72,12 +74,12 @@ SIMContactListAccount *SIMContactList::addAccount(PsiAccount *pa)
 	return account;
 }
 
-const QString &SIMContactList::search()
+const QString &List::search()
 {
 	return search_;
 }
 
-void SIMContactList::setSearch(const QString& search)
+void List::setSearch(const QString& search)
 {
 	QString oldsearch = search_;
 	search_ = search;
@@ -99,21 +101,21 @@ void SIMContactList::setSearch(const QString& search)
 		updateParents();
 }
 
-bool SIMContactList::isGroupOpen(const QString &s)
+bool List::isGroupOpen(const QString &s)
 {
 	UserProfile::instance()->isGroupOpen(s);
 }
-void SIMContactList::setGroupOpen(const QString &s, bool b)
+void List::setGroupOpen(const QString &s, bool b)
 {
 	UserProfile::instance()->setGroupOpen(s,b);
 }
 
-bool SIMContactList::showOffline()
+bool List::showOffline()
 {
 	return showOffline_;
 }
 
-void SIMContactList::setShowOffline(bool e)
+void List::setShowOffline(bool e)
 {
 	showOffline_ = e;
 	updateVisibleParents();
@@ -121,12 +123,12 @@ void SIMContactList::setShowOffline(bool e)
 	emit showOffline(e);
 }
 
-bool SIMContactList::showAway()
+bool List::showAway()
 {
 	return showAway_;
 }
 
-void SIMContactList::setShowAway(bool e)
+void List::setShowAway(bool e)
 {
 	showAway_ = e;
 	updateVisibleParents();
@@ -134,12 +136,12 @@ void SIMContactList::setShowAway(bool e)
 	emit showAway(e);
 }
 
-bool SIMContactList::showAgents()
+bool List::showAgents()
 {
 	return showAgents_;
 }
 
-void SIMContactList::setShowAgents(bool e)
+void List::setShowAgents(bool e)
 {
 	showAgents_ = e;
 	updateVisibleParents();
@@ -147,12 +149,12 @@ void SIMContactList::setShowAgents(bool e)
 	emit showAgents(e);
 }
 
-bool SIMContactList::showSelf()
+bool List::showSelf()
 {
 	return showSelf_;
 }
 
-void SIMContactList::setShowSelf(bool e)
+void List::setShowSelf(bool e)
 {
 	showSelf_ = e;
 	updateVisibleParents();
@@ -160,12 +162,12 @@ void SIMContactList::setShowSelf(bool e)
 	emit showSelf(e);
 }
 
-bool SIMContactList::showGroups()
+bool List::showGroups()
 {
 	return showGroups_;
 }
 
-void SIMContactList::setShowGroups(bool e)
+void List::setShowGroups(bool e)
 {
 	showGroups_ = e;
 	updateVisibleParents();
@@ -173,66 +175,66 @@ void SIMContactList::setShowGroups(bool e)
 	emit showGroups(e);
 }
 
-bool SIMContactList::showAccounts()
+bool List::showAccounts()
 {
 	return showAccounts_;
 }
 
 
 
-SIMContactListView *SIMContactList::contactListView()
+View *List::contactListView()
 {
 	return contactListView_;
 }
 
-void SIMContactList::setContactListView(SIMContactListView *clv)
+void List::setContactListView(View *clv)
 {
 	contactListView_ = clv;
 }
 
-int SIMContactList::avatarSize()
+int List::avatarSize()
 {
 	return contactListView_->iconSize().width() - 4;
 }
 
-void SIMContactList::dataChanged()
+void List::dataChanged()
 {
 	emit s_dataChanged();
 }
 
-void SIMContactList::contactBlocked(const QString &jid, bool blocked)
+void List::contactBlocked(const QString &jid, bool blocked)
 {
-	SIMContactListContact *clc = findEntry(jid);
+	Contact *clc = findEntry(jid);
 	if(clc)
 		clc->setBlocked(blocked);
 }
 
-void SIMContactList::updateVisibleParents()
+void List::updateVisibleParents()
 {
 	root_->updateParents();
 	emit s_dataChanged();
 }
 
-void SIMContactList::updateInvisibleParents()
+void List::updateInvisibleParents()
 {
 	invisibleGroup()->updateParents();
 	emit s_dataChanged();
 }
 
-void SIMContactList::updateSearchParents()
+void List::updateSearchParents()
 {
 	searchGroup()->updateParents();
 	emit s_dataChanged();
 }
 
-void SIMContactList::updateOptions()
+void List::updateOptions()
 {
 	root_->updateOptions();
 	searchGroup_->updateOptions();
 	invisibleGroup_->updateOptions();
 }
 
-void SIMContactList::updateParents()
+void List::updateParents()
 {
 	root_->updateParents();
 	searchGroup_->updateParents();

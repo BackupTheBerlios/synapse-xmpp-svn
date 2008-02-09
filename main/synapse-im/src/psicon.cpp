@@ -41,7 +41,7 @@
 #include "accountadddlg.h"
 #include "psiiconset.h"
 //#include "contactview.h"
-#include "SIMContactListView.h"
+#include "View.h"
 #include "psievent.h"
 #include "passphrasedlg.h"
 #include "common.h"
@@ -258,7 +258,7 @@ public:
 	CapsRegistry* capsRegistry;
 	TabManager *tabManager;
 
-	SIMContactList *simContactList;
+	SIMContactList::List *simContactList;
 };
 
 //----------------------------------------------------------------------------
@@ -319,7 +319,7 @@ bool PsiCon::init()
 	connect(d->contactList, SIGNAL(accountCountChanged()), SIGNAL(accountCountChanged()));
 	connect(d->contactList, SIGNAL(accountActivityChanged()), SIGNAL(accountActivityChanged()));
 	connect(d->contactList, SIGNAL(saveAccounts()), SLOT(saveAccounts()));
-	connect(this, SIGNAL(emitOptionsUpdate()), ((SIMContactList*)d->contactList), SLOT(dataChanged()));
+	connect(this, SIGNAL(emitOptionsUpdate()), ((SIMContactList::List*)d->contactList), SLOT(dataChanged()));
 	
 	// advanced widget
 	GAdvancedWidget::setStickEnabled( false ); //until this is bugless
@@ -416,7 +416,7 @@ bool PsiCon::init()
 	connect(this, SIGNAL(emitOptionsUpdate()), d->mainwin, SLOT(optionsUpdate()));
 
 	connect(this, SIGNAL(emitOptionsUpdate()), d->mainwin->cvlist, SLOT(optionsUpdate()));
-	connect(this, SIGNAL(emitOptionsUpdate()), ((SIMContactList*)d->contactList), SLOT(updateOptions()));
+	connect(this, SIGNAL(emitOptionsUpdate()), ((SIMContactList::List*)d->contactList), SLOT(updateOptions()));
 
 	QRect geom = PsiOptions::instance()->getOption("options.ui.contactlist.saved-window-geometry").toRect();
 	if (geom.isValid()) d->mainwin->restoreSavedGeometry(geom);
@@ -626,7 +626,7 @@ void PsiCon::setShortcuts()
 
 }
 
-SIMContactListView *PsiCon::contactView() const
+SIMContactList::View *PsiCon::contactView() const
 {
 	if(d->mainwin)
 		return d->mainwin->cvlist;

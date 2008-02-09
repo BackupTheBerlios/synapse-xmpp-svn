@@ -1,13 +1,13 @@
-#include "SIMContactListModel.h"
+#include "Model.h"
 
-#include "SIMContactList.h"
-#include "SIMContactListItem.h"
-#include "SIMContactListAccount.h"
-#include "SIMContactListGroup.h"
-#include "SIMContactListMeta.h"
-#include "SIMContactListContact.h"
-#include "SIMContactListView.h"
-#include "SIMContactName.h"
+#include "List.h"
+#include "Item.h"
+#include "Account.h"
+#include "Group.h"
+#include "Meta.h"
+#include "Contact.h"
+#include "View.h"
+#include "Name.h"
 
 #include <QTextDocument>
 
@@ -23,81 +23,83 @@
 
 using namespace XMPP;
 
-SIMContactListModel::SIMContactListModel(SIMContactList *contactList) : contactList_(contactList)
+using namespace SIMContactList;
+
+Model::Model(List *contactList) : contactList_(contactList)
 {
 	connect(contactList_,SIGNAL(s_dataChanged()),this,SLOT(contactList_changed()));
 }
 
-QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
+QVariant Model::data(const QModelIndex &index, int role) const
 {
 	if (!index.isValid())
 		return QVariant();
 
-	SIMContactListAccount *account;
-	SIMContactListGroup *group;
-	SIMContactListMeta *meta;
-	SIMContactListContact *contact;
+	Account *account;
+	Group *group;
+	Meta *meta;
+	Contact *contact;
 
-	SIMContactListItem* item = static_cast<SIMContactListItem*>(index.internalPointer());
+	Item* item = static_cast<Item*>(index.internalPointer());
 	if (role == Qt::DisplayRole && index.column() == NameColumn) {
-		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if (( contact = dynamic_cast<Contact*>(item))) {
 			return qVariantFromValue(contact->contactName());
-		} else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		} else if ((meta = dynamic_cast<Meta*>(item))) {
 			return qVariantFromValue(meta->contactName());
-		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		} else if ((group = dynamic_cast<Group*>(item))) {
 			return qVariantFromValue(group->name());
-		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
+		} else if ((account = dynamic_cast<Account*>(item))) {
 			return qVariantFromValue(account->name());
 		}
 	} else if (role == Qt::DecorationRole && index.column() == StateColumn) {
-		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if (( contact = dynamic_cast<Contact*>(item))) {
 			return qVariantFromValue(contact->state());
-		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		} else if (( meta = dynamic_cast<Meta*>(item))) {
 			return qVariantFromValue(meta->state());
-		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		} else if ((group = dynamic_cast<Group*>(item))) {
 			return qVariantFromValue(group->pixmap());
-		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
+		} else if ((account = dynamic_cast<Account*>(item))) {
 			return qVariantFromValue(account->pixmap());
 		}
 	} else if (role == Qt::DecorationRole && index.column() == PixmapColumn) {
-		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if (( contact = dynamic_cast<Contact*>(item))) {
 			return qVariantFromValue(contact->pixmap());
-		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		} else if (( meta = dynamic_cast<Meta*>(item))) {
 			return qVariantFromValue(meta->pixmap());
-		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		} else if ((group = dynamic_cast<Group*>(item))) {
 			return qVariantFromValue(group->pixmap());
-		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
+		} else if ((account = dynamic_cast<Account*>(item))) {
 			return qVariantFromValue(account->pixmap());
 		}
 	} else if (role == Qt::DecorationRole && index.column() == AvatarColumn) {
-		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if (( contact = dynamic_cast<Contact*>(item))) {
 			return qVariantFromValue(contact->avatar());
-		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		} else if (( meta = dynamic_cast<Meta*>(item))) {
 			return qVariantFromValue(meta->avatar());
 		}
 	}
 	else if (role == Qt::BackgroundColorRole) {
-		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if ((contact = dynamic_cast<Contact*>(item))) {
 			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.background").value<QColor>());
-		} else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		} else if ((meta = dynamic_cast<Meta*>(item))) {
 			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.background").value<QColor>());
-		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		} else if ((group = dynamic_cast<Group*>(item))) {
 			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-background").value<QColor>());
-		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
+		} else if ((account = dynamic_cast<Account*>(item))) {
 			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.profile.header-background").value<QColor>());
 		}
 	}
 	else if (role == Qt::TextColorRole) {
-		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if ((contact = dynamic_cast<Contact*>(item))) {
 			return qVariantFromValue(contact->textColor());
 		}
-		else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		else if ((meta = dynamic_cast<Meta*>(item))) {
 			return qVariantFromValue(meta->textColor());
 		}
-		else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		else if ((group = dynamic_cast<Group*>(item))) {
 			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.grouping.header-foreground").value<QColor>());
 		}
-		else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
+		else if ((account = dynamic_cast<Account*>(item))) {
 			return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.profile.header-foreground").value<QColor>());
 		}
 	}
@@ -105,16 +107,16 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 		return qVariantFromValue(PsiOptions::instance()->getOption("options.ui.look.font.contactlist").value<QFont>());
 	}
 	else if (role == Qt::EditRole) {
-		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if (( contact = dynamic_cast<Contact*>(item))) {
 			return qVariantFromValue(contact->name());
-		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		} else if (( meta = dynamic_cast<Meta*>(item))) {
 			return qVariantFromValue(meta->name());
-		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		} else if ((group = dynamic_cast<Group*>(item))) {
 			return qVariantFromValue(group->name());
 		}		
 	}
 	else if (role == ExpandedRole) {
-		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if ((contact = dynamic_cast<Contact*>(item))) {
 			return QVariant(false);
 		}
 		else {
@@ -124,43 +126,43 @@ QVariant SIMContactListModel::data(const QModelIndex &index, int role) const
 	return QVariant();
 }
 
-bool SIMContactListModel::setData(const QModelIndex& index, const QVariant& data, int role)
+bool Model::setData(const QModelIndex& index, const QVariant& data, int role)
 {
 	if (!index.isValid())
 		return false;
 
-	SIMContactListAccount *account;
-	SIMContactListGroup *group;
-	SIMContactListMeta *meta;
-	SIMContactListContact *contact;
+	Account *account;
+	Group *group;
+	Meta *meta;
+	Contact *contact;
 
-	SIMContactListItem* item = static_cast<SIMContactListItem*>(index.internalPointer());
+	Item* item = static_cast<Item*>(index.internalPointer());
 	if (role == ContextMenuRole) {
-		if (( contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if (( contact = dynamic_cast<Contact*>(item))) {
 			contact->showContextMenu(data.toPoint());
-		} else if (( meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		} else if (( meta = dynamic_cast<Meta*>(item))) {
 			meta->showContextMenu(data.toPoint());
-		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		} else if ((group = dynamic_cast<Group*>(item))) {
 			group->showContextMenu(data.toPoint());
 		}
 	}
 
 	if (role == Qt::ToolTipRole) {
-		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if ((contact = dynamic_cast<Contact*>(item))) {
 			PsiToolTip::showText(data.toPoint(),contact->toolTip(),contactList_->contactListView());
-		} else if ((meta = dynamic_cast<SIMContactListMeta*>(item))) {
+		} else if ((meta = dynamic_cast<Meta*>(item))) {
 			PsiToolTip::showText(data.toPoint(),meta->toolTip(),contactList_->contactListView());
-		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		} else if ((group = dynamic_cast<Group*>(item))) {
 			PsiToolTip::showText(data.toPoint(),group->toolTip(),contactList_->contactListView());
-		} else if ((account = dynamic_cast<SIMContactListAccount*>(item))) {
+		} else if ((account = dynamic_cast<Account*>(item))) {
 			PsiToolTip::showText(data.toPoint(),account->toolTip(),contactList_->contactListView());
 		}
 	}
 
 	if (role == Qt::EditRole) {
-		if ((contact = dynamic_cast<SIMContactListContact*>(item))) {
+		if ((contact = dynamic_cast<Contact*>(item))) {
 			contact->account()->actionRename(contact->u()->jid(), data.toString());
-		} else if ((group = dynamic_cast<SIMContactListGroup*>(item))) {
+		} else if ((group = dynamic_cast<Group*>(item))) {
 			QList<PsiAccount*> lpa = group->account()->psi()->contactList()->enabledAccounts();
 			foreach(PsiAccount* pa, lpa)
 				pa->actionGroupRename(group->name(), data.toString());
@@ -171,7 +173,7 @@ bool SIMContactListModel::setData(const QModelIndex& index, const QVariant& data
 }
 
 
-Qt::ItemFlags SIMContactListModel::flags(const QModelIndex& index) const
+Qt::ItemFlags Model::flags(const QModelIndex& index) const
 {
 	Qt::ItemFlags f = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 	if (index.column() == NameColumn)
@@ -179,7 +181,7 @@ Qt::ItemFlags SIMContactListModel::flags(const QModelIndex& index) const
 	return f;
 }
 
-QVariant SIMContactListModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant Model::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	Q_UNUSED(section);
 	Q_UNUSED(orientation);
@@ -187,38 +189,38 @@ QVariant SIMContactListModel::headerData(int section, Qt::Orientation orientatio
 	return QVariant();
 }
 
-QModelIndex SIMContactListModel::index( int row, int column, SIMContactListItem *item) const
+QModelIndex Model::index( int row, int column, Item *item) const
 {
 	return createIndex(row, column, item);
 }
 
 
-QModelIndex SIMContactListModel::index( int row, int column, const QModelIndex &parent) const
+QModelIndex Model::index( int row, int column, const QModelIndex &parent) const
 {
-	SIMContactListItem *parentItem;
+	Item *parentItem;
 	if (!parent.isValid())
 		parentItem = contactList_->rootItem();
 	else
-		parentItem = static_cast<SIMContactListItem*>(parent.internalPointer());
+		parentItem = static_cast<Item*>(parent.internalPointer());
 
-	SIMContactListItem *item = parentItem->child(row);
+	Item *item = parentItem->child(row);
 	return (item ? createIndex(row, column, item) : QModelIndex());	
 }
 
-QModelIndex SIMContactListModel::parent(const QModelIndex &index) const
+QModelIndex Model::parent(const QModelIndex &index) const
 {
 	if (!index.isValid())
 		return QModelIndex();
 
-	SIMContactListItem *parent = (static_cast<SIMContactListItem*>(index.internalPointer()))->parent();
+	Item *parent = (static_cast<Item*>(index.internalPointer()))->parent();
 	return (parent == contactList_->rootItem() ? QModelIndex() : createIndex(parent->row(),0,parent));
 }
 
-int SIMContactListModel::rowCount(const QModelIndex &parent) const
+int Model::rowCount(const QModelIndex &parent) const
 {
-	SIMContactListItem* parentItem;
+	Item* parentItem;
 	if (parent.isValid()) {
-		parentItem = static_cast<SIMContactListItem*>(parent.internalPointer());
+		parentItem = static_cast<Item*>(parent.internalPointer());
 	}
 	else {
 		parentItem = contactList_->rootItem();
@@ -227,12 +229,12 @@ int SIMContactListModel::rowCount(const QModelIndex &parent) const
 	return (parentItem ? parentItem->size() : 0);
 }
 
-int SIMContactListModel::columnCount(const QModelIndex &parent) const
+int Model::columnCount(const QModelIndex &parent) const
 {
 	return COLUMNS;
 }
 
-void SIMContactListModel::contactList_changed()
+void Model::contactList_changed()
 {
 	reset();
 }

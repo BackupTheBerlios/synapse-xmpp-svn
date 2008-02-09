@@ -1,24 +1,26 @@
-#include "SIMContactListItem.h"
-#include "SIMContactListAccount.h"
+#include "Item.h"
+#include "Account.h"
 
-#ifndef SIMCONTACTLIST_H
-#define SIMCONTACTLIST_H
+#ifndef LIST_H
+#define LIST_H
 
-class SIMContactListView;
+namespace SIMContactList {
 
-class SIMContactList : public QObject {
+class View;
+
+class List : public QObject {
 	Q_OBJECT
-	friend class SIMContactListModel;
+	friend class Model;
 public:
-	SIMContactList(QObject *);
-	~SIMContactList();
+	List(QObject *);
+	~List();
 
-	SIMContactListItem *rootItem();
-	SIMContactListItem *invisibleGroup();
-	SIMContactListItem *searchGroup();
+	Item *rootItem();
+	Item *invisibleGroup();
+	Item *searchGroup();
 
-	SIMContactListItem *findItem(const QString &name, int _type);
-	SIMContactListContact *findEntry(const QString &j, bool self = false);
+	Item *findItem(const QString &name, int _type);
+	Contact *findEntry(const QString &j, bool self = false);
 
 	const QString &search();
 	void setSearch(const QString& search);
@@ -38,13 +40,13 @@ public:
 	void updateSearchParents();
 	void updateParents();
 
-	SIMContactListAccount *addAccount(PsiAccount *pa);
+	Account *addAccount(PsiAccount *pa);
 
 	int avatarSize();
 
 
-	SIMContactListView *contactListView();
-	void setContactListView(SIMContactListView *clv);
+	View *contactListView();
+	void setContactListView(View *clv);
 
 	QMap<QString,bool> groupStates;
 
@@ -68,10 +70,10 @@ signals:
 	void s_dataChanged();
 
 private:
-	SIMContactListItem *root_;
-	SIMContactListItem *invisibleGroup_;
-	SIMContactListItem *searchGroup_;
-	SIMContactListView *contactListView_;
+	Item *root_;
+	Item *invisibleGroup_;
+	Item *searchGroup_;
+	View *contactListView_;
 
 	QString search_;
 	bool showOffline_;
@@ -80,6 +82,8 @@ private:
 	bool showSelf_;
 	bool showGroups_;
 	bool showAccounts_;
+};
+
 };
 
 #endif

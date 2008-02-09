@@ -1,5 +1,5 @@
-#ifndef SIMCONTACTNAME_H
-#define SIMCONTACTNAME_H
+#ifndef NAME_H
+#define NAME_H
 
 #include <QString>
 #include <QRect>
@@ -8,18 +8,20 @@
 #include <QColor>
 #include <QTextDocument>
 
-class SIMContactListView;
-
 class QPainter;
 
-class SIMContactName {
+namespace SIMContactList {
+
+class View;
+
+class Name {
 public:
 	enum EditMode { Editable, ReadOnly };
 
-	SIMContactName();
-	SIMContactName(const QString &txt, const QColor &color, SIMContactListView *clv);
+	Name();
+	Name(const QString &txt, const QColor &color, SIMContactList::View *clv);
 	
-	void setText(const QString &txt, const QColor &color, SIMContactListView *clv);
+	void setText(const QString &txt, const QColor &color, SIMContactList::View *clv);
 
 	void paint(QPainter *painter, const QRect &rect, const QPalette &palette, EditMode mode) const;
 	QSize sizeHint( const QRect &rect) const;
@@ -27,9 +29,11 @@ public:
 private:
 	QColor color_;
 	QTextDocument *v_rt;
-	SIMContactListView *clv_;
+	SIMContactList::View *clv_;
 };
 
-Q_DECLARE_METATYPE(SIMContactName);
+};
+
+Q_DECLARE_METATYPE(SIMContactList::Name);
 
 #endif

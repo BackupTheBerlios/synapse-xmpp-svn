@@ -1,9 +1,10 @@
-#include "SIMContactListContact.h"
-#include "SIMContactListMeta.h"
-#include "SIMContactListGroup.h"
-#include "SIMContactList.h"
-#include "SIMContactListModel.h"
-#include "SIMContactListView.h"
+#include "Contact.h"
+//#include "PubSub.h"
+#include "Meta.h"
+#include "Group.h"
+#include "List.h"
+#include "Model.h"
+#include "View.h"
 #include "textutil.h"
 #include "jidutil.h"
 #include "common.h"
@@ -32,27 +33,29 @@
 #include <QApplication>
 #include "qclipboard.h"
 
-SIMContactListContact::SIMContactListContact(const UserListItem &_u, PsiAccount *_pa, SIMContactList *cl, SIMContactListItem *parent)
-:SIMContactListItem(SIMContactListItem::Contact, _pa, cl, parent), alertIcon_(NULL), blocked_(false)
+using namespace SIMContactList;
+
+Contact::Contact(const UserListItem &_u, PsiAccount *_pa, List *cl, Item *parent)
+:Item(Item::TContact, _pa, cl, parent), alertIcon_(NULL), blocked_(false)
 {
 	setUserListItem(_u);
 }
 
-SIMContactListContact::~SIMContactListContact()
+Contact::~Contact()
 {
 }
 
-QString SIMContactListContact::name()
+QString Contact::name()
 {
 	return JIDUtil::nickOrJid(u_.name(), u_.jid().full());
 }
 
-XMPP::Jid SIMContactListContact::jid()
+XMPP::Jid Contact::jid()
 {
 	return u_.jid();
 }
 
-QPixmap SIMContactListContact::state()
+QPixmap Contact::state()
 {
 	if(alertIcon_) {
 		return alertIcon_->pixmap();
@@ -64,7 +67,7 @@ QPixmap SIMContactListContact::state()
 	return PsiIconset::instance()->statusPtr(&u_)->pixmap();
 }
 
-QPixmap SIMContactListContact::pixmap()
+QPixmap Contact::pixmap()
 {
 	bool grey = !u_.isAvailable();
 	QPixmap ps = state();
@@ -80,7 +83,7 @@ QPixmap SIMContactListContact::pixmap()
 	return (px.isNull()) ? ps : px;
 }
 
-QPixmap SIMContactListContact::avatar()
+QPixmap Contact::avatar()
 {
 	bool grey = !u_.isAvailable();
 	if(account()->avatarFactory() && (contactList()->avatarSize() > 0))
@@ -88,7 +91,7 @@ QPixmap SIMContactListContact::avatar()
 	return QPixmap();
 }
 
-QString SIMContactListContact::description()
+QString Contact::description()
 {
 	if(u_.isAvailable())
 		return status().status();
@@ -96,12 +99,12 @@ QString SIMContactListContact::description()
 		return u_.lastUnavailableStatus().status();
 }
 
-const SIMContactName &SIMContactListContact::contactName()
+const Name &Contact::contactName()
 {
 	return contactName_;
 }
 
-const QColor &SIMContactListContact::textColor()
+const QColor &Contact::textColor()
 {
 	if(status().type() == Status::Away || status().type() == Status::XA) {
 		return PsiOptions::instance()->getOption("options.ui.look.colors.contactlist.status.away").value<QColor>();
@@ -118,23 +121,23 @@ const QColor &SIMContactListContact::textColor()
 
 }
 
-bool SIMContactListContact::alerting()
+bool Contact::alerting()
 {
 	return (alertIcon_ != NULL);
 }
 
-void SIMContactListContact::setAlertIcon(PsiIcon *icon)
+void Contact::setAlertIcon(PsiIcon *icon)
 {
 	alertIcon_ = icon;
 }
 
-void SIMContactListContact::setBlocked(bool blocked)
+void Contact::setBlocked(bool blocked)
 {
 	blocked_ = blocked;
 	setUserListItem(u_);
 }
 
-void SIMContactListContact::setUserListItem(const UserListItem &_u)
+void Contact::setUserListItem(const UserListItem &_u)
 {
 	u_=_u;
 	u_.setAvatarFactory(account()->avatarFactory());
@@ -164,15 +167,31 @@ void SIMContactListContact::setUserListItem(const UserListItem &_u)
 		s += "</font>";
 	}
 
-	contactName_.setText(s, textColor(), contactList()->contactListView());
+	contactName_.setText(s, textColor(),
+	contactList()->contactListView());
 }
 
-UserListItem *SIMContactListContact::u()
+/*void SIMContactListContact::updatePEP()
+{
+	for(int i=0; i<SIMContactListPubSub::MAX; i++)
+	{
+		SIMContactListPubSub *ps = NULL;
+		ps = dynamic_cast<SIMContactListPubSub*>child(i);
+		if(ps =! NULL && ps->type() == i)
+			delete ps;
+		
+		if(i == SIMContactListPubSub::Mood) {
+			ps = new PubSub();
+		}
+	}
+}*/
+
+UserListItem *Contact::u()
 {
 	return &u_;
 }
 
-XMPP::Status SIMContactListContact::status()
+XMPP::Status Contact::status()
 {
 	if(!u_.userResourceList().isEmpty()) {
 		UserResource &r = *u_.priority();
@@ -184,7 +203,7 @@ XMPP::Status SIMContactListContact::status()
 	}
 }
 
-void SIMContactListContact::showContextMenu(const QPoint& p)
+void Contact::showContextMenu(const QPoint& p)
 {
 	bool online = account()->loggedIn();
 	bool self = u_.isSelf();
@@ -236,23 +255,23 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	QMenu pm(0);
 
 	if(self) {
-		status = pm.addAction(SIMContactList::tr("Set &Status"));
+		status = pm.addAction(List::tr("Set &Status"));
 #ifdef USE_PEP
 		if(online && account()->serverInfoManager()->hasPEP()) {
-			QMenu *set = pm.addMenu(SIMContactList::tr("PEP"));
-			mood = set->addAction(IconsetFactory::icon("psi/smile").icon(),SIMContactList::tr("Set Mood"));
-			avatAssign = set->addAction(SIMContactList::tr("Set Avatar"));
-			avatClear = set->addAction(SIMContactList::tr("Unset Avatar"));
+			QMenu *set = pm.addMenu(List::tr("PEP"));
+			mood = set->addAction(IconsetFactory::icon("psi/smile").icon(),List::tr("Set Mood"));
+			avatAssign = set->addAction(List::tr("Set Avatar"));
+			avatClear = set->addAction(List::tr("Unset Avatar"));
 		}
 #endif
 
-		QMenu *bm = pm.addMenu(SIMContactList::tr("Bookmarks"));
-		bookmarksManage = bm->addAction(SIMContactList::tr("Manage..."));
+		QMenu *bm = pm.addMenu(List::tr("Bookmarks"));
+		bookmarksManage = bm->addAction(List::tr("Manage..."));
 		if (account()->bookmarkManager()->isAvailable()) {
 			int idx = 0;
 			bm->insertSeparator();
 			foreach(ConferenceBookmark c, account()->bookmarkManager()->conferences()) {
-				bookmarks[bm->addAction(QString(SIMContactList::tr("Join %1")).arg(c.name()))] = idx;
+				bookmarks[bm->addAction(QString(List::tr("Join %1")).arg(c.name()))] = idx;
 				idx++;
 			}
 		}
@@ -260,32 +279,32 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			bm->setEnabled(false);
 		}
 
-		addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), SIMContactList::tr("&Add a contact"));
-		serviceDiscovery = pm.addAction(IconsetFactory::icon("psi/disco").icon(), SIMContactList::tr("Service &Discovery"));
-		xmlConsole = pm.addAction(IconsetFactory::icon("psi/xml").icon(), SIMContactList::tr("&XML Console"));
+		addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), List::tr("&Add a contact"));
+		serviceDiscovery = pm.addAction(IconsetFactory::icon("psi/disco").icon(), List::tr("Service &Discovery"));
+		xmlConsole = pm.addAction(IconsetFactory::icon("psi/xml").icon(), List::tr("&XML Console"));
 		pm.addSeparator();
 	} else {
 
 		if(!inList && !isPrivate && !PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool() && online) {
-			addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), SIMContactList::tr("Add/Authorize to contact list"));
+			addToContactList = pm.addAction(IconsetFactory::icon("psi/addContact").icon(), List::tr("Add/Authorize to contact list"));
 		
 			pm.addSeparator();
 		}
 
 		if (PsiOptions::instance()->getOption("options.ui.message.enabled").toBool() && online)
-			sendMessage = pm.addAction(IconsetFactory::icon("psi/sendMessage").icon(), SIMContactList::tr("Send &message"));
+			sendMessage = pm.addAction(IconsetFactory::icon("psi/sendMessage").icon(), List::tr("Send &message"));
 
 		if (online)
-			startChat = pm.addAction(IconsetFactory::icon("psi/start-chat").icon(), SIMContactList::tr("Open &chat window"));
+			startChat = pm.addAction(IconsetFactory::icon("psi/start-chat").icon(), List::tr("Open &chat window"));
 	
 #ifdef WHITEBOARDING
 		if (online)
-			openWhiteboard = pm.addAction(IconsetFactory::icon("psi/whiteboard").icon(), SIMContactList::tr("Open a &whiteboard"));
+			openWhiteboard = pm.addAction(IconsetFactory::icon("psi/whiteboard").icon(), List::tr("Open a &whiteboard"));
 #endif
 	}
 
 	if(!isPrivate && PsiOptions::instance()->getOption("options.external-control.adhoc-remote-control.enable").toBool()) {
-		RC = pm.addAction(SIMContactList::tr("E&xecute command"));
+		RC = pm.addAction(List::tr("E&xecute command"));
 	}
 
 	if(!self) {
@@ -296,74 +315,74 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			hasVoice = account()->capsManager()->features(u_.jid().withResource((*it).name())).canVoice();
 		}
 		if( hasVoice && account()->capsManager()->isEnabled() )
-			voiceCall = pm.addAction(IconsetFactory::icon("psi/voice").icon(), SIMContactList::tr("Voice call"));
+			voiceCall = pm.addAction(IconsetFactory::icon("psi/voice").icon(), List::tr("Voice call"));
 		}
 
 		if(!isAgent && online) {
 			pm.addSeparator();
-			upload = pm.addAction(IconsetFactory::icon("psi/upload").icon(), SIMContactList::tr("Send &file"));
+			upload = pm.addAction(IconsetFactory::icon("psi/upload").icon(), List::tr("Send &file"));
 		}
 
 #ifdef XEP-0136
 		ServerInfoManager *sim = account()->serverInfoManager();
 //		if(sim && sim->hasMessageArchiving()) {
-			archive = pm.addAction(IconsetFactory::icon("psi/history").icon(), SIMContactList::tr("&Archive"));
+			archive = pm.addAction(IconsetFactory::icon("psi/history").icon(), List::tr("&Archive"));
 //		}
 #endif
 
-		history = pm.addAction(IconsetFactory::icon("psi/history").icon(), SIMContactList::tr("&History"));
+		history = pm.addAction(IconsetFactory::icon("psi/history").icon(), List::tr("&History"));
 	}
 
-	info = pm.addAction(IconsetFactory::icon("psi/vCard").icon(), SIMContactList::tr("User &Info"));
+	info = pm.addAction(IconsetFactory::icon("psi/vCard").icon(), List::tr("User &Info"));
 
 	if(!self && online && !PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool()) {
-		QMenu *manage = pm.addMenu(SIMContactList::tr("Manage"));
+		QMenu *manage = pm.addMenu(List::tr("Manage"));
 
-		rename = manage->addAction(IconsetFactory::icon("psi/edit/clear").icon(), SIMContactList::tr("Re&name"));
+		rename = manage->addAction(IconsetFactory::icon("psi/edit/clear").icon(), List::tr("Re&name"));
 
-		QMenu *authorize = manage->addMenu(IconsetFactory::icon("psi/register").icon(), SIMContactList::tr("Authorization"));
-		authResend = authorize->addAction(SIMContactList::tr("Resend authorization to"));
-		authRequest = authorize->addAction(SIMContactList::tr("Rerequest authorization from"));
-		authRemove = authorize->addAction(SIMContactList::tr("Remove authorization from"));
+		QMenu *authorize = manage->addMenu(IconsetFactory::icon("psi/register").icon(), List::tr("Authorization"));
+		authResend = authorize->addAction(List::tr("Resend authorization to"));
+		authRequest = authorize->addAction(List::tr("Rerequest authorization from"));
+		authRemove = authorize->addAction(List::tr("Remove authorization from"));
 
-		remove = manage->addAction(IconsetFactory::icon("psi/remove").icon(), SIMContactList::tr("Rem&ove"));
+		remove = manage->addAction(IconsetFactory::icon("psi/remove").icon(), List::tr("Rem&ove"));
 
-		meta = manage->addAction(SIMContactList::tr("Add meta.."));
-		group = manage->addAction(SIMContactList::tr("Add group.."));
+		meta = manage->addAction(List::tr("Add meta.."));
+		group = manage->addAction(List::tr("Add group.."));
 
 		if (PsiOptions::instance()->getOption("options.ui.menu.contact.custom-picture").toBool()) {
-			QMenu *avpm = manage->addMenu(SIMContactList::tr("&Picture"));
+			QMenu *avpm = manage->addMenu(List::tr("&Picture"));
 
-			avatAssign = avpm->addAction(SIMContactList::tr("&Assign Custom Picture"));
+			avatAssign = avpm->addAction(List::tr("&Assign Custom Picture"));
 			if(account()->avatarFactory()->hasManualAvatar(u_.jid()))
-				avatClear = avpm->addAction(SIMContactList::tr("&Clear Custom Picture"));
+				avatClear = avpm->addAction(List::tr("&Clear Custom Picture"));
 		}
 
 		if(PGPUtil::instance().pgpAvailable() && PsiOptions::instance()->getOption("options.ui.menu.contact.custom-pgp-key").toBool()) {
 			if(u_.publicKeyID().isEmpty())
-				pgp = manage->addAction(IconsetFactory::icon("psi/gpg-yes").icon(), SIMContactList::tr("Assign Open&PGP key"));
+				pgp = manage->addAction(IconsetFactory::icon("psi/gpg-yes").icon(), List::tr("Assign Open&PGP key"));
 			else
-				pgp = manage->addAction(IconsetFactory::icon("psi/gpg-no").icon(), SIMContactList::tr("Unassign Open&PGP key"));
+				pgp = manage->addAction(IconsetFactory::icon("psi/gpg-no").icon(), List::tr("Unassign Open&PGP key"));
 		}
 	}
 
 	if(!self && online) {
 		if(isAgent) {
 			if(!u_.isAvailable())
-				logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_ONLINE).icon(), SIMContactList::tr("&Log on"));
+				logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_ONLINE).icon(), List::tr("&Log on"));
 			else
-				logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_OFFLINE).icon(), SIMContactList::tr("&Log off"));
+				logon = pm.addAction(PsiIconset::instance()->status(jid(), STATUS_OFFLINE).icon(), List::tr("&Log off"));
 		}
 		if(blocked_)
-			unblock = pm.addAction(IconsetFactory::icon("psi/stop").icon(), SIMContactList::tr("Unblock contact"));
+			unblock = pm.addAction(IconsetFactory::icon("psi/stop").icon(), List::tr("Unblock contact"));
 		else
-			block = pm.addAction(IconsetFactory::icon("psi/stop").icon(), SIMContactList::tr("Block contact"));
+			block = pm.addAction(IconsetFactory::icon("psi/stop").icon(), List::tr("Block contact"));
 
-		copyJid = pm.addAction(SIMContactList::tr("Copy JID"));
+		copyJid = pm.addAction(List::tr("Copy JID"));
 		if(!description().isEmpty()) {
-			copyStatusMsg = pm.addAction(SIMContactList::tr("Copy status message"));
+			copyStatusMsg = pm.addAction(List::tr("Copy status message"));
 			if(TextUtil::linkify(description()).compare(description()) != 0)
-				goToUrl = pm.addAction(SIMContactList::tr("Go to URL.."));
+				goToUrl = pm.addAction(List::tr("Go to URL.."));
 		}
 
 	}
@@ -406,7 +425,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			rnl << r.name();
 		}
 		account()->actionExecuteCommandSpecific(Jid(jid().bare() + "/" + QInputDialog::getItem(contactList()->contactListView(),
-			SIMContactList::tr("Choose resource.."), SIMContactList::tr("Choose resource.."),
+			List::tr("Choose resource.."), List::tr("Choose resource.."),
 			rnl)), "");
 	} else if (ret == voiceCall) {
 		account()->actionVoice(u_.jid());
@@ -425,12 +444,12 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			account()->changeVCard();
 	} else if (ret == rename) {
 //		account()->actionRename(u.jid());
-		QModelIndex m = ((SIMContactListModel*)contactList()->contactListView()->model())->index(row(), SIMContactListModel::NameColumn, this);
+		QModelIndex m = ((Model*)contactList()->contactListView()->model())->index(row(), Model::NameColumn, this);
 		contactList()->contactListView()->edit(m);
 	} else if (ret == group) {
 		while(1) {
 			bool ok = false;
-			QString newgroup = QInputDialog::getText(SIMContactList::tr("Create New Group"), SIMContactList::tr("Enter the new Group name:"), QLineEdit::Normal, QString::null, &ok, contactList()->contactListView());
+			QString newgroup = QInputDialog::getText(List::tr("Create New Group"), List::tr("Enter the new Group name:"), QLineEdit::Normal, QString::null, &ok, contactList()->contactListView());
 			if(!ok)
 				break;
 			if(newgroup.isEmpty())
@@ -447,7 +466,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			}
 
 			if(!found) {
-				SIMContactListGroup *group = dynamic_cast<SIMContactListGroup*>(parent());
+				Group *group = dynamic_cast<Group*>(parent());
 				if(group) {
 					account()->actionGroupRemove(u_.jid(), group->name());
 					account()->actionGroupAdd(u_.jid(), newgroup);
@@ -458,8 +477,8 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	} else if (ret == meta) {
 		while(1) {
 			bool ok = false;
-			QString newmeta = QInputDialog::getText(SIMContactList::tr("Create New Metacontact"), SIMContactList::tr("Enter the new Metacontact name:"), QLineEdit::Normal, QString::null, &ok, contactList()->contactListView());
-			int newmeta_priority = QInputDialog::getInteger(SIMContactList::tr("Set priority for contact"), SIMContactList::tr("Enter the priority:"), 1, 1,100,1, &ok, contactList()->contactListView());
+			QString newmeta = QInputDialog::getText(List::tr("Create New Metacontact"), List::tr("Enter the new Metacontact name:"), QLineEdit::Normal, QString::null, &ok, contactList()->contactListView());
+			int newmeta_priority = QInputDialog::getInteger(List::tr("Set priority for contact"), List::tr("Enter the priority:"), 1, 1,100,1, &ok, contactList()->contactListView());
 			if(!ok)
 				break;
 			if(newmeta.isEmpty())
@@ -503,7 +522,7 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 			account()->actionSetAvatar();
 		else {
 #endif
-  			QString file = QFileDialog::getOpenFileName(0, SIMContactList::tr("Choose an image"), "", SIMContactList::tr("All files (*.png *.jpg *.gif)"));
+  			QString file = QFileDialog::getOpenFileName(0, List::tr("Choose an image"), "", List::tr("All files (*.png *.jpg *.gif)"));
  			if(!file.isNull()) {
  				account()->avatarFactory()->importManualAvatar(u_.jid(), file);
  			}
@@ -569,14 +588,14 @@ void SIMContactListContact::showContextMenu(const QPoint& p)
 	}
 }
 
-QString SIMContactListContact::toolTip()
+QString Contact::toolTip()
 {
 	return u_.makeBareTip(false,true);
 }
 
-SIMContactListItem *SIMContactListContact::updateParent(SIMContactListContact *item, SIMContactList *contactList)
+Item *Contact::updateParent(Contact *item, List *contactList)
 {
-	SIMContactListItem *newParent = item->parent();
+	Item *newParent = item->parent();
 
 	if (!contactList->search().isEmpty()) {
 		QString search = contactList->search();
@@ -613,7 +632,7 @@ SIMContactListItem *SIMContactListContact::updateParent(SIMContactListContact *i
 	return newParent;
 }
 
-void SIMContactListContact::updateOptions()
+void Contact::updateOptions()
 {
 	UserListItem uloc = *u();
 	setUserListItem(uloc);

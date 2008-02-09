@@ -1,15 +1,17 @@
-#include "SIMContactListItem.h"
-#include "SIMContactName.h"
+#include "Item.h"
+#include "Name.h"
 #include "userlist.h"
 #include "iconset.h"
 
-#ifndef SIMCONTACTLISTCONTACT_H
-#define SIMCONTACTLISTCONTACT_H
+#ifndef CONTACT_H
+#define CONTACT_H
 
-class SIMContactListContact : public SIMContactListItem {
+namespace SIMContactList {
+
+class Contact : public Item {
 public:
-	SIMContactListContact(const UserListItem &_u, PsiAccount *_pa, SIMContactList *cl, SIMContactListItem *parent);
-	~SIMContactListContact();
+	Contact(const UserListItem &_u, PsiAccount *_pa, List *cl, Item *parent);
+	~Contact();
 
 	QString name();
 	XMPP::Jid jid();
@@ -17,7 +19,7 @@ public:
 	QPixmap pixmap();
 	QPixmap avatar();
 	QString description();
-	const SIMContactName &contactName();
+	const SIMContactList::Name &contactName();
 	const QColor &textColor();
 
 	bool alerting();
@@ -32,14 +34,16 @@ public:
 	void showContextMenu(const QPoint&);
 	QString toolTip();
 
-	static SIMContactListItem *updateParent(SIMContactListContact *item, SIMContactList *contactList);
+	static Item *updateParent(Contact *item, SIMContactList::List *contactList);
 	void updateOptions();
 
 private:
 	UserListItem u_;
-	SIMContactName contactName_;
+	SIMContactList::Name contactName_;
 	PsiIcon *alertIcon_;
 	bool blocked_;
+};
+
 };
 
 #endif
