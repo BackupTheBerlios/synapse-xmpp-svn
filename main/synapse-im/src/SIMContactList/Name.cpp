@@ -29,13 +29,14 @@ Name::Name(const QString &txt, const QColor &color, View *clv) : color_(color), 
 	{
 		PsiRichText::install(v_rt);
 	}
-	setText(txt, color, clv);
+	setText(txt, color_, clv);
 }
 
-void Name::setText(const QString &txt, const QColor &color, View *clv)
+void Name::setText(const QString &txt, QColor color, View *clv)
 {
-	clv_ = clv;
 	color_ = color;
+	clv_ = clv;
+
 	if (PsiOptions::instance()->getOption("options.ui.style.rosterEmoticons").toBool())
 	{
 		PsiRichText::install(v_rt);

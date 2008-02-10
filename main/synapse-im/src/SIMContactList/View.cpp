@@ -31,7 +31,7 @@ View::View(QWidget* parent, QComboBox *search) : QTreeView(parent)
 	setWordWrap(true);
 	setEditTriggers(QAbstractItemView::EditKeyPressed);
 	setIndentation(0);
-	updateOptions();
+	optionsUpdate();
 	search_ = search;
 	header()->hide();
 	header()->setStretchLastSection(false);
@@ -351,7 +351,7 @@ void View::setModel(QAbstractItemModel* model)
 	setShowIcons(showIcons());
 }
 
-void View::updateOptions()
+void View::optionsUpdate()
 {
 	int iconSize = PsiOptions::instance()->getOption("options.ui.contactlist.avatar.size").toInt() + 4;
 	setShowIcons(PsiOptions::instance()->getOption("options.ui.contactlist.avatar.show").toInt());

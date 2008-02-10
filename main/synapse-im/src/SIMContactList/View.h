@@ -32,7 +32,8 @@ public:
 	// Reimplemented
 	void setModel(QAbstractItemModel* model);
 
-	void updateOptions();
+public slots:
+	void optionsUpdate();
 
 signals:
 	void resizeEventNotifier(QWidget* w);

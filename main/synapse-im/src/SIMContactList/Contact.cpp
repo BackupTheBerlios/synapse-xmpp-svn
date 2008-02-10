@@ -171,21 +171,6 @@ void Contact::setUserListItem(const UserListItem &_u)
 	contactList()->contactListView());
 }
 
-/*void SIMContactListContact::updatePEP()
-{
-	for(int i=0; i<SIMContactListPubSub::MAX; i++)
-	{
-		SIMContactListPubSub *ps = NULL;
-		ps = dynamic_cast<SIMContactListPubSub*>child(i);
-		if(ps =! NULL && ps->type() == i)
-			delete ps;
-		
-		if(i == SIMContactListPubSub::Mood) {
-			ps = new PubSub();
-		}
-	}
-}*/
-
 UserListItem *Contact::u()
 {
 	return &u_;

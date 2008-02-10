@@ -21,7 +21,7 @@ public:
 	Name();
 	Name(const QString &txt, const QColor &color, SIMContactList::View *clv);
 	
-	void setText(const QString &txt, const QColor &color, SIMContactList::View *clv);
+	void setText(const QString &txt, QColor color, SIMContactList::View *clv);
 
 	void paint(QPainter *painter, const QRect &rect, const QPalette &palette, EditMode mode) const;
 	QSize sizeHint( const QRect &rect) const;
