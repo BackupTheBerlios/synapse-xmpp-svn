@@ -1,6 +1,10 @@
 include_directories(tools/tunecontroller)
 
+add_definitions(-DTC_MPD)
 set(tunecontroller_noMOC_SRCS
+	tools/tunecontroller/plugins/mpd/libmpdclient.c
+	tools/tunecontroller/plugins/mpd/mpdcontroller.cpp
+	tools/tunecontroller/plugins/mpd/mpdplugin.cpp
 	tools/tunecontroller/pollingtunecontroller.cpp
 	tools/tunecontroller/filetunecontroller.cpp
 	tools/tunecontroller/combinedtunecontroller.cpp
@@ -9,6 +13,8 @@ set(tunecontroller_noMOC_SRCS
 
 set(tunecontroller_H
 #	tools/tunecontroller/tune.h
+#	tools/tunecontroller/plugins/mpd/mpdcontroller.h
+	tools/tunecontroller/plugins/mpd/mpdplugin.h
 	tools/tunecontroller/tunecontroller.h
 	tools/tunecontroller/pollingtunecontroller.h
 #	tools/tunecontroller/filetunecontroller.h

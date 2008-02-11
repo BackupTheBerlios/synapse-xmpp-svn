@@ -112,6 +112,10 @@ Q_IMPORT_PLUGIN(itunesplugin)
 Q_IMPORT_PLUGIN(xmmsplugin);
 #endif
 
+#ifdef TC_MPD
+Q_IMPORT_PLUGIN(mpdplugin);
+#endif
+
 #ifdef TC_WINAMP
 Q_IMPORT_PLUGIN(winampplugin);
 #endif
