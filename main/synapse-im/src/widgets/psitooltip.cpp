@@ -163,7 +163,7 @@ static void installPsiToolTipFont()
 		return;
 
 	qApp->setFont(QToolTip::font(), "PsiTipLabel");
-
+	QToolTip::setPalette(qApp->palette());
 	toolTipFontInstalled = true;
 }
 
