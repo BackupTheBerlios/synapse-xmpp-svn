@@ -69,6 +69,12 @@ Tune MPDController::currentTune()
 		return tune;
 	}
 
+	if(status->state == MPD_STATUS_STATE_STOP || status->state == MPD_STATUS_STATE_UNKNOWN) {
+    		mpd_freeStatus(status);
+    		mpd_closeConnection(conn);
+		return tune;
+	}
+
 	if(status->state == MPD_STATUS_STATE_PLAY || status->state == MPD_STATUS_STATE_PAUSE) {
 	    tune.setTime(status->elapsedTime / 1000);
 	}
