@@ -25,10 +25,12 @@
 
 GeoLocation::GeoLocation()
 {
+	floor_ = -100;
 }
 
 GeoLocation::GeoLocation(const QDomElement& el)
 {
+	floor_ = -100;
 	fromXml(el);
 }
 
@@ -72,6 +74,31 @@ QDomElement GeoLocation::toXml(QDomDocument& doc)
 		e.appendChild(doc.createTextNode(description_));
 		geoloc.appendChild(e);
 	}
+	if (!QString("%1").arg(floor_).isEmpty()) {
+		QDomElement e = doc.createElement("floor");
+		e.appendChild(doc.createTextNode(QString::number(floor_)));
+		geoloc.appendChild(e);
+	}
+	if (!street_.isEmpty()) {
+		QDomElement e = doc.createElement("street");
+		e.appendChild(doc.createTextNode(street_));
+		geoloc.appendChild(e);
+	}
+	if (!locality_.isEmpty()) {
+		QDomElement e = doc.createElement("locality");
+		e.appendChild(doc.createTextNode(locality_));
+		geoloc.appendChild(e);
+	}
+	if (!country_.isEmpty()) {
+		QDomElement e = doc.createElement("country");
+		e.appendChild(doc.createTextNode(country_));
+		geoloc.appendChild(e);
+	}
+	if (!postalcode_.isEmpty()) {
+		QDomElement e = doc.createElement("postalcode");
+		e.appendChild(doc.createTextNode(postalcode_));
+		geoloc.appendChild(e);
+	}
 
 	return geoloc;
 }
@@ -97,6 +124,17 @@ void GeoLocation::fromXml(const QDomElement& e)
 			datum_ = m.text();
 		if (m.tagName() == "description") 
 			description_ = m.text();
+
+		if (m.tagName() == "floor")
+			floor_ = m.text().toInt();
+		if (m.tagName() == "street")
+			street_ = m.text();
+		if (m.tagName() == "locality")
+			locality_ = m.text();
+		if (m.tagName() == "country")
+			country_ = m.text();
+		if (m.tagName() == "postalcode")
+			postalcode_ = m.text();
 	}
 }
 
@@ -134,6 +172,32 @@ void GeoLocation::setDescription(const QString& description)
 	description_ = description;
 }
 
+void GeoLocation::setFloor(int i)
+{
+	floor_ = i;
+}
+
+void GeoLocation::setStreet(const QString &street)
+{
+	street_ = street;
+}
+
+void GeoLocation::setLocality(const QString &locality)
+{
+	locality_ = locality;
+}
+
+void GeoLocation::setCountry(const QString &country)
+{
+	country_ = country;
+}
+
+void GeoLocation::setPostalcode(const QString &postalcode)
+{
+	postalcode_ = postalcode;
+}
+
+
 const Maybe<float>& GeoLocation::alt() const
 {
 	return alt_;
@@ -168,6 +232,32 @@ const QString& GeoLocation::description() const
 {
 	return description_;
 }
+
+int GeoLocation::floor() const
+{
+	return floor_;
+}
+
+const QString& GeoLocation::street() const
+{
+	return street_;
+}
+
+const QString& GeoLocation::locality() const
+{
+	return locality_;
+}
+
+const QString& GeoLocation::country() const
+{
+	return country_;
+}
+
+const QString& GeoLocation::postalcode() const
+{
+	return postalcode_;
+}
+
 
 bool GeoLocation::isNull() const 
 {

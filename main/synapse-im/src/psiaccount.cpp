@@ -98,6 +98,7 @@
 #include "mooddlg.h"
 #include "qwextend.h"
 #include "geolocation.h"
+#include "geolocationdlg.h"
 #include "physicallocation.h"
 #include "psipopup.h"
 #include "pgputil.h"
@@ -3341,6 +3342,18 @@ void PsiAccount::actionSetMood()
 	QList<PsiAccount *> pal;
 	pal.append(this);
 	MoodDlg *w = new MoodDlg(pal);
+	w->show();
+}
+
+void PsiAccount::actionSetGeolocation()
+{
+	GeolocationDlg *w = new GeolocationDlg(jid(),this);
+	w->show();
+}
+
+void PsiAccount::actionShowGeolocation(const Jid &j)
+{
+	GeolocationDlg *w = new GeolocationDlg(j, this);
 	w->show();
 }
 

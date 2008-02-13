@@ -10,6 +10,7 @@ include(tools/advwidget/CMakeLists.txt)
 include(tools/grepshortcutkeydlg/CMakeLists.txt)
 include(tools/tunecontroller/CMakeLists.txt)
 include(tools/atomicxmlfile/CMakeLists.txt)
+include(tools/mapcontrol/CMakeLists.txt)
 
 set(tools_SRCS 
 	${advwidget_SRCS}
@@ -24,6 +25,7 @@ set(tools_SRCS
 	${contactlist_SRCS}
 	${tunecontroller_SRCS}
 	${atomicxmlfile_SRCS}
+	${mapcontrol_SRCS}
 )
 set(tools_noMOC_SRCS 
 	${advwidget_noMOC_SRCS}
@@ -69,6 +71,7 @@ set(tools_H
 	${contactlist_H}
 	${tunecontroller_H}
 	${atomicxmlfile_H}
+	${mapcontrol_H}
 )
 
 MY_AUTOMOC(tools_SRCS)

@@ -170,6 +170,7 @@ set(synapse-im_noMOC_SRCS
 	entitytimetask.cpp
 	gcuserview.cpp
 	geolocation.cpp
+	geolocationdlg.cpp
 	historydb.cpp
 	historydlg.cpp
 	infodlg.cpp
@@ -348,6 +349,7 @@ set(synapse-im_H
 	xmlconsole.h
 	bookmarkmanagedlg.h
 	statuscombobox.h
+	geolocationdlg.h
 )
 
 set(res_RC
@@ -401,6 +403,7 @@ set(synapse-im_UIS
 	bookmarkmanage.ui
 	disco.ui
 	tip.ui
+	geolocation.ui
 	filetrans.ui
 	mood.ui
 	voicecall.ui

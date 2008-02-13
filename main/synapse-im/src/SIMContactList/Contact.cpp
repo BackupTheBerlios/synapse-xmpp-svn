@@ -21,6 +21,7 @@
 
 #ifdef USE_PEP
 #include "serverinfomanager.h"
+#include "geolocation.h"
 #endif
 
 #include <QAction>
@@ -200,6 +201,7 @@ void Contact::showContextMenu(const QPoint& p)
 	QAction *status = NULL;
 	QAction *mood = NULL;
 
+	QAction *geo = NULL;
 	QAction *bookmarksManage = NULL;
 	QMap<QAction*,int> bookmarks;
 
@@ -245,6 +247,7 @@ void Contact::showContextMenu(const QPoint& p)
 		if(online && account()->serverInfoManager()->hasPEP()) {
 			QMenu *set = pm.addMenu(List::tr("PEP"));
 			mood = set->addAction(IconsetFactory::icon("psi/smile").icon(),List::tr("Set Mood"));
+			geo = set->addAction(List::tr("Geolocation"));
 			avatAssign = set->addAction(List::tr("Set Avatar"));
 			avatClear = set->addAction(List::tr("Unset Avatar"));
 		}
@@ -321,6 +324,10 @@ void Contact::showContextMenu(const QPoint& p)
 	info = pm.addAction(IconsetFactory::icon("psi/vCard").icon(), List::tr("User &Info"));
 
 	if(!self && online && !PsiOptions::instance()->getOption("options.ui.contactlist.lockdown-roster").toBool()) {
+#ifdef USE_PEP
+		if(!u_.geoLocation().isNull())
+			geo = pm.addAction(List::tr("Geolocation"));
+#endif
 		QMenu *manage = pm.addMenu(List::tr("Manage"));
 
 		rename = manage->addAction(IconsetFactory::icon("psi/edit/clear").icon(), List::tr("Re&name"));
@@ -381,6 +388,11 @@ void Contact::showContextMenu(const QPoint& p)
 #ifdef USE_PEP
 	} else if (ret == mood) {
 		account()->actionSetMood();
+	} else if (ret == geo) {
+		if(u_.isSelf())
+			account()->actionSetGeolocation();
+		else
+			account()->actionShowGeolocation(u_.jid());
 #endif
 	} else if (ret == serviceDiscovery) {
 		account()->actionDisco(Jid(account()->jid().host()),"");

@@ -34,6 +34,12 @@ public:
 	GeoLocation();
 	GeoLocation(const QDomElement&);
 	
+	int floor() const;
+	const QString& street() const;
+	const QString& locality() const;
+	const QString& country() const;
+	const QString& postalcode() const;
+
 	const Maybe<float>& alt() const;
 	const Maybe<float>& bearing() const;
 	const Maybe<float>& error() const;
@@ -43,6 +49,12 @@ public:
 	const QString& description() const;
 
 	bool isNull() const;
+
+	void setFloor(int);
+	void setStreet(const QString&);
+	void setLocality(const QString&);
+	void setCountry(const QString&);
+	void setPostalcode(const QString&);
 
 	void setAlt(float);
 	void setBearing(float);
@@ -63,6 +75,8 @@ protected:
 private:
 	Maybe<float> alt_, bearing_, error_, lat_, lon_;
 	QString datum_, description_;
+	int floor_;
+	QString street_, locality_, country_, postalcode_;
 };
 
 #endif
